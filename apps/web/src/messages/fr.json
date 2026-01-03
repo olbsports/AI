@@ -1,0 +1,114 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "actions": "Actions",
+    "yes": "Oui",
+    "no": "Non",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent"
+  },
+  "home": {
+    "subtitle": "Plateforme d'analyse équestre et vétérinaire par intelligence artificielle",
+    "login": "Se connecter",
+    "register": "Créer un compte",
+    "features": {
+      "analysis": {
+        "title": "Analyse de Parcours",
+        "description": "Analyse vidéo détaillée de vos parcours de CSO avec scoring et recommandations personnalisées."
+      },
+      "radio": {
+        "title": "Rapports Radiologiques",
+        "description": "Génération automatique de rapports vétérinaires à partir de vos radiographies équines."
+      },
+      "reports": {
+        "title": "Rapports Professionnels",
+        "description": "Export PDF et HTML de rapports complets, personnalisables et partageables."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "email": "Email",
+      "password": "Mot de passe",
+      "remember": "Se souvenir de moi",
+      "forgot": "Mot de passe oublié ?",
+      "submit": "Se connecter",
+      "noAccount": "Pas encore de compte ?",
+      "register": "S'inscrire"
+    },
+    "register": {
+      "title": "Inscription",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Email",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "organization": "Nom de l'organisation",
+      "terms": "J'accepte les conditions d'utilisation",
+      "submit": "Créer mon compte",
+      "hasAccount": "Déjà un compte ?",
+      "login": "Se connecter"
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue, {name}",
+    "stats": {
+      "analyses": "Analyses",
+      "horses": "Chevaux",
+      "reports": "Rapports",
+      "tokens": "Tokens"
+    }
+  },
+  "horses": {
+    "title": "Chevaux",
+    "add": "Ajouter un cheval",
+    "empty": "Aucun cheval enregistré",
+    "fields": {
+      "name": "Nom",
+      "breed": "Race",
+      "gender": "Sexe",
+      "birthDate": "Date de naissance",
+      "color": "Robe",
+      "height": "Taille",
+      "owner": "Propriétaire",
+      "status": "Statut"
+    }
+  },
+  "analyses": {
+    "title": "Analyses",
+    "new": "Nouvelle analyse",
+    "types": {
+      "video_performance": "Analyse Performance",
+      "video_course": "Analyse Parcours",
+      "radiological": "Analyse Radiologique",
+      "locomotion": "Analyse Locomotion"
+    },
+    "status": {
+      "pending": "En attente",
+      "processing": "En cours",
+      "completed": "Terminée",
+      "failed": "Échec",
+      "cancelled": "Annulée"
+    }
+  },
+  "reports": {
+    "title": "Rapports",
+    "generate": "Générer un rapport",
+    "download": "Télécharger",
+    "share": "Partager",
+    "sign": "Signer"
+  }
+}

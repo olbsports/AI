@@ -1,0 +1,114 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "actions": "Actions",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "home": {
+    "subtitle": "AI-powered equestrian analysis and veterinary platform",
+    "login": "Sign in",
+    "register": "Create account",
+    "features": {
+      "analysis": {
+        "title": "Course Analysis",
+        "description": "Detailed video analysis of your show jumping courses with scoring and personalized recommendations."
+      },
+      "radio": {
+        "title": "Radiological Reports",
+        "description": "Automatic generation of veterinary reports from your equine radiographs."
+      },
+      "reports": {
+        "title": "Professional Reports",
+        "description": "PDF and HTML export of complete, customizable and shareable reports."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "email": "Email",
+      "password": "Password",
+      "remember": "Remember me",
+      "forgot": "Forgot password?",
+      "submit": "Sign in",
+      "noAccount": "Don't have an account?",
+      "register": "Register"
+    },
+    "register": {
+      "title": "Register",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "organization": "Organization name",
+      "terms": "I accept the terms of service",
+      "submit": "Create my account",
+      "hasAccount": "Already have an account?",
+      "login": "Sign in"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {name}",
+    "stats": {
+      "analyses": "Analyses",
+      "horses": "Horses",
+      "reports": "Reports",
+      "tokens": "Tokens"
+    }
+  },
+  "horses": {
+    "title": "Horses",
+    "add": "Add a horse",
+    "empty": "No horses registered",
+    "fields": {
+      "name": "Name",
+      "breed": "Breed",
+      "gender": "Gender",
+      "birthDate": "Birth date",
+      "color": "Color",
+      "height": "Height",
+      "owner": "Owner",
+      "status": "Status"
+    }
+  },
+  "analyses": {
+    "title": "Analyses",
+    "new": "New analysis",
+    "types": {
+      "video_performance": "Performance Analysis",
+      "video_course": "Course Analysis",
+      "radiological": "Radiological Analysis",
+      "locomotion": "Locomotion Analysis"
+    },
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "generate": "Generate report",
+    "download": "Download",
+    "share": "Share",
+    "sign": "Sign"
+  }
+}

@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+.next/
+.turbo/
+out/
+coverage/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Docs that shouldn't be formatted
+CHANGELOG.md
