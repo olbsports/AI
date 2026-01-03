@@ -110,5 +110,15 @@
     "download": "Télécharger",
     "share": "Partager",
     "sign": "Signer"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "horses": "Chevaux",
+    "analyses": "Analyses",
+    "reports": "Rapports",
+    "team": "Équipe",
+    "billing": "Facturation",
+    "settings": "Paramètres",
+    "help": "Aide"
   }
 }

@@ -110,5 +110,15 @@
     "download": "Download",
     "share": "Share",
     "sign": "Sign"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "horses": "Horses",
+    "analyses": "Analyses",
+    "reports": "Reports",
+    "team": "Team",
+    "billing": "Billing",
+    "settings": "Settings",
+    "help": "Help"
   }
 }
