@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horse Vision AI — Analyse Critique de Parcours CSI — Equita Lyon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        horse: { 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d' },
+                        dark: { 800: '#1e1e2e', 900: '#11111b' },
+                        warning: { 400: '#fbbf24', 500: '#f59e0b' },
+                        danger: { 400: '#f87171', 500: '#ef4444' },
+                        info: { 400: '#60a5fa', 500: '#3b82f6' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: linear-gradient(135deg, #11111b 0%, #1e1e2e 50%, #11111b 100%); }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glow { box-shadow: 0 0 30px rgba(34, 197, 94, 0.3); }
+        .glow-warning { box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+        .glow-danger { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+        .glow-info { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+        .obstacle-card:hover { transform: translateY(-2px); transition: all 0.3s ease; }
+        @media print {
+            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .glass { background: #f8f8f8 !important; border: 1px solid #ddd !important; }
+            .text-white { color: #1a1a1a !important; }
+            .text-gray-300, .text-gray-400, .text-gray-500 { color: #555 !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- Header -->
+        <header class="glass rounded-2xl p-6 mb-6 glow-warning">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-warning-500 to-orange-600 flex items-center justify-center">
+                        <span class="text-3xl">🎬</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">Horse Vision AI</h1>
+                        <p class="text-gray-400">Analyse Critique de Parcours CSI</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-400">Rapport généré le</div>
+                    <div class="font-semibold">30 Décembre 2025</div>
+                    <div class="text-xs text-gray-500 mt-1">ID: HV-PARCOURS-001</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Alerte Score Révisé -->
+        <section class="glass rounded-2xl p-6 mb-6 border-2 border-warning-500/50 glow-warning">
+            <div class="flex items-center gap-4 mb-4">
+                <span class="text-4xl">⚠️</span>
+                <div>
+                    <h2 class="text-xl font-bold text-warning-400">ANALYSE CRITIQUE</h2>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4 text-center">
+                <div class="p-4 bg-warning-500/20 rounded-xl border border-warning-500/30">
+                    <div class="text-sm text-warning-400 mb-1">Score</div>
+                    <div class="text-4xl font-black text-warning-400">6.5/10</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contexte Compétition -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-info-500/20 flex items-center justify-center">🏆</span>
+                Contexte de la Compétition
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Événement</span>
+                        <span class="font-bold text-info-400">EQUITA LYON</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Sponsor Principal</span>
+                        <span class="font-semibold">LONGINES</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Niveau Estimé</span>
+                        <span class="font-semibold text-warning-400">CSI 4★ / 5★</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Type</span>
+                        <span class="font-semibold">Indoor — Grande Épreuve</span>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Hauteur Obstacles</span>
+                        <span class="font-semibold">145-155 cm</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Durée Parcours</span>
+                        <span class="font-semibold">~71 secondes</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Nombre Obstacles</span>
+                        <span class="font-semibold">11 (dont 2 combinaisons)</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Résultat</span>
+                        <span class="font-semibold text-horse-400">Sans-faute apparent</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Identification Couple -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-horse-500/20 flex items-center justify-center">🐴</span>
+                Identification du Couple
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-horse-400 mb-3">Cheval</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span class="text-gray-400">Robe</span>
+                            <span class="font-semibold">Alezan (chestnut)</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span class="text-gray-400">Crins</span>
+                            <span class="font-semibold">Plus foncés que le corps</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span class="text-gray-400">Taille estimée</span>
+                            <span class="font-semibold">~168-172 cm</span>
+                        </div>
+                        <div class="flex justify-between py-2">
+                            <span class="text-gray-400">Type probable</span>
+                            <span class="font-semibold">SF ou BWP</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-info-400 mb-3">Cavalier</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span class="text-gray-400">Identification</span>
+                            <span class="font-semibold text-gray-500">Non identifiable</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span class="text-gray-400">Tenue</span>
+                            <span class="font-semibold">Veste foncée</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-700">
+                            <span class="text-gray-400">Équipement</span>
+                            <span class="font-semibold">Tapis foncé, protections</span>
+                        </div>
+                        <div class="flex justify-between py-2">
+                            <span class="text-gray-400">Niveau estimé</span>
+                            <span class="font-semibold text-warning-400">Professionnel</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cartographie du Parcours -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-info-500/20 flex items-center justify-center">🗺️</span>
+                Cartographie du Parcours
+            </h2>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="py-3 text-left text-gray-400 font-medium">#</th>
+                            <th class="py-3 text-left text-gray-400 font-medium">Obstacle</th>
+                            <th class="py-3 text-left text-gray-400 font-medium">Type</th>
+                            <th class="py-3 text-left text-gray-400 font-medium">Sponsor/Description</th>
+                            <th class="py-3 text-center text-gray-400 font-medium">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-gray-800 bg-danger-500/5">
+                            <td class="py-3 font-bold">1</td>
+                            <td class="py-3">Oxer rose</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">Oxer</span></td>
+                            <td class="py-3 text-gray-400">Panneaux arabesques roses</td>
+                            <td class="py-3 text-center"><span class="text-danger-400 font-bold">6/10</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800 bg-warning-500/5">
+                            <td class="py-3 font-bold">2</td>
+                            <td class="py-3">Vertical CWD</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Vertical</span></td>
+                            <td class="py-3 text-gray-400">CWD / Rhône / Ezer</td>
+                            <td class="py-3 text-center"><span class="text-warning-400 font-bold">6.5/10</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800 bg-danger-500/5">
+                            <td class="py-3 font-bold">3A-B</td>
+                            <td class="py-3 text-warning-400 font-semibold">Double</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-orange-500/20 text-orange-400 rounded text-xs">Combinaison</span></td>
+                            <td class="py-3 text-gray-400">La Région Auvergne-Rhône-Alpes</td>
+                            <td class="py-3 text-center"><span class="text-danger-400 font-bold">6/10</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800">
+                            <td class="py-3 font-bold">4</td>
+                            <td class="py-3">Oxer massif</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">Oxer</span></td>
+                            <td class="py-3 text-gray-400">Rose/marron avec grille</td>
+                            <td class="py-3 text-center"><span class="text-horse-400 font-bold">7/10</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800">
+                            <td class="py-3 font-bold">5</td>
+                            <td class="py-3">Spa / Triple barre</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">Montant</span></td>
+                            <td class="py-3 text-gray-400">Rose avec buis</td>
+                            <td class="py-3 text-center"><span class="text-horse-400 font-bold">7.5/10</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800 bg-warning-500/5">
+                            <td class="py-3 font-bold">6</td>
+                            <td class="py-3">Oxer bleu</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">Oxer</span></td>
+                            <td class="py-3 text-gray-400">Esthederm</td>
+                            <td class="py-3 text-center"><span class="text-warning-400 font-bold">6.5/10</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800 bg-warning-500/5">
+                            <td class="py-3 font-bold">7</td>
+                            <td class="py-3">Oxer rose</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">Oxer</span></td>
+                            <td class="py-3 text-gray-400">Panneaux décoratifs</td>
+                            <td class="py-3 text-center"><span class="text-warning-400 font-bold">6.5/10</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800 bg-danger-500/5">
+                            <td class="py-3 font-bold">8</td>
+                            <td class="py-3">Oxer Longines</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">Oxer</span></td>
+                            <td class="py-3 text-gray-400">Arabesques roses</td>
+                            <td class="py-3 text-center"><span class="text-danger-400 font-bold">6/10</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800 bg-danger-500/10">
+                            <td class="py-3 font-bold">9A-B-C</td>
+                            <td class="py-3 text-danger-400 font-semibold">Triple</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">Combinaison</span></td>
+                            <td class="py-3 text-gray-400">La Région (3 éléments)</td>
+                            <td class="py-3 text-center"><span class="text-danger-400 font-bold">5.5/10</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800">
+                            <td class="py-3 font-bold">10</td>
+                            <td class="py-3">Oxer Lambey</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">Oxer</span></td>
+                            <td class="py-3 text-gray-400">Orange/beige large</td>
+                            <td class="py-3 text-center"><span class="text-horse-400 font-bold">7/10</span></td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 font-bold">11</td>
+                            <td class="py-3">Vertical final</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Vertical</span></td>
+                            <td class="py-3 text-gray-400">Horseware Ireland</td>
+                            <td class="py-3 text-center"><span class="text-horse-400 font-bold">7/10</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PROBLÈMES MAJEURS IDENTIFIÉS -->
+        <section class="glass rounded-2xl p-6 mb-6 border border-danger-500/30">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3 text-danger-400">
+                <span class="w-10 h-10 rounded-lg bg-danger-500/20 flex items-center justify-center">🔴</span>
+                Problèmes Majeurs Identifiés
+            </h2>
+
+            <!-- Problème 1 -->
+            <div class="mb-8 p-5 bg-danger-500/10 rounded-xl border border-danger-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-danger-500/30 flex items-center justify-center text-danger-400 font-bold text-lg">1</span>
+                    <div>
+                        <h3 class="font-bold text-danger-400 text-lg">GALOP CREUX / SUR LES ÉPAULES</h3>
+                        <span class="text-xs text-gray-400">Problème récurrent tout au long du parcours</span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-sm font-semibold text-gray-300 mb-2">📍 Visible aux obstacles :</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">Avant #1</div>
+                            <div class="text-gray-500">Tête haute, post. traînants</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#2 → #3</div>
+                            <div class="text-gray-500">Position défensive</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">Après #3B</div>
+                            <div class="text-gray-500">Sur les épaules</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#5 → #6</div>
+                            <div class="text-gray-500">Dos creux visible</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">Avant #9</div>
+                            <div class="text-gray-500">Précipité, avant-main</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-800/50 rounded-lg">
+                    <h4 class="text-sm font-semibold text-danger-400 mb-2">🔍 Diagnostic :</h4>
+                    <p class="text-sm text-gray-300">
+                        Le cheval <strong class="text-white">ne se porte pas</strong> — il galope "creux" avec les postérieurs qui traînent 
+                        derrière au lieu de s'engager sous la masse. C'est un cheval qui <strong class="text-danger-400">fuit le contact</strong> 
+                        plutôt que de venir chercher la main.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Problème 2 -->
+            <div class="mb-8 p-5 bg-danger-500/10 rounded-xl border border-danger-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-danger-500/30 flex items-center justify-center text-danger-400 font-bold text-lg">2</span>
+                    <div>
+                        <h3 class="font-bold text-danger-400 text-lg">CAVALIER EN POSITION DÉFENSIVE</h3>
+                        <span class="text-xs text-gray-400">Cercle vicieux cavalier/cheval</span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-sm font-semibold text-gray-300 mb-2">📍 Visible aux obstacles :</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">Après #1</div>
+                            <div class="text-gray-500">Jambe devant sangle</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#4 → #5</div>
+                            <div class="text-gray-500">Tire sur rênes</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">Avant #6</div>
+                            <div class="text-gray-500">Position défensive</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">Après #8</div>
+                            <div class="text-gray-500">"Tracté" par cheval</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-800/50 rounded-lg">
+                    <h4 class="text-sm font-semibold text-danger-400 mb-2">🔍 Diagnostic :</h4>
+                    <p class="text-sm text-gray-300">
+                        Position typique du cavalier qui essaie de <strong class="text-white">ralentir un cheval fort</strong>. 
+                        La jambe avance, le buste recule = position "water-skiing". 
+                        Cela indique que le <strong class="text-danger-400">cheval est difficile à contrôler</strong>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Problème 3 -->
+            <div class="mb-8 p-5 bg-warning-500/10 rounded-xl border border-warning-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-warning-500/30 flex items-center justify-center text-warning-400 font-bold text-lg">3</span>
+                    <div>
+                        <h3 class="font-bold text-warning-400 text-lg">TENSION DANS LA BOUCHE</h3>
+                        <span class="text-xs text-gray-400">Résistance au contact</span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-sm font-semibold text-gray-300 mb-2">📍 Visible aux obstacles :</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">Après #1</div>
+                            <div class="text-gray-500">Bouche ouverte</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#4 → #5</div>
+                            <div class="text-gray-500">Tête haute, fuit</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">Avant #6</div>
+                            <div class="text-gray-500">Encolure contractée</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">Avant #10</div>
+                            <div class="text-gray-500">Mâchoire serrée</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-800/50 rounded-lg">
+                    <h4 class="text-sm font-semibold text-warning-400 mb-2">🔍 Diagnostic :</h4>
+                    <p class="text-sm text-gray-300">
+                        Le cheval montre des signes de <strong class="text-white">tension dans la bouche</strong> — il ne vient pas se poser 
+                        sereinement dans la main. Causes possibles : problème de dressage, embouchure inadaptée, ou douleur (dents, dos).
+                    </p>
+                </div>
+            </div>
+
+            <!-- Problème 4 -->
+            <div class="mb-8 p-5 bg-warning-500/10 rounded-xl border border-warning-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-warning-500/30 flex items-center justify-center text-warning-400 font-bold text-lg">4</span>
+                    <div>
+                        <h3 class="font-bold text-warning-400 text-lg">MANQUE DE RECTITUDE AU SAUT</h3>
+                        <span class="text-xs text-gray-400">Hanches qui dérivent, asymétrie</span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-sm font-semibold text-gray-300 mb-2">📍 Visible aux obstacles :</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#4</div>
+                            <div class="text-gray-500">Hanches à gauche</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#6</div>
+                            <div class="text-gray-500">Ant. droit plus bas</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#8</div>
+                            <div class="text-gray-500">Vrillé à la réception</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#10</div>
+                            <div class="text-gray-500">Asymétrie genoux</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#11</div>
+                            <div class="text-gray-500">Hanches dérivent</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-800/50 rounded-lg">
+                    <h4 class="text-sm font-semibold text-warning-400 mb-2">🔍 Diagnostic :</h4>
+                    <p class="text-sm text-gray-300">
+                        Le cheval ne saute pas parfaitement <strong class="text-white">droit</strong> — les hanches dérivent légèrement 
+                        (souvent à gauche). Peut indiquer une <strong class="text-warning-400">dissymétrie musculaire</strong> ou une gêne sur un postérieur.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Problème 5 -->
+            <div class="p-5 bg-warning-500/10 rounded-xl border border-warning-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-warning-500/30 flex items-center justify-center text-warning-400 font-bold text-lg">5</span>
+                    <div>
+                        <h3 class="font-bold text-warning-400 text-lg">ABORDS PRÉCIPITÉS</h3>
+                        <span class="text-xs text-gray-400">Accélération incontrôlée</span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-sm font-semibold text-gray-300 mb-2">📍 Visible aux obstacles :</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#3A (Double)</div>
+                            <div class="text-gray-500">Arrive vite, distance longue</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#6</div>
+                            <div class="text-gray-500">Accélère 3 dernières foulées</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#9A (Triple)</div>
+                            <div class="text-gray-500">Précipité, "plonge"</div>
+                        </div>
+                        <div class="p-2 bg-gray-800/50 rounded text-center text-xs">
+                            <div class="text-warning-400 font-bold">#10</div>
+                            <div class="text-gray-500">Manque contrôle</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-800/50 rounded-lg">
+                    <h4 class="text-sm font-semibold text-warning-400 mb-2">🔍 Diagnostic :</h4>
+                    <p class="text-sm text-gray-300">
+                        Le cheval <strong class="text-white">accélère en voyant l'obstacle</strong> — il "plonge" sur ses épaules. 
+                        Le cavalier perd le contrôle du rythme. C'est un signe de <strong class="text-warning-400">cheval qui décide</strong> au lieu d'écouter.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analyse du Couple -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-warning-500/20 flex items-center justify-center">🔗</span>
+                Diagnostic du Couple
+            </h2>
+            
+            <div class="p-6 bg-gradient-to-r from-warning-500/10 via-danger-500/10 to-warning-500/10 rounded-xl border border-warning-500/20 mb-6">
+                <h3 class="text-lg font-bold text-warning-400 mb-4 text-center">⚠️ CERCLE VICIEUX IDENTIFIÉ</h3>
+                
+                <div class="flex flex-col md:flex-row items-center justify-center gap-4 mb-4">
+                    <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                        <div class="text-2xl mb-2">🐴</div>
+                        <div class="text-sm font-semibold text-danger-400">Cheval qui tire</div>
+                        <div class="text-xs text-gray-400">Fuit le contact</div>
+                    </div>
+                    <div class="text-3xl text-warning-400">→</div>
+                    <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                        <div class="text-2xl mb-2">👤</div>
+                        <div class="text-sm font-semibold text-danger-400">Cavalier qui tient</div>
+                        <div class="text-xs text-gray-400">Position défensive</div>
+                    </div>
+                    <div class="text-3xl text-warning-400">→</div>
+                    <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                        <div class="text-2xl mb-2">🔄</div>
+                        <div class="text-sm font-semibold text-danger-400">Cheval fuit +</div>
+                        <div class="text-xs text-gray-400">Cercle vicieux</div>
+                    </div>
+                </div>
+                
+                <div class="text-center text-sm text-gray-300">
+                    <strong class="text-white">Résultat :</strong> Galop creux, dos creux, tension permanente
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-4 bg-gray-800/30 rounded-xl">
+                    <h4 class="font-semibold text-warning-400 mb-3">❓ Ce que ça peut cacher</h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <span class="text-warning-400 mt-1">•</span>
+                            <span>Problème de <strong class="text-white">dressage de base</strong> (cheval qui n'a jamais appris à se porter)</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-warning-400 mt-1">•</span>
+                            <span>Problème <strong class="text-white">physique</strong> (dos, bouche, dents ?)</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-warning-400 mt-1">•</span>
+                            <span><strong class="text-white">Inadéquation</strong> cavalier/cheval</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-danger-500/10 rounded-xl border border-danger-500/20">
+                    <h4 class="font-semibold text-danger-400 mb-3">⚠️ Conséquence</h4>
+                    <p class="text-sm text-gray-300 mb-3">
+                        Le couple <strong class="text-white">"fonctionne"</strong> mais sans harmonie. 
+                        C'est de l'équitation de <strong class="text-danger-400">force</strong>, pas de finesse.
+                    </p>
+                    <p class="text-sm text-gray-300">
+                        Le cheval fait le parcours <strong class="text-white">malgré</strong> ses défauts, 
+                        pas grâce à un travail de qualité.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scores Détaillés -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-info-500/20 flex items-center justify-center">📊</span>
+                Scores Détaillés Révisés
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Cheval -->
+                <div class="p-5 bg-gray-800/30 rounded-xl">
+                    <h3 class="font-bold text-horse-400 mb-4 flex items-center gap-2">
+                        <span class="text-xl">🐴</span> Analyse du Cheval
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Technique de saut</span>
+                                <span class="font-semibold">7.0/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-horse-500 rounded-full" style="width: 70%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Équilibre au galop</span>
+                                <span class="font-semibold text-danger-400">5.5/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-danger-500 rounded-full" style="width: 55%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Contact / Bouche</span>
+                                <span class="font-semibold text-warning-400">6.0/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-warning-500 rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Rectitude</span>
+                                <span class="font-semibold text-warning-400">6.5/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-warning-500 rounded-full" style="width: 65%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Mental / Volonté</span>
+                                <span class="font-semibold text-horse-400">8.0/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-horse-500 rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center">
+                        <span class="text-gray-400">Score Cheval</span>
+                        <span class="text-2xl font-black text-warning-400">7.0/10</span>
+                    </div>
+                </div>
+                
+                <!-- Cavalier -->
+                <div class="p-5 bg-gray-800/30 rounded-xl">
+                    <h3 class="font-bold text-info-400 mb-4 flex items-center gap-2">
+                        <span class="text-xl">👤</span> Analyse du Cavalier
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Position de base</span>
+                                <span class="font-semibold text-danger-400">5.5/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-danger-500 rounded-full" style="width: 55%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Action de main</span>
+                                <span class="font-semibold text-warning-400">6.0/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-warning-500 rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Accompagnement saut</span>
+                                <span class="font-semibold text-warning-400">6.5/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-warning-500 rounded-full" style="width: 65%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Lecture de parcours</span>
+                                <span class="font-semibold text-horse-400">8.0/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-horse-500 rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Gestion du parcours</span>
+                                <span class="font-semibold text-horse-400">7.5/10</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-horse-500 rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center">
+                        <span class="text-gray-400">Score Cavalier</span>
+                        <span class="text-2xl font-black text-warning-400">6.5/10</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONSEILS & RECOMMANDATIONS -->
+        <section class="glass rounded-2xl p-6 mb-6 glow-info border border-info-500/30">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3 text-info-400">
+                <span class="w-10 h-10 rounded-lg bg-info-500/20 flex items-center justify-center">💡</span>
+                Conseils & Recommandations
+            </h2>
+
+            <!-- Conseil 1 -->
+            <div class="mb-6 p-5 bg-info-500/10 rounded-xl border border-info-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-info-500/30 flex items-center justify-center text-info-400 font-bold">1</span>
+                    <h3 class="font-bold text-info-400">ENGAGEMENT DES POSTÉRIEURS</h3>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-sm font-semibold text-horse-400 mb-2">🏠 Exercice à la maison</h4>
+                        <ul class="space-y-1 text-sm text-gray-300">
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> Transitions galop → trot → galop tous les 8 foulées</li>
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> Forcer le cheval à s'asseoir sur ses hanches</li>
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> Ne JAMAIS accepter un départ "sur les épaules"</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-warning-400 mb-2">🏟️ Sur le parcours</h4>
+                        <ul class="space-y-1 text-sm text-gray-300">
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> Demi-arrêt 5-6 foulées avant chaque obstacle</li>
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> Reporter le poids sur l'arrière-main</li>
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> Attendre que le cheval "monte" devant</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-gray-800/50 rounded-lg">
+                    <p class="text-sm text-gray-300">
+                        <strong class="text-info-400">Ce qu'il faut sentir :</strong> Le cheval doit "s'alléger" dans la main, 
+                        l'encolure monte naturellement, les épaules se relèvent.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Conseil 2 -->
+            <div class="mb-6 p-5 bg-info-500/10 rounded-xl border border-info-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-info-500/30 flex items-center justify-center text-info-400 font-bold">2</span>
+                    <h3 class="font-bold text-info-400">CORRIGER LA POSITION DU CAVALIER</h3>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-3 bg-gray-800/50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-white mb-2">Exercice #1 — Sans étriers</h4>
+                        <p class="text-xs text-gray-400">20 min de trot enlevé sans étriers par semaine. Force à mettre la jambe sous soi.</p>
+                    </div>
+                    <div class="p-3 bg-gray-800/50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-white mb-2">Exercice #2 — Position 2-points</h4>
+                        <p class="text-xs text-gray-400">Galoper en équilibre sur les étriers. 2 tours sans toucher la selle.</p>
+                    </div>
+                    <div class="p-3 bg-gray-800/50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-white mb-2">Exercice #3 — Mains en avant</h4>
+                        <p class="text-xs text-gray-400">Poser les mains sur l'encolure. Contrôler uniquement avec jambe/assiette.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-horse-500/10 rounded-lg border border-horse-500/20">
+                    <p class="text-sm text-gray-300">
+                        <strong class="text-horse-400">Point clé :</strong> L'étrier sous le MILIEU du pied → La jambe tombe SOUS les hanches → 
+                        Talon, hanche, épaule = même ligne verticale
+                    </p>
+                </div>
+            </div>
+
+            <!-- Conseil 3 -->
+            <div class="mb-6 p-5 bg-info-500/10 rounded-xl border border-info-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-info-500/30 flex items-center justify-center text-info-400 font-bold">3</span>
+                    <h3 class="font-bold text-info-400">AMÉLIORER LE CONTACT</h3>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-sm font-semibold text-danger-400 mb-2">🩺 Vérifications vétérinaires</h4>
+                        <ul class="space-y-1 text-sm text-gray-300">
+                            <li class="flex items-center gap-2"><span class="text-gray-500">□</span> Dentiste équin (dents de loup ? surdents ?)</li>
+                            <li class="flex items-center gap-2"><span class="text-gray-500">□</span> Ostéopathe (ATM, nuque, cervicales)</li>
+                            <li class="flex items-center gap-2"><span class="text-gray-500">□</span> Vérifier adaptation de l'embouchure</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-horse-400 mb-2">🎯 Embouchures à tester</h4>
+                        <ul class="space-y-1 text-sm text-gray-300">
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> Mors à aiguilles (plus stable)</li>
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> Mors en résine/plastique (plus doux)</li>
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> Happy Mouth ou Nathe</li>
+                            <li class="flex items-start gap-2"><span class="text-info-400">•</span> OU hackamore temporairement</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-gray-800/50 rounded-lg">
+                    <p class="text-sm text-gray-300">
+                        <strong class="text-info-400">Principe :</strong> La main PROPOSE, elle ne TIRE jamais. 
+                        Demander avec les DOIGTS, pas le BRAS. Contact ÉLASTIQUE, pas FIXE.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Conseil 4 -->
+            <div class="mb-6 p-5 bg-info-500/10 rounded-xl border border-info-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-info-500/30 flex items-center justify-center text-info-400 font-bold">4</span>
+                    <h3 class="font-bold text-info-400">TRAVAILLER LA RECTITUDE</h3>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-3 bg-gray-800/50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-white mb-2">Exercice #1 — Couloir de barres</h4>
+                        <p class="text-xs text-gray-400">2 barres au sol parallèles (1.20m écart). Passer dedans au pas, trot, galop.</p>
+                    </div>
+                    <div class="p-3 bg-gray-800/50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-white mb-2">Exercice #2 — Ligne de cônes</h4>
+                        <p class="text-xs text-gray-400">Cônes tous les 5m. Galoper en restant exactement sur la ligne.</p>
+                    </div>
+                    <div class="p-3 bg-gray-800/50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-white mb-2">Exercice #3 — Sauts avec guides</h4>
+                        <p class="text-xs text-gray-400">Chandeliers très près de l'obstacle. Force le cheval à sauter DROIT.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-warning-500/10 rounded-lg border border-warning-500/20">
+                    <p class="text-sm text-gray-300">
+                        <strong class="text-warning-400">Astuce :</strong> Filmer TOUS les sauts de face. 
+                        Analyser si toujours le même côté qui dérive. Si oui = problème physique probable.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Conseil 5 -->
+            <div class="p-5 bg-info-500/10 rounded-xl border border-info-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-info-500/30 flex items-center justify-center text-info-400 font-bold">5</span>
+                    <h3 class="font-bold text-info-400">CALMER LES ABORDS</h3>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-3 bg-gray-800/50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-white mb-2">Exercice #1 — Arrêt avant obstacle</h4>
+                        <p class="text-xs text-gray-400">Barre au sol. Galoper vers elle puis ARRÊT à 2m. Répéter 10x. Puis laisser passer 1x sur 3.</p>
+                    </div>
+                    <div class="p-3 bg-gray-800/50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-white mb-2">Exercice #2 — Contrôle du rythme</h4>
+                        <p class="text-xs text-gray-400">Ligne de 3 obstacles à 18m (4 foulées). Passer en 4, puis en 5, puis en 4.</p>
+                    </div>
+                    <div class="p-3 bg-gray-800/50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-white mb-2">Exercice #3 — Galop compté</h4>
+                        <p class="text-xs text-gray-400">Compter à voix haute : "5... 4... 3... 2... 1... SAUT". Maintenir le rythme.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-danger-500/10 rounded-lg border border-danger-500/20">
+                    <p class="text-sm text-gray-300">
+                        <strong class="text-danger-400">Règle d'or :</strong> Si le cheval accélère = CERCLE et on recommence. 
+                        Ne JAMAIS récompenser un abord précipité. Mieux vaut un refus qu'un saut dans le désordre.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Programme Semaine Type -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-horse-500/20 flex items-center justify-center">📅</span>
+                Programme Semaine Type
+            </h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="p-4 bg-gray-800/30 rounded-xl border-l-4 border-info-500">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-bold text-info-400">LUNDI</span>
+                        <span class="text-xs text-gray-500">45 min</span>
+                    </div>
+                    <h4 class="font-semibold text-white text-sm mb-2">Plat technique</h4>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• 15 min échauffement rênes longues</li>
+                        <li>• 15 min transitions (galop-trot-arrêt-reculer)</li>
+                        <li>• 10 min épaule en dedans / appuyers</li>
+                        <li>• 5 min étirements</li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-gray-800/30 rounded-xl border-l-4 border-horse-500">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-bold text-horse-400">MARDI</span>
+                        <span class="text-xs text-gray-500">40 min</span>
+                    </div>
+                    <h4 class="font-semibold text-white text-sm mb-2">Cavaletti / Barres</h4>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• Barres au sol en éventail</li>
+                        <li>• Cavaletti surélevés au trot</li>
+                        <li>• Travail du rythme et de l'équilibre</li>
+                        <li>• PAS DE SAUT</li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-gray-800/30 rounded-xl border-l-4 border-gray-500">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-bold text-gray-400">MERCREDI</span>
+                        <span class="text-xs text-gray-500">Variable</span>
+                    </div>
+                    <h4 class="font-semibold text-white text-sm mb-2">Repos ou balade</h4>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• Sortie en extérieur</li>
+                        <li>• Décontraction mentale</li>
+                        <li>• Pas de travail intensif</li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-gray-800/30 rounded-xl border-l-4 border-warning-500">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-bold text-warning-400">JEUDI</span>
+                        <span class="text-xs text-gray-500">50 min</span>
+                    </div>
+                    <h4 class="font-semibold text-white text-sm mb-2">Plat + Gymnastique</h4>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• 20 min plat (engagement postérieurs)</li>
+                        <li>• 20 min gymnastique (lignes en 4-5 foulées)</li>
+                        <li>• 10 min retour au calme</li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-gray-800/30 rounded-xl border-l-4 border-purple-500">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-bold text-purple-400">VENDREDI</span>
+                        <span class="text-xs text-gray-500">45 min</span>
+                    </div>
+                    <h4 class="font-semibold text-white text-sm mb-2">Saut technique</h4>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• Focus QUALITÉ, pas hauteur</li>
+                        <li>• Maximum 90-100cm</li>
+                        <li>• Rectitude avec guides</li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-gray-800/30 rounded-xl border-l-4 border-orange-500">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-bold text-orange-400">SAMEDI</span>
+                        <span class="text-xs text-gray-500">Si compétition</span>
+                    </div>
+                    <h4 class="font-semibold text-white text-sm mb-2">Parcours simulation</h4>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• Parcours 1.10-1.20m max</li>
+                        <li>• Focus RYTHME constant</li>
+                        <li>• Arrêt si le cheval s'emballe</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-danger-500/10 rounded-lg border border-danger-500/20 text-center">
+                <span class="font-bold text-danger-400">DIMANCHE</span>
+                <span class="text-gray-400 ml-2">— Repos complet</span>
+            </div>
+        </section>
+
+        <!-- Checklist Vétérinaire -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-danger-500/20 flex items-center justify-center">🩺</span>
+                Checklist Vétérinaire
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-800/30 rounded-xl">
+                    <h3 class="font-semibold text-danger-400 mb-3">À vérifier en PRIORITÉ</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="w-5 h-5 border-2 border-gray-600 rounded flex-shrink-0"></span>
+                            <span class="text-gray-300"><strong class="text-white">DENTISTE</strong> — Dents de loup, surdents, blessures</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="w-5 h-5 border-2 border-gray-600 rounded flex-shrink-0"></span>
+                            <span class="text-gray-300"><strong class="text-white">DOS</strong> — Palpation + radios si réactif</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="w-5 h-5 border-2 border-gray-600 rounded flex-shrink-0"></span>
+                            <span class="text-gray-300"><strong class="text-white">OSTÉOPATHE</strong> — Bassin, sacro-iliaque</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="w-5 h-5 border-2 border-gray-600 rounded flex-shrink-0"></span>
+                            <span class="text-gray-300"><strong class="text-white">FERRURE</strong> — Équilibre des 4 pieds</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="w-5 h-5 border-2 border-gray-600 rounded flex-shrink-0"></span>
+                            <span class="text-gray-300"><strong class="text-white">SELLE</strong> — Adaptation au dos (saddle fitter)</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="p-4 bg-horse-500/10 rounded-xl border border-horse-500/20">
+                    <h3 class="font-semibold text-horse-400 mb-3">Objectifs à 3 mois</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="text-horse-400">✓</span>
+                            <span class="text-gray-300">Équilibre au galop — Cheval qui "monte" devant sans tirer</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="text-horse-400">✓</span>
+                            <span class="text-gray-300">Contact stable — Bouche fermée, mâchoire décontractée</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="text-horse-400">✓</span>
+                            <span class="text-gray-300">Position cavalier — Jambe sous le corps, pas devant</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="text-horse-400">✓</span>
+                            <span class="text-gray-300">Rectitude — Sauts droits, hanches dans l'axe</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-sm">
+                            <span class="text-horse-400">✓</span>
+                            <span class="text-gray-300">Abords calmes — Rythme constant jusqu'à l'obstacle</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section class="glass rounded-2xl p-6 mb-6 glow-warning">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-warning-500/20 flex items-center justify-center">📝</span>
+                Conclusion
+            </h2>
+            
+            <div class="p-6 bg-gradient-to-r from-warning-500/10 to-transparent rounded-xl mb-6">
+                <div class="flex items-start gap-4">
+                    <div class="text-6xl font-black text-warning-400">6.5</div>
+                    <div class="pt-2">
+                        <div class="text-xl font-bold text-warning-400">Score</div>
+                        <div class="text-gray-400">Équitation de force, pas d'harmonie</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-4 text-gray-300">
+                <p class="leading-relaxed">
+                    Ce couple fait des <strong class="text-horse-400">sans-fautes en CSI</strong> grâce à :
+                </p>
+                <ul class="ml-4 space-y-1">
+                    <li class="flex items-start gap-2"><span class="text-horse-400">✓</span> Un cheval <strong class="text-white">volontaire</strong> qui respecte les barres</li>
+                    <li class="flex items-start gap-2"><span class="text-horse-400">✓</span> Un cavalier qui fait les <strong class="text-white">bons choix tactiques</strong></li>
+                </ul>
+                
+                <p class="leading-relaxed mt-4">
+                    <strong class="text-warning-400">MAIS</strong> ce n'est pas de l'équitation de qualité :
+                </p>
+                <ul class="ml-4 space-y-1">
+                    <li class="flex items-start gap-2"><span class="text-danger-400">✗</span> Le cheval <strong class="text-white">galope mal</strong> (creux, sur les épaules)</li>
+                    <li class="flex items-start gap-2"><span class="text-danger-400">✗</span> Le cavalier <strong class="text-white">compense par la force</strong></li>
+                    <li class="flex items-start gap-2"><span class="text-danger-400">✗</span> <strong class="text-white">Aucune harmonie</strong> dans le mouvement</li>
+                </ul>
+               
+                
+                <div class="mt-4 p-4 bg-horse-500/10 rounded-lg border border-horse-500/20">
+                    <h4 class="font-bold text-horse-400 mb-2">💡 Message clé</h4>
+                    <p class="text-sm text-gray-300">
+                        <strong class="text-white">INVESTIR 3-6 MOIS</strong> dans le travail de base = gagner des 
+                        <strong class="text-horse-400">ANNÉES</strong> de carrière sportive de qualité.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Avertissement -->
+        <section class="glass rounded-2xl p-6 mb-6 border border-red-500/30">
+            <div class="flex items-start gap-4">
+                <span class="text-3xl">⚕️</span>
+                <div>
+                    <h2 class="text-lg font-bold text-red-400 mb-2">Avertissement</h2>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Cette analyse est générée par intelligence artificielle à <strong class="text-gray-300">titre indicatif uniquement</strong>. 
+                        Elle ne constitue pas un avis professionnel d'entraîneur ou de coach certifié et ne peut en aucun cas se substituer 
+                        à l'expertise d'un professionnel du monde équestre. Les conseils proposés doivent être adaptés au cas particulier 
+                        de chaque couple cavalier/cheval par un professionnel qualifié.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Récapitulatif Final -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-warning-500/20 flex items-center justify-center">📊</span>
+                Fiche Récapitulative
+            </h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                    <div class="text-gray-400 mb-1 text-xs">Événement</div>
+                    <div class="font-bold text-info-400">EQUITA LYON</div>
+                </div>
+                <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                    <div class="text-gray-400 mb-1 text-xs">Niveau</div>
+                    <div class="font-bold">CSI 4★/5★</div>
+                </div>
+                <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                    <div class="text-gray-400 mb-1 text-xs">Obstacles</div>
+                    <div class="font-bold">11 (145-155cm)</div>
+                </div>
+                <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                    <div class="text-gray-400 mb-1 text-xs">Résultat</div>
+                    <div class="font-bold text-horse-400">Sans-faute</div>
+                </div>
+                <div class="p-4 bg-warning-500/10 rounded-lg text-center border border-warning-500/20">
+                    <div class="text-gray-400 mb-1 text-xs">Score Cheval</div>
+                    <div class="font-bold text-warning-400 text-lg">7.0/10</div>
+                </div>
+                <div class="p-4 bg-warning-500/10 rounded-lg text-center border border-warning-500/20">
+                    <div class="text-gray-400 mb-1 text-xs">Score Cavalier</div>
+                    <div class="font-bold text-warning-400 text-lg">6.5/10</div>
+                </div>
+                <div class="p-4 bg-danger-500/10 rounded-lg text-center border border-danger-500/20">
+                    <div class="text-gray-400 mb-1 text-xs">Problèmes majeurs</div>
+                    <div class="font-bold text-danger-400">5 identifiés</div>
+                </div>
+                <div class="p-4 bg-warning-500/10 rounded-lg text-center border border-warning-500/20">
+                    <div class="text-gray-400 mb-1 text-xs">Score Global</div>
+                    <div class="font-bold text-warning-400 text-lg">6.5/10</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 text-sm py-6">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-warning-500 to-orange-600 flex items-center justify-center text-xl font-bold text-white">
+                    HV
+                </div>
+                <span class="font-semibold text-gray-300">Horse Vision AI</span>
+            </div>
+            <p class="mt-2 text-xs text-gray-600">Document test à usage professionnel uniquement</p>
+        </footer>
+
+    </div>
+</body>
+</html>

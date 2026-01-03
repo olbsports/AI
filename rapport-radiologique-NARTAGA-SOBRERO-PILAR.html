@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horse Vision AI — Rapport Radiologique — NARTAGA SOBRERO PILAR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        horse: { 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d' },
+                        dark: { 800: '#1e1e2e', 900: '#11111b' },
+                        warning: { 400: '#fbbf24', 500: '#f59e0b' },
+                        danger: { 400: '#f87171', 500: '#ef4444' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: linear-gradient(135deg, #11111b 0%, #1e1e2e 50%, #11111b 100%); }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glow { box-shadow: 0 0 30px rgba(34, 197, 94, 0.3); }
+        .glow-warning { box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+        .glow-danger { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+        @media print {
+            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .glass { background: #f8f8f8 !important; border: 1px solid #ddd !important; }
+            .text-white { color: #1a1a1a !important; }
+            .text-gray-300, .text-gray-400, .text-gray-500 { color: #555 !important; }
+            .bg-horse-500\/10, .bg-horse-500\/20 { background: #e8f5e9 !important; }
+            .bg-warning-500\/10 { background: #fff8e1 !important; }
+            .bg-danger-500\/10 { background: #ffebee !important; }
+            .bg-gray-800\/30, .bg-gray-800\/50 { background: #f0f0f0 !important; }
+            .text-horse-400 { color: #2e7d32 !important; }
+            .text-warning-400 { color: #f57c00 !important; }
+            .text-danger-400 { color: #c62828 !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- Header -->
+        <header class="glass rounded-2xl p-6 mb-6 glow-warning">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-warning-500 to-warning-400 flex items-center justify-center">
+                        <span class="text-3xl">🏥</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">Horse Vision AI</h1>
+                        <p class="text-gray-400">Rapport Radiologique Complet</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-400">Rapport généré le</div>
+                    <div class="font-semibold">30 Décembre 2025</div>
+                    <div class="text-xs text-gray-500 mt-1">ID: HV-RADIO-347</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Identification -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-horse-500/20 flex items-center justify-center">🐴</span>
+                Identification du Patient
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Nom</span>
+                        <span class="font-bold text-lg text-warning-400">NARTAGA SOBRERO PILAR</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">ID Dossier</span>
+                        <span class="font-semibold">347</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Date d'examen</span>
+                        <span class="font-semibold">24 Avril 2024</span>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Heure</span>
+                        <span class="font-semibold">10:36:26</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Vétérinaires</span>
+                        <span class="font-semibold text-sm">Diego Duggan & Cristian Montes de Oca</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-gray-400">Nombre de clichés</span>
+                        <span class="font-semibold">7</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Score Global avec alerte -->
+        <section class="glass rounded-2xl p-6 mb-6 text-center border border-warning-500/30">
+            <div class="text-gray-400 mb-2">Score Radiologique Global</div>
+            <div class="text-7xl font-black text-warning-400 mb-2">7.5<span class="text-3xl text-gray-500">/10</span></div>
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-warning-500/20 rounded-full text-warning-400 font-semibold">
+                <span class="w-2 h-2 bg-warning-400 rounded-full animate-pulse"></span>
+                Catégorie B — Dossier Incomplet
+            </div>
+            <div class="mt-4 flex flex-col items-center gap-2">
+                <div class="text-sm text-warning-400 flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>3 points d'attention identifiés</span>
+                </div>
+                <div class="text-sm text-danger-400 flex items-center gap-2">
+                    <span>❌</span>
+                    <span>2 vues critiques manquantes</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerte Critique -->
+        <section class="glass rounded-2xl p-6 mb-6 border-2 border-danger-500/50 glow-danger">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-3 text-danger-400">
+                <span class="w-10 h-10 rounded-lg bg-danger-500/20 flex items-center justify-center">🚨</span>
+                Vues Critiques Manquantes
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="p-4 bg-danger-500/10 rounded-xl border border-danger-500/20">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="text-2xl">🦴</span>
+                        <div>
+                            <h3 class="font-bold text-danger-400">JARRET — Vue Latérale</h3>
+                            <span class="text-xs text-gray-400">Indispensable pour exclure l'éparvin</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-300">
+                        La vue DP seule ne permet <strong class="text-white">pas d'évaluer correctement</strong> l'articulation 
+                        intertarsienne distale et tarsométatarsienne, localisations classiques de l'éparvin.
+                    </p>
+                </div>
+                
+                <div class="p-4 bg-danger-500/10 rounded-xl border border-danger-500/20">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="text-2xl">🦵</span>
+                        <div>
+                            <h3 class="font-bold text-danger-400">GRASSET — Vue Latérale</h3>
+                            <span class="text-xs text-gray-400">Indispensable pour exclure l'OCD</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-300">
+                        La vue DP seule ne permet <strong class="text-white">pas d'exclure</strong> une OCD de la trochlée fémorale, 
+                        pathologie fréquente chez le jeune cheval de sport.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-gray-800/50 rounded-lg">
+                <p class="text-sm text-gray-300 text-center">
+                    <strong class="text-danger-400">⚠️ IMPORTANT :</strong> Ne pas prendre de décision d'achat 
+                    sans avoir réalisé ces clichés complémentaires.
+                </p>
+            </div>
+        </section>
+
+        <!-- Inventaire des Clichés -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-horse-500/20 flex items-center justify-center">📸</span>
+                Inventaire des Clichés Analysés
+            </h2>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="py-3 text-left text-gray-400 font-medium">#</th>
+                            <th class="py-3 text-left text-gray-400 font-medium">Membre</th>
+                            <th class="py-3 text-left text-gray-400 font-medium">Région</th>
+                            <th class="py-3 text-left text-gray-400 font-medium">Vue</th>
+                            <th class="py-3 text-left text-gray-400 font-medium">Calibration</th>
+                            <th class="py-3 text-center text-gray-400 font-medium">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-gray-800 bg-warning-500/5">
+                            <td class="py-3 font-semibold">1</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">LH</span> Post. Gauche</td>
+                            <td class="py-3 font-semibold text-warning-400">Jarret (tarso)</td>
+                            <td class="py-3">DP (Face)</td>
+                            <td class="py-3 text-gray-400">101.68mm</td>
+                            <td class="py-3 text-center"><span class="text-warning-400 text-lg">⚠️</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800">
+                            <td class="py-3 font-semibold">2</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs font-medium">LF</span> Ant. Gauche</td>
+                            <td class="py-3">Boulet (nudo)</td>
+                            <td class="py-3">DP (Face)</td>
+                            <td class="py-3 text-gray-400">90.52mm</td>
+                            <td class="py-3 text-center"><span class="text-horse-400 text-lg">✅</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800">
+                            <td class="py-3 font-semibold">3</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium">RH</span> Post. Droit</td>
+                            <td class="py-3">Boulet (nudo)</td>
+                            <td class="py-3">DP (Face)</td>
+                            <td class="py-3 text-gray-400">86.80mm</td>
+                            <td class="py-3 text-center"><span class="text-horse-400 text-lg">✅</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800">
+                            <td class="py-3 font-semibold">4</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">LH</span> Post. Gauche</td>
+                            <td class="py-3">Boulet (nudo)</td>
+                            <td class="py-3">Latérale</td>
+                            <td class="py-3 text-gray-400">85.56mm</td>
+                            <td class="py-3 text-center"><span class="text-horse-400 text-lg">✅</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800 bg-warning-500/5">
+                            <td class="py-3 font-semibold">5</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">LH</span> Post. Gauche</td>
+                            <td class="py-3">Boulet (nudo)</td>
+                            <td class="py-3">DLPMO</td>
+                            <td class="py-3 text-gray-400">89.28mm</td>
+                            <td class="py-3 text-center"><span class="text-warning-400 text-lg">⚠️</span></td>
+                        </tr>
+                        <tr class="border-b border-gray-800">
+                            <td class="py-3 font-semibold">6</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium">RH</span> Post. Droit</td>
+                            <td class="py-3">Boulet (nudo)</td>
+                            <td class="py-3">Latérale</td>
+                            <td class="py-3 text-gray-400">93.00mm</td>
+                            <td class="py-3 text-center"><span class="text-horse-400 text-lg">✅</span></td>
+                        </tr>
+                        <tr class="bg-warning-500/5">
+                            <td class="py-3 font-semibold">7</td>
+                            <td class="py-3"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">LH</span> Post. Gauche</td>
+                            <td class="py-3 font-semibold text-warning-400">Grasset (babilla)</td>
+                            <td class="py-3">DP (Face)</td>
+                            <td class="py-3 text-gray-400">83.08mm</td>
+                            <td class="py-3 text-center"><span class="text-warning-400 text-lg">⚠️</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 p-3 bg-gray-800/50 rounded-lg text-xs text-gray-400">
+                <strong class="text-gray-300">Légende :</strong> LH = Left Hind (Post. Gauche) | LF = Left Front (Ant. Gauche) | RH = Right Hind (Post. Droit) | DLPMO = Dorso-Latéro-Plantaire Médio-Oblique | DP = Dorso-Plantaire (Face)
+            </div>
+        </section>
+
+        <!-- Points d'Attention -->
+        <section class="glass rounded-2xl p-6 mb-6 glow-warning border border-warning-500/30">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3 text-warning-400">
+                <span class="w-10 h-10 rounded-lg bg-warning-500/20 flex items-center justify-center">⚠️</span>
+                Points d'Attention Identifiés (3)
+            </h2>
+            
+            <!-- Point 1 - Jarret -->
+            <div class="mb-6 p-4 bg-warning-500/10 rounded-xl border border-warning-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 font-bold">1</span>
+                    <div>
+                        <h3 class="font-bold text-warning-400">JARRET (LH) — Vue DP Insuffisante</h3>
+                        <span class="text-xs text-gray-400">Cliché #1 — Tarso DP</span>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">🔍 Observation</h4>
+                        <p class="text-sm text-gray-400">
+                            Possible légère irrégularité du bord médial de l'articulation intertarsienne distale / tarsométatarsienne.
+                            <strong class="text-warning-400">Vue latérale indispensable</strong> pour confirmer ou infirmer.
+                        </p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">❓ Pathologie suspectée</h4>
+                        <p class="text-sm text-gray-400">
+                            <strong class="text-white">Éparvin</strong> (ostéoarthrite du tarse distal) — Localisation classique.
+                            Ne peut être exclu sans vue latérale.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Point 2 - Grasset -->
+            <div class="mb-6 p-4 bg-warning-500/10 rounded-xl border border-warning-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 font-bold">2</span>
+                    <div>
+                        <h3 class="font-bold text-warning-400">GRASSET (LH) — Vue DP Insuffisante</h3>
+                        <span class="text-xs text-gray-400">Cliché #7 — Babilla DP</span>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">🔍 Observation</h4>
+                        <p class="text-sm text-gray-400">
+                            La vue DP seule montre des structures normales (rotule, condyles, interligne) mais ne permet pas 
+                            d'évaluer la <strong class="text-warning-400">lèvre latérale de la trochlée fémorale</strong>.
+                        </p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">❓ Pathologie non exclue</h4>
+                        <p class="text-sm text-gray-400">
+                            <strong class="text-white">OCD de la trochlée fémorale</strong> — Pathologie la plus fréquente du grasset.
+                            Vue latérale ou oblique indispensable.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Point 3 - Sésamoïde -->
+            <div class="p-4 bg-warning-500/5 rounded-xl border border-warning-500/10">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-10 h-10 rounded-full bg-warning-500/10 flex items-center justify-center text-warning-400 font-bold">3</span>
+                    <div>
+                        <h3 class="font-bold text-warning-400">SÉSAMOÏDE (LH) — Contour à Vérifier</h3>
+                        <span class="text-xs text-gray-400">Cliché #5 — Boulet DLPMO</span>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">🔍 Observation</h4>
+                        <p class="text-sm text-gray-400">
+                            Contour apical du sésamoïde latéral <strong class="text-warning-400">possiblement légèrement irrégulier</strong>.
+                            Pourrait être une variante anatomique.
+                        </p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">💡 Signification</h4>
+                        <p class="text-sm text-gray-400">
+                            <strong class="text-white">Probablement bénin</strong> si cheval non boiteux. 
+                            Peut être un ancien microtraumatisme cicatrisé. À corréler avec l'examen clinique.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analyse Détaillée -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-horse-500/20 flex items-center justify-center">🔬</span>
+                Analyse Détaillée par Cliché
+            </h2>
+            
+            <!-- Cliché 1 - Jarret -->
+            <div class="mb-4 p-4 bg-warning-500/5 rounded-xl border border-warning-500/20">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 font-bold text-sm">1</span>
+                        <div>
+                            <h3 class="font-semibold text-sm">Jarret Post. Gauche (LH) — DP Face</h3>
+                            <span class="text-xs text-warning-400">⚠️ Vue insuffisante</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4 text-xs">
+                    <div class="space-y-1 text-gray-400">
+                        <div>• Tibia distal : Normal</div>
+                        <div>• Talus : Pas d'OCD visible</div>
+                        <div>• Calcanéum : Contours nets</div>
+                    </div>
+                    <div class="space-y-1 text-gray-400">
+                        <div>• Articulation tibio-tarsienne : OK</div>
+                        <div class="text-warning-400">• Interlignes distaux : À vérifier en LAT</div>
+                        <div class="text-danger-400">• ❌ Vue latérale manquante</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Clichés normaux -->
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <!-- Cliché 2 -->
+                <div class="p-4 bg-gray-800/30 rounded-xl">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-full bg-horse-500/20 flex items-center justify-center text-horse-400 font-bold text-sm">2</span>
+                        <div>
+                            <h3 class="font-semibold text-sm">Boulet Ant. Gauche (LF) — DP</h3>
+                            <span class="text-xs text-horse-400">✅ Normal</span>
+                        </div>
+                    </div>
+                    <div class="text-xs space-y-1 text-gray-400">
+                        <div>• Symétrie condylienne : Excellente</div>
+                        <div>• Sésamoïdes : Intègres</div>
+                        <div>• Pas d'OCD visible</div>
+                    </div>
+                </div>
+                
+                <!-- Cliché 3 -->
+                <div class="p-4 bg-gray-800/30 rounded-xl">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-full bg-horse-500/20 flex items-center justify-center text-horse-400 font-bold text-sm">3</span>
+                        <div>
+                            <h3 class="font-semibold text-sm">Boulet Post. Droit (RH) — DP</h3>
+                            <span class="text-xs text-horse-400">✅ Normal</span>
+                        </div>
+                    </div>
+                    <div class="text-xs space-y-1 text-gray-400">
+                        <div>• Condyles : Symétriques</div>
+                        <div>• Sésamoïdes : Bien positionnés</div>
+                        <div>• Interligne : Régulier</div>
+                    </div>
+                </div>
+                
+                <!-- Cliché 4 -->
+                <div class="p-4 bg-gray-800/30 rounded-xl">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-full bg-horse-500/20 flex items-center justify-center text-horse-400 font-bold text-sm">4</span>
+                        <div>
+                            <h3 class="font-semibold text-sm">Boulet Post. Gauche (LH) — LAT</h3>
+                            <span class="text-xs text-horse-400">✅ Normal</span>
+                        </div>
+                    </div>
+                    <div class="text-xs space-y-1 text-gray-400">
+                        <div>• Sésamoïdes : Contours nets</div>
+                        <div>• Articulation : Interligne régulier</div>
+                        <div>• P1 : Structure normale</div>
+                    </div>
+                </div>
+                
+                <!-- Cliché 6 -->
+                <div class="p-4 bg-gray-800/30 rounded-xl">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-8 h-8 rounded-full bg-horse-500/20 flex items-center justify-center text-horse-400 font-bold text-sm">6</span>
+                        <div>
+                            <h3 class="font-semibold text-sm">Boulet Post. Droit (RH) — LAT</h3>
+                            <span class="text-xs text-horse-400">✅ Normal</span>
+                        </div>
+                    </div>
+                    <div class="text-xs space-y-1 text-gray-400">
+                        <div>• Sésamoïdes : Intègres</div>
+                        <div>• Articulation : Normale</div>
+                        <div>• Pied visible : RAS</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cliché 5 - Sésamoïde -->
+            <div class="mb-4 p-4 bg-warning-500/5 rounded-xl border border-warning-500/10">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="w-8 h-8 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 font-bold text-sm">5</span>
+                    <div>
+                        <h3 class="font-semibold text-sm">Boulet Post. Gauche (LH) — DLPMO</h3>
+                        <span class="text-xs text-warning-400">⚠️ Point d'attention mineur</span>
+                    </div>
+                </div>
+                <div class="text-xs space-y-1 text-gray-400">
+                    <div>• Condyles : Normaux</div>
+                    <div class="text-warning-400">• Sésamoïde latéral : Contour apical à surveiller</div>
+                    <div>• Gorge sagittale : Bien définie</div>
+                </div>
+            </div>
+            
+            <!-- Cliché 7 - Grasset -->
+            <div class="p-4 bg-warning-500/5 rounded-xl border border-warning-500/20">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="w-8 h-8 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 font-bold text-sm">7</span>
+                    <div>
+                        <h3 class="font-semibold text-sm">Grasset Post. Gauche (LH) — DP Face</h3>
+                        <span class="text-xs text-warning-400">⚠️ Vue insuffisante pour OCD</span>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4 text-xs">
+                    <div class="space-y-1 text-gray-400">
+                        <div>• Fémur distal : Condyles normaux</div>
+                        <div>• Rotule : En place, contours nets</div>
+                        <div>• Interligne fémoro-tibial : Régulier</div>
+                    </div>
+                    <div class="space-y-1 text-gray-400">
+                        <div class="text-warning-400">• Trochlée : Non évaluable en DP</div>
+                        <div class="text-danger-400">• ❌ Vue latérale manquante</div>
+                        <div class="text-danger-400">• ❌ OCD non exclue</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pathologies Recherchées -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-horse-500/20 flex items-center justify-center">🔎</span>
+                Pathologies Recherchées
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-warning-500/10 rounded-lg border border-warning-500/20">
+                        <span class="text-gray-300">OCD Grasset</span>
+                        <span class="text-warning-400 font-semibold">❓ Non exclue</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-warning-500/10 rounded-lg border border-warning-500/20">
+                        <span class="text-gray-300">Éparvin (jarret)</span>
+                        <span class="text-warning-400 font-semibold">❓ Non exclu</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-horse-500/10 rounded-lg">
+                        <span class="text-gray-300">OCD Boulets</span>
+                        <span class="text-horse-400 font-semibold">❌ Non détecté</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-horse-500/10 rounded-lg">
+                        <span class="text-gray-300">OCD Jarret (talus)</span>
+                        <span class="text-horse-400 font-semibold">❌ Non détecté</span>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-horse-500/10 rounded-lg">
+                        <span class="text-gray-300">Fractures sésamoïdes</span>
+                        <span class="text-horse-400 font-semibold">❌ Non détecté</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-horse-500/10 rounded-lg">
+                        <span class="text-gray-300">Arthrose boulets</span>
+                        <span class="text-horse-400 font-semibold">❌ Non détecté</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-horse-500/10 rounded-lg">
+                        <span class="text-gray-300">Kystes osseux</span>
+                        <span class="text-horse-400 font-semibold">❌ Non détecté</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-warning-500/10 rounded-lg border border-warning-500/20">
+                        <span class="text-gray-300">Anomalie sésamoïde</span>
+                        <span class="text-warning-400 font-semibold">⚠️ À vérifier</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Limitations -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-gray-500/20 flex items-center justify-center">📋</span>
+                Limitations de l'Examen
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-horse-400 mb-3">✅ Régions examinées</h3>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li class="flex items-center gap-2"><span class="text-horse-400">•</span> Boulet antérieur gauche (LF) — 1 vue</li>
+                        <li class="flex items-center gap-2"><span class="text-horse-400">•</span> Boulet postérieur gauche (LH) — 2 vues</li>
+                        <li class="flex items-center gap-2"><span class="text-horse-400">•</span> Boulet postérieur droit (RH) — 2 vues</li>
+                        <li class="flex items-center gap-2 text-warning-400"><span>⚠️</span> Jarret gauche (LH) — 1 vue (insuffisant)</li>
+                        <li class="flex items-center gap-2 text-warning-400"><span>⚠️</span> Grasset gauche (LH) — 1 vue (insuffisant)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-danger-400 mb-3">❌ Régions NON examinées</h3>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li class="flex items-center gap-2"><span class="text-danger-400">•</span> Boulet antérieur droit (RF)</li>
+                        <li class="flex items-center gap-2"><span class="text-danger-400">•</span> Jarret droit (RH)</li>
+                        <li class="flex items-center gap-2"><span class="text-danger-400">•</span> Grasset droit (RH)</li>
+                        <li class="flex items-center gap-2"><span class="text-danger-400">•</span> Pieds / Naviculaire</li>
+                        <li class="flex items-center gap-2"><span class="text-danger-400">•</span> Genoux (carpes)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-danger-500/10 rounded-lg border border-danger-500/20">
+                <p class="text-sm text-gray-300">
+                    <strong class="text-danger-400">🚨 CRITIQUE :</strong> Les vues latérales du <strong class="text-white">jarret</strong> 
+                    et du <strong class="text-white">grasset</strong> sont <strong class="text-danger-400">indispensables</strong> 
+                    pour exclure l'éparvin et l'OCD. Ne pas conclure sans ces clichés.
+                </p>
+            </div>
+        </section>
+
+        <!-- Recommandations Urgentes -->
+        <section class="glass rounded-2xl p-6 mb-6 border border-danger-500/30">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3 text-danger-400">
+                <span class="w-10 h-10 rounded-lg bg-danger-500/20 flex items-center justify-center">🚨</span>
+                Recommandations URGENTES
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-danger-400 mb-3">📸 Clichés OBLIGATOIRES avant décision</h3>
+                    <div class="space-y-2">
+                        <div class="p-3 bg-danger-500/10 rounded-lg text-sm border border-danger-500/20">
+                            <span class="font-semibold text-white">1. Jarret LH — Vue LATÉRALE</span>
+                            <p class="text-xs text-gray-400 mt-1">Recherche éparvin (articulations distales du tarse)</p>
+                        </div>
+                        <div class="p-3 bg-danger-500/10 rounded-lg text-sm border border-danger-500/20">
+                            <span class="font-semibold text-white">2. Grasset LH — Vue LATÉRALE</span>
+                            <p class="text-xs text-gray-400 mt-1">Recherche OCD de la trochlée fémorale</p>
+                        </div>
+                        <div class="p-3 bg-warning-500/10 rounded-lg text-sm border border-warning-500/20">
+                            <span class="font-semibold text-white">3. Pieds (4) — Vues naviculaires</span>
+                            <p class="text-xs text-gray-400 mt-1">Indispensable pour tout cheval de sport</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-warning-400 mb-3">🩺 Examen clinique ciblé</h3>
+                    <div class="space-y-2">
+                        <div class="p-3 bg-gray-800/50 rounded-lg text-sm">
+                            <span class="font-semibold text-white">Flexions jarret</span>
+                            <p class="text-xs text-gray-400 mt-1">Test de Harper — recherche réactivité</p>
+                        </div>
+                        <div class="p-3 bg-gray-800/50 rounded-lg text-sm">
+                            <span class="font-semibold text-white">Flexions grasset</span>
+                            <p class="text-xs text-gray-400 mt-1">Évaluation mobilité et douleur</p>
+                        </div>
+                        <div class="p-3 bg-gray-800/50 rounded-lg text-sm">
+                            <span class="font-semibold text-white">Palpation sésamoïdes LH</span>
+                            <p class="text-xs text-gray-400 mt-1">Vérifier absence de sensibilité</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section class="glass rounded-2xl p-6 mb-6 glow-warning">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-warning-500/20 flex items-center justify-center">📝</span>
+                Conclusion
+            </h2>
+            
+            <div class="p-6 bg-gradient-to-r from-warning-500/10 to-transparent rounded-xl mb-6">
+                <div class="flex items-start gap-4">
+                    <div class="text-6xl font-black text-warning-400">7.5</div>
+                    <div class="pt-2">
+                        <div class="text-xl font-bold text-warning-400">Catégorie B</div>
+                        <div class="text-gray-400">Dossier Incomplet — À Compléter</div>
+                        <div class="text-sm text-danger-400 mt-1">2 vues critiques manquantes</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-4 text-gray-300">
+                <p class="leading-relaxed">
+                    Les 7 clichés radiographiques de <strong class="text-white">NARTAGA SOBRERO PILAR</strong> couvrent plus de régions 
+                    que le dossier de NALOUTERRA (jarret, grasset) mais les <strong class="text-danger-400">vues sont insuffisantes</strong> 
+                    pour conclure sur les pathologies les plus importantes.
+                </p>
+                
+                <p class="leading-relaxed">
+                    <strong class="text-warning-400">Trois points d'attention</strong> sont identifiés : jarret à vérifier (éparvin?), 
+                    grasset à compléter (OCD?), et sésamoïde avec contour à surveiller.
+                </p>
+                
+                <div class="p-4 bg-danger-500/10 rounded-lg border border-danger-500/20">
+                    <p class="leading-relaxed text-center">
+                        <strong class="text-danger-400">⚠️ AVIS :</strong> <strong class="text-white">Ne pas prendre de décision d'achat</strong> 
+                        sans avoir réalisé les vues latérales du jarret et du grasset.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Avertissement -->
+        <section class="glass rounded-2xl p-6 mb-6 border border-red-500/30">
+            <div class="flex items-start gap-4">
+                <span class="text-3xl">⚕️</span>
+                <div>
+                    <h2 class="text-lg font-bold text-red-400 mb-2">Avertissement Légal</h2>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Cette analyse est générée par intelligence artificielle à <strong class="text-gray-300">titre indicatif uniquement</strong>. 
+                        Elle ne constitue pas un diagnostic vétérinaire et ne peut en aucun cas se substituer à l'avis d'un 
+                        vétérinaire équin qualifié. Seul un professionnel de santé animale peut interpréter ces clichés en 
+                        corrélation avec l'examen clinique et établir un diagnostic définitif. Cette analyse ne peut servir 
+                        de base à une décision d'achat ou de vente.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Récapitulatif -->
+        <section class="glass rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-3">
+                <span class="w-10 h-10 rounded-lg bg-warning-500/20 flex items-center justify-center">📊</span>
+                Fiche Récapitulative
+            </h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                    <div class="text-gray-400 mb-1 text-xs">Cheval</div>
+                    <div class="font-bold text-warning-400 text-xs md:text-sm">NARTAGA SOBRERO PILAR</div>
+                </div>
+                <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                    <div class="text-gray-400 mb-1 text-xs">ID</div>
+                    <div class="font-bold">347</div>
+                </div>
+                <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                    <div class="text-gray-400 mb-1 text-xs">Date radios</div>
+                    <div class="font-bold">24/04/2024</div>
+                </div>
+                <div class="p-4 bg-gray-800/50 rounded-lg text-center">
+                    <div class="text-gray-400 mb-1 text-xs">Clichés</div>
+                    <div class="font-bold">7</div>
+                </div>
+                <div class="p-4 bg-warning-500/10 rounded-lg text-center border border-warning-500/20">
+                    <div class="text-gray-400 mb-1 text-xs">Score</div>
+                    <div class="font-bold text-warning-400 text-lg">7.5/10</div>
+                </div>
+                <div class="p-4 bg-warning-500/10 rounded-lg text-center border border-warning-500/20">
+                    <div class="text-gray-400 mb-1 text-xs">Classification</div>
+                    <div class="font-bold text-warning-400">B</div>
+                </div>
+                <div class="p-4 bg-danger-500/10 rounded-lg text-center border border-danger-500/20">
+                    <div class="text-gray-400 mb-1 text-xs">Vues manquantes</div>
+                    <div class="font-bold text-danger-400">2 critiques</div>
+                </div>
+                <div class="p-4 bg-warning-500/10 rounded-lg text-center border border-warning-500/20">
+                    <div class="text-gray-400 mb-1 text-xs">Points d'attention</div>
+                    <div class="font-bold text-warning-400">3</div>
+                </div>
+                <div class="p-4 bg-danger-500/10 rounded-lg text-center border border-danger-500/20">
+                    <div class="text-gray-400 mb-1 text-xs">Avis</div>
+                    <div class="font-bold text-danger-400 text-xs">À COMPLÉTER</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 text-sm py-6">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-warning-500 to-warning-400 flex items-center justify-center text-xl font-bold text-white">
+                    HV
+                </div>
+                <span class="font-semibold text-gray-300">Horse Vision AI</span>
+            </div>
+            <p class="mt-2 text-xs text-gray-600">Document test à usage professionnel uniquement</p>
+        </footer>
+
+    </div>
+</body>
+</html>
