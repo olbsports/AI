@@ -9,7 +9,7 @@ services:
     runtime: node
     region: frankfurt # Closest to France
     plan: free
-    buildCommand: pnpm install && pnpm --filter @horse-vision/api build && pnpm --filter @horse-vision/api db:generate
+    buildCommand: pnpm install && pnpm turbo build --filter=@horse-vision/api && pnpm --filter @horse-vision/api db:generate
     startCommand: pnpm --filter @horse-vision/api db:migrate && pnpm --filter @horse-vision/api start:prod
     healthCheckPath: /api/health
     envVars:
