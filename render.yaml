@@ -1,5 +1,6 @@
 # Render Blueprint - Horse Vision AI
 # https://render.com/docs/blueprint-spec
+# Using external MySQL database (o2switch)
 
 services:
   # NestJS API Backend
@@ -8,8 +9,8 @@ services:
     runtime: node
     region: frankfurt # Closest to France
     plan: free
-    buildCommand: pnpm install && pnpm --filter @horse-vision/api build
-    startCommand: pnpm --filter @horse-vision/api start:prod
+    buildCommand: pnpm install && pnpm --filter @horse-vision/api build && pnpm --filter @horse-vision/api db:generate
+    startCommand: pnpm --filter @horse-vision/api db:migrate && pnpm --filter @horse-vision/api start:prod
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -17,14 +18,14 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        fromDatabase:
-          name: horse-vision-db
-          property: connectionString
+        sync: false # MySQL URL from o2switch
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
         sync: false
       - key: STRIPE_SECRET_KEY
         sync: false
@@ -38,13 +39,7 @@ services:
         sync: false
       - key: AWS_REGION
         value: eu-west-3
-      - key: REDIS_URL
+      - key: RESEND_API_KEY
         sync: false
 
-databases:
-  # PostgreSQL Database (Free tier: 1GB, 97 days retention)
-  - name: horse-vision-db
-    plan: free
-    region: frankfurt
-    databaseName: horse_vision
-    user: horse_vision_user
+# No database section - using external MySQL on o2switch

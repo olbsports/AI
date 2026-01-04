@@ -23,7 +23,7 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "prepare": "husky install",
+    "prepare": "node -e \"try { require.resolve('husky') && require('child_process').execSync('husky install') } catch(e) {}\"",
     "db:migrate": "turbo run db:migrate --filter=@horse-vision/api",
     "db:seed": "turbo run db:seed --filter=@horse-vision/api",
     "docker:up": "docker compose up -d",
