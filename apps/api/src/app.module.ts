@@ -18,6 +18,10 @@ import { BillingModule } from './modules/billing/billing.module';
 import { TokensModule } from './modules/tokens/tokens.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { InvoicesModule } from './modules/invoices/invoices.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { ExportsModule } from './modules/exports/exports.module';
+import { MonitoringModule } from './modules/monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -58,6 +62,12 @@ import { InvoicesModule } from './modules/invoices/invoices.module';
     TokensModule,
     SubscriptionsModule,
     InvoicesModule,
+
+    // Admin & Monitoring modules
+    AdminModule,
+    AnalyticsModule,
+    ExportsModule,
+    MonitoringModule,
   ],
 })
 export class AppModule {}
