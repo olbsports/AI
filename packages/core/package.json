@@ -2,19 +2,19 @@
   "name": "@horse-vision/core",
   "version": "0.1.0",
   "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./auth": "./src/auth/index.ts",
-    "./analysis": "./src/analysis/index.ts",
-    "./billing": "./src/billing/index.ts",
-    "./utils": "./src/utils/index.ts"
+    ".": "./dist/index.js",
+    "./auth": "./dist/auth/index.js",
+    "./analysis": "./dist/analysis/index.js",
+    "./billing": "./dist/billing/index.js",
+    "./utils": "./dist/utils/index.js"
   },
   "scripts": {
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
-    "build": "echo 'No build needed - consumed as source'",
+    "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:watch": "vitest"
   },
