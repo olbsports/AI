@@ -129,7 +129,7 @@ export default function NewHorsePage() {
           <CardContent className="space-y-6">
             <div className="flex gap-6">
               <ImageUpload
-                value={formData.photoUrl || undefined}
+                value={formData.photoUrl || ''}
                 onChange={(url) =>
                   setFormData((prev) => ({ ...prev, photoUrl: url }))
                 }
