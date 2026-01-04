@@ -219,7 +219,7 @@ export default function ReportsPage() {
                     <td className="p-4">
                       <div className="flex justify-end gap-2">
                         <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/reports/${report.id}`}>
+                          <Link href={`/reports/${report.id}` as any}>
                             <Eye className="w-4 h-4" />
                           </Link>
                         </Button>
@@ -235,7 +235,7 @@ export default function ReportsPage() {
                         )}
                         {report.status === 'pending_review' && (
                           <Button size="sm" asChild>
-                            <Link href={`/reports/${report.id}/sign`}>
+                            <Link href={`/reports/${report.id}/sign` as any}>
                               Signer
                             </Link>
                           </Button>

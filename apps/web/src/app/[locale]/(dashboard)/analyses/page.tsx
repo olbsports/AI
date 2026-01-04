@@ -251,7 +251,7 @@ export default function AnalysesPage() {
                 <div className="flex gap-2">
                   {analysis.status === 'completed' && (
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/analyses/${analysis.id}`}>
+                      <Link href={`/analyses/${analysis.id}` as any}>
                         <Eye className="w-4 h-4 mr-1" />
                         Voir
                       </Link>

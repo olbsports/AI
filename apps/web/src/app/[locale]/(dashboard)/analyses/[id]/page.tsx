@@ -253,7 +253,7 @@ export default function AnalysisDetailPage() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Cheval</span>
                 <Link
-                  href={`/horses/${analysis.horse.id}`}
+                  href={`/horses/${analysis.horse.id}` as any}
                   className="text-primary hover:underline"
                 >
                   {analysis.horse.name}
