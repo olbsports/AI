@@ -352,7 +352,7 @@ export class BillingService {
     const organizations = await this.prisma.organization.findMany({
       where: {
         settings: {
-          path: ['stripeCustomerId'],
+          path: '$.stripeCustomerId',
           equals: customerId,
         },
       },
@@ -397,7 +397,7 @@ export class BillingService {
     const organizations = await this.prisma.organization.findMany({
       where: {
         settings: {
-          path: ['stripeCustomerId'],
+          path: '$.stripeCustomerId',
           equals: customerId,
         },
       },
