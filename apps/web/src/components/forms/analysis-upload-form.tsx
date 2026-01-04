@@ -62,6 +62,7 @@ export function AnalysisUploadForm({
     defaultValues: {
       horseId: preselectedHorseId || '',
       type: 'locomotion',
+      title: '',
       notes: '',
     },
   });

@@ -4,16 +4,13 @@ export { ApiProvider, useApi } from './use-api';
 // Auth
 export * from './useAuth';
 
-// Horses
-export * from './useHorses';
+// Horses - use the newer use-horses
 export * from './use-horses';
 
-// Analyses
-export * from './useAnalyses';
+// Analyses - use the newer use-analyses
 export * from './use-analyses';
 
-// Reports
-export * from './useReports';
+// Reports - use the newer use-reports
 export * from './use-reports';
 
 // Tokens

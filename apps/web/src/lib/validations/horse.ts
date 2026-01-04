@@ -31,6 +31,18 @@ export const horseSchema = z.object({
     .min(100, 'La taille doit être d\'au moins 100 cm')
     .max(250, 'La taille ne peut pas dépasser 250 cm')
     .optional(),
+  height: z
+    .number()
+    .optional(),
+  weight: z
+    .number()
+    .optional(),
+  chipNumber: z
+    .string()
+    .optional(),
+  passportNumber: z
+    .string()
+    .optional(),
   ownerName: z
     .string()
     .optional(),

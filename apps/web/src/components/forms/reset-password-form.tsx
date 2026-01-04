@@ -40,7 +40,7 @@ export function ResetPasswordForm() {
 
     setError(null);
     try {
-      await api.auth.resetPassword(token, data.password);
+      await api.auth.resetPassword({ token, password: data.password, confirmPassword: data.confirmPassword });
       setIsSuccess(true);
       setTimeout(() => {
         router.push('/auth/login');

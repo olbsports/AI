@@ -27,7 +27,7 @@ export function ForgotPasswordForm() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setError(null);
     try {
-      await api.auth.forgotPassword(data.email);
+      await api.auth.forgotPassword({ email: data.email });
       setIsSuccess(true);
     } catch (err) {
       setError(
