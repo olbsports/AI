@@ -7,12 +7,9 @@ import { ReportProcessor } from './processors/report.processor';
 import { NotificationProcessor } from './processors/notification.processor';
 import { QueueService } from './queue.service';
 import { QueueController } from './queue.controller';
+import { QUEUE_NAMES } from './queue.constants';
 
-export const QUEUE_NAMES = {
-  ANALYSIS: 'analysis',
-  REPORTS: 'reports',
-  NOTIFICATIONS: 'notifications',
-} as const;
+export { QUEUE_NAMES } from './queue.constants';
 
 @Global()
 @Module({

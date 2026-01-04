@@ -4,7 +4,7 @@ import { Job } from 'bull';
 
 import { PrismaService } from '../../../prisma/prisma.service';
 import { EmailService } from '../../email/email.service';
-import { QUEUE_NAMES } from '../queue.module';
+import { QUEUE_NAMES } from '../queue.constants';
 import { NotificationJobData } from '../queue.service';
 
 @Processor(QUEUE_NAMES.NOTIFICATIONS)

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue, Job, JobOptions } from 'bull';
-import { QUEUE_NAMES } from './queue.module';
+import { QUEUE_NAMES } from './queue.constants';
 
 export interface AnalysisJobData {
   analysisId: string;
