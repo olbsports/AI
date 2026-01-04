@@ -118,6 +118,21 @@ export const RolePermissions: Record<UserRole, Permission[]> = {
     Permissions.USER_READ,
   ],
 
+  member: [
+    Permissions.HORSE_CREATE,
+    Permissions.HORSE_READ,
+    Permissions.HORSE_UPDATE,
+    Permissions.RIDER_CREATE,
+    Permissions.RIDER_READ,
+    Permissions.RIDER_UPDATE,
+    Permissions.ANALYSIS_CREATE,
+    Permissions.ANALYSIS_READ,
+    Permissions.REPORT_READ,
+    Permissions.REPORT_SHARE,
+    Permissions.ORG_READ,
+    Permissions.USER_READ,
+  ],
+
   viewer: [
     Permissions.HORSE_READ,
     Permissions.RIDER_READ,

@@ -7,15 +7,15 @@ import type { AnalysisType } from '@horse-vision/types';
 export function calculateTokenCost(analysisType: AnalysisType): number {
   switch (analysisType) {
     case 'video_performance':
-      return TOKEN_COSTS.VIDEO_ANALYSIS;
+      return TOKEN_COSTS.VIDEO_STANDARD;
     case 'video_course':
-      return TOKEN_COSTS.COURSE_ANALYSIS;
+      return TOKEN_COSTS.VIDEO_PARCOURS;
     case 'radiological':
-      return TOKEN_COSTS.RADIO_ANALYSIS;
+      return TOKEN_COSTS.RADIO_STANDARD;
     case 'locomotion':
-      return TOKEN_COSTS.LOCOMOTION_ANALYSIS;
+      return TOKEN_COSTS.VIDEO_ADVANCED;
     default:
-      return TOKEN_COSTS.VIDEO_ANALYSIS;
+      return TOKEN_COSTS.VIDEO_STANDARD;
   }
 }
 
