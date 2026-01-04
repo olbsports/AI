@@ -15,6 +15,12 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
       "env": ["NODE_ENV"]
     },
+    "build:deploy": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "env": ["NODE_ENV", "DATABASE_URL"],
+      "cache": false
+    },
     "dev": {
       "cache": false,
       "persistent": true
