@@ -36,6 +36,37 @@ export const PLAN_LIMITS: Record<Plan, { analyses: number; horses: number; users
   enterprise: { analyses: -1, horses: -1, users: -1, tokens: -1 },
 };
 
+export const PLAN_DETAILS: Record<Plan, { monthlyPrice: number; features: string[] }> = {
+  free: {
+    monthlyPrice: 0,
+    features: ['3 analyses/mois', '1 cheval', 'Support email'],
+  },
+  starter: {
+    monthlyPrice: 19,
+    features: ['15 analyses/mois', '3 chevaux', '50 tokens inclus', 'Support email'],
+  },
+  rider: {
+    monthlyPrice: 39,
+    features: ['50 analyses/mois', '10 chevaux', '150 tokens inclus', '2 membres', 'Support prioritaire'],
+  },
+  champion: {
+    monthlyPrice: 79,
+    features: ['150 analyses/mois', '25 chevaux', '500 tokens inclus', '5 membres', 'Support prioritaire'],
+  },
+  pro: {
+    monthlyPrice: 149,
+    features: ['Analyses illimitées', '50 chevaux', '1500 tokens inclus', '10 membres', 'Accès API', 'Support dédié'],
+  },
+  elite: {
+    monthlyPrice: 299,
+    features: ['Tout illimité', '5000 tokens inclus', 'Accès API avancé', 'Support VIP', 'Formation incluse'],
+  },
+  enterprise: {
+    monthlyPrice: -1,
+    features: ['Tout illimité', 'Tokens sur mesure', 'API dédiée', 'Support 24/7', 'SLA garanti'],
+  },
+};
+
 // =============================================================================
 // TOKENS - Coût par type d'analyse
 // =============================================================================
@@ -55,6 +86,12 @@ export const TOKEN_COSTS = {
   // Services premium
   ESTIMATION_VALUE: 800, // Estimation valeur marchande
   EXPERT_REVIEW: 1000, // Avis expert humain
+
+  // Aliases pour l'interface utilisateur
+  COURSE_ANALYSIS: 150, // = VIDEO_PARCOURS
+  VIDEO_ANALYSIS: 100, // = VIDEO_STANDARD
+  RADIO_ANALYSIS: 200, // = RADIO_STANDARD
+  LOCOMOTION_ANALYSIS: 250, // = VIDEO_ADVANCED
 } as const;
 
 // =============================================================================
