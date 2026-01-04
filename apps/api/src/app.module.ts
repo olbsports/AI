@@ -14,6 +14,10 @@ import { InvitationsModule } from './modules/invitations/invitations.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { RidersModule } from './modules/riders/riders.module';
 import { QueueModule } from './modules/queue/queue.module';
+import { BillingModule } from './modules/billing/billing.module';
+import { TokensModule } from './modules/tokens/tokens.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { InvoicesModule } from './modules/invoices/invoices.module';
 
 @Module({
   imports: [
@@ -48,6 +52,12 @@ import { QueueModule } from './modules/queue/queue.module';
     InvitationsModule,
     UploadModule,
     QueueModule,
+
+    // Billing modules
+    BillingModule,
+    TokensModule,
+    SubscriptionsModule,
+    InvoicesModule,
   ],
 })
 export class AppModule {}

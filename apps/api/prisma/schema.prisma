@@ -28,12 +28,16 @@ model Organization {
   updatedAt DateTime @updatedAt
 
   // Relations
-  users            User[]
-  horses           Horse[]
-  riders           Rider[]
-  analysisSessions AnalysisSession[]
-  reports          Report[]
-  teamInvitations  TeamInvitation[]
+  users             User[]
+  horses            Horse[]
+  riders            Rider[]
+  analysisSessions  AnalysisSession[]
+  reports           Report[]
+  teamInvitations   TeamInvitation[]
+  tokenTransactions TokenTransaction[]
+  tokenReservations TokenReservation[]
+  invoices          Invoice[]
+  auditLogs         AuditLog[]
 
   @@map("organizations")
 }
@@ -327,4 +331,90 @@ model TeamInvitation {
   updatedAt DateTime @updatedAt
 
   @@map("team_invitations")
+}
+
+// ==================== TOKEN TRANSACTIONS ====================
+
+model TokenTransaction {
+  id             String   @id @default(uuid())
+
+  amount         Int      // Positive for credit, negative for debit
+  type           String   // credit, debit, transfer_in, transfer_out
+  description    String
+  metadata       Json?
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("token_transactions")
+}
+
+// ==================== TOKEN RESERVATIONS ====================
+
+model TokenReservation {
+  id             String   @id @default(uuid())
+
+  amount         Int
+  analysisId     String
+  expiresAt      DateTime
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, expiresAt])
+  @@map("token_reservations")
+}
+
+// ==================== INVOICES ====================
+
+model Invoice {
+  id              String    @id @default(uuid())
+  invoiceNumber   String    @unique
+  stripeInvoiceId String?   @unique
+
+  amount          Float
+  currency        String    @default("EUR")
+  status          String    @default("pending") // draft, pending, paid, failed, refunded
+  description     String?
+
+  paidAt          DateTime?
+  dueDate         DateTime?
+
+  invoiceUrl      String?
+  pdfUrl          String?
+
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@map("invoices")
+}
+
+// ==================== AUDIT LOGS ====================
+
+model AuditLog {
+  id             String   @id @default(uuid())
+
+  action         String
+  details        Json?
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  userId         String?
+  ipAddress      String?
+  userAgent      String?
+
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, action, createdAt])
+  @@map("audit_logs")
 }
