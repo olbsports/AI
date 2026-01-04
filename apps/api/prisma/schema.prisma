@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -100,7 +100,7 @@ model Horse {
   photoUrl       String?
 
   status         String   @default("active") // active, retired, sold, deceased
-  tags           String[] @default([])
+  tags           Json     @default("[]")
   notes          String?
 
   // Organization
@@ -165,14 +165,14 @@ model AnalysisSession {
   competition    Json?    // { name, location, level, date }
 
   // Input
-  inputMediaUrls String[]
+  inputMediaUrls Json     @default("[]")
   inputMetadata  Json?
 
   // Results
   scores          Json?    // { global, horse, rider, harmony, technique }
   obstacles       Json?    // Array of obstacle analyses
   issues          Json?    // Array of issues
-  recommendations String[]
+  recommendations Json     @default("[]")
 
   // AI
   aiAnalysis      Json?
@@ -226,7 +226,7 @@ model Report {
   // Exam metadata
   examDate         DateTime
   examTime         String?
-  veterinarians    String[] @default([])
+  veterinarians    Json     @default("[]")
   location         String?
 
   // Scores
@@ -240,11 +240,11 @@ model Report {
   pathologiesSearched Json? // Array of pathologies
 
   // Regions
-  examinedRegions  String[] @default([])
-  missingRegions   String[] @default([])
+  examinedRegions  Json     @default("[]")
+  missingRegions   Json     @default("[]")
 
   // Recommendations
-  recommendations  String[] @default([])
+  recommendations  Json     @default("[]")
   suggestedFollowUp String?
   conclusion       String?
   clinicalCorrelation String?
