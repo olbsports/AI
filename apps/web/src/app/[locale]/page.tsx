@@ -19,10 +19,10 @@ export default function HomePage() {
 
         <div className="flex gap-4 justify-center">
           <Button asChild size="lg">
-            <Link href="/auth/login">{t('login')}</Link>
+            <Link href={"/auth/login" as any}>{t('login')}</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href="/auth/register">{t('register')}</Link>
+            <Link href={"/auth/register" as any}>{t('register')}</Link>
           </Button>
         </div>
 

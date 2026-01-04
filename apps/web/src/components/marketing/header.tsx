@@ -44,13 +44,13 @@ export function Header() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <Link
-              href="/auth/login"
+              href={"/auth/login" as any}
               className="text-gray-600 hover:text-primary font-medium transition-colors"
             >
               Se connecter
             </Link>
             <Link
-              href="/auth/register"
+              href={"/auth/register" as any}
               className="bg-primary text-white px-5 py-2.5 rounded-lg font-medium hover:bg-primary/90 transition-colors"
             >
               Essai gratuit
@@ -87,14 +87,14 @@ export function Header() {
               ))}
               <hr className="my-2" />
               <Link
-                href="/auth/login"
+                href={"/auth/login" as any}
                 className="text-gray-600 hover:text-primary font-medium transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Se connecter
               </Link>
               <Link
-                href="/auth/register"
+                href={"/auth/register" as any}
                 className="bg-primary text-white px-5 py-2.5 rounded-lg font-medium hover:bg-primary/90 transition-colors text-center"
                 onClick={() => setMobileMenuOpen(false)}
               >

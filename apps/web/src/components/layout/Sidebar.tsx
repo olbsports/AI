@@ -136,7 +136,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 {organization.tokenBalance}
               </div>
               <Link
-                href="/settings/billing"
+                href={"/settings/billing" as any}
                 className="text-xs text-primary hover:underline"
               >
                 Acheter des tokens →

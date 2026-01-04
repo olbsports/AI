@@ -114,7 +114,7 @@ export default function HorsesPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/horses/new">
+          <Link href={"/horses/new" as any}>
             <Plus className="w-4 h-4 mr-2" />
             {t('add')}
           </Link>
@@ -220,7 +220,7 @@ export default function HorsesPage() {
             Commencez par ajouter votre premier cheval
           </p>
           <Button className="mt-4" asChild>
-            <Link href="/horses/new">
+            <Link href={"/horses/new" as any}>
               <Plus className="w-4 h-4 mr-2" />
               {t('add')}
             </Link>

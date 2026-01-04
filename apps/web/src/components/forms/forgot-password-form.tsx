@@ -50,7 +50,7 @@ export function ForgotPasswordForm() {
           pour réinitialiser votre mot de passe.
         </p>
         <Link
-          href="/auth/login"
+          href={"/auth/login" as any}
           className="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -117,7 +117,7 @@ export function ForgotPasswordForm() {
 
       <div className="text-center">
         <Link
-          href="/auth/login"
+          href={"/auth/login" as any}
           className="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

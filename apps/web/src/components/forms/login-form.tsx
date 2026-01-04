@@ -117,7 +117,7 @@ export function LoginForm() {
           </label>
         </div>
         <Link
-          href="/auth/forgot-password"
+          href={"/auth/forgot-password" as any}
           className="text-sm font-medium text-primary hover:text-primary/80"
         >
           Mot de passe oublié ?
@@ -142,7 +142,7 @@ export function LoginForm() {
       <p className="text-center text-sm text-gray-600">
         Pas encore de compte ?{' '}
         <Link
-          href="/auth/register"
+          href={"/auth/register" as any}
           className="font-medium text-primary hover:text-primary/80"
         >
           Créer un compte

@@ -121,7 +121,7 @@ export default function DashboardPage() {
             <Link href="/reports">Voir les rapports</Link>
           </Button>
           <Button asChild>
-            <Link href="/analyses/new">Nouvelle analyse</Link>
+            <Link href={"/analyses/new" as any}>Nouvelle analyse</Link>
           </Button>
         </div>
       </div>
@@ -253,7 +253,7 @@ export default function DashboardPage() {
                   tokens disponibles
                 </p>
                 <Button className="w-full mt-4" asChild>
-                  <Link href="/settings/billing">Acheter des tokens</Link>
+                  <Link href={"/settings/billing" as any}>Acheter des tokens</Link>
                 </Button>
               </div>
             </CardContent>
@@ -305,19 +305,19 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/horses/new">
+                <Link href={"/horses/new" as any}>
                   <span className="mr-2">🐴</span>
                   Ajouter un cheval
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/analyses/new?type=radiological">
+                <Link href={"/analyses/new?type=radiological" as any}>
                   <span className="mr-2">🩺</span>
                   Analyse radiologique
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/analyses/new?type=video_course">
+                <Link href={"/analyses/new?type=video_course" as any}>
                   <span className="mr-2">🎥</span>
                   Analyse de parcours
                 </Link>
