@@ -50,7 +50,7 @@ export default function LoginPage() {
         <h2 className="text-2xl font-bold">{t('title')}</h2>
         <p className="text-muted-foreground mt-2">
           {t('noAccount')}{' '}
-          <Link href="/auth/register" className="text-primary hover:underline">
+          <Link href={"/auth/register" as any} className="text-primary hover:underline">
             {t('register')}
           </Link>
         </p>

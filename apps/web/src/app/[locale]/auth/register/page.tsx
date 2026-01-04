@@ -82,7 +82,7 @@ export default function RegisterPage() {
         <h2 className="text-2xl font-bold">{t('title')}</h2>
         <p className="text-muted-foreground mt-2">
           {t('hasAccount')}{' '}
-          <Link href="/auth/login" className="text-primary hover:underline">
+          <Link href={"/auth/login" as any} className="text-primary hover:underline">
             {t('login')}
           </Link>
         </p>
@@ -201,11 +201,11 @@ export default function RegisterPage() {
           />
           <label htmlFor="acceptTerms" className="text-sm">
             {t('terms')}{' '}
-            <Link href="/legal/terms" className="text-primary hover:underline">
+            <Link href={"/legal/terms" as any} className="text-primary hover:underline">
               conditions d'utilisation
             </Link>{' '}
             et la{' '}
-            <Link href="/legal/privacy" className="text-primary hover:underline">
+            <Link href={"/legal/privacy" as any} className="text-primary hover:underline">
               politique de confidentialité
             </Link>
           </label>

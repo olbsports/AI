@@ -65,7 +65,7 @@ export function ResetPasswordForm() {
           Ce lien de réinitialisation est invalide ou a expiré.
         </p>
         <Link
-          href="/auth/forgot-password"
+          href={"/auth/forgot-password" as any}
           className="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80"
         >
           Demander un nouveau lien

@@ -259,7 +259,7 @@ export function RegisterForm() {
       <p className="text-center text-sm text-gray-600">
         Déjà un compte ?{' '}
         <Link
-          href="/auth/login"
+          href={"/auth/login" as any}
           className="font-medium text-primary hover:text-primary/80"
         >
           Se connecter

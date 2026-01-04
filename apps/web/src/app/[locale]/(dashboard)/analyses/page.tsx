@@ -155,7 +155,7 @@ export default function AnalysesPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/analyses/new">
+          <Link href={"/analyses/new" as any}>
             <Plus className="w-4 h-4 mr-2" />
             {t('new')}
           </Link>
@@ -285,7 +285,7 @@ export default function AnalysesPage() {
             Lancez votre première analyse pour commencer
           </p>
           <Button className="mt-4" asChild>
-            <Link href="/analyses/new">
+            <Link href={"/analyses/new" as any}>
               <Plus className="w-4 h-4 mr-2" />
               {t('new')}
             </Link>

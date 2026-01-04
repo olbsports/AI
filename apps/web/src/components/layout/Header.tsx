@@ -54,7 +54,7 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
         <div className="flex items-center gap-4">
           {/* New analysis button */}
           <Button asChild>
-            <Link href="/analyses/new">
+            <Link href={"/analyses/new" as any}>
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle analyse
             </Link>
@@ -130,7 +130,7 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border py-2">
                 <Link
-                  href="/settings/profile"
+                  href={"/settings/profile" as any}
                   className="flex items-center gap-3 px-4 py-2 hover:bg-muted"
                 >
                   <User className="w-4 h-4" />

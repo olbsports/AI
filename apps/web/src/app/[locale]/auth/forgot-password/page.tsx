@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
           Si un compte existe avec l'adresse <strong>{email}</strong>, vous recevrez
           un email avec les instructions pour réinitialiser votre mot de passe.
         </p>
-        <Link href="/auth/login">
+        <Link href={"/auth/login" as any}>
           <Button variant="outline" className="mt-4">
             Retour à la connexion
           </Button>
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
 
       <div className="text-center">
         <Link
-          href="/auth/login"
+          href={"/auth/login" as any}
           className="text-sm text-primary hover:underline"
         >
           ← Retour à la connexion
