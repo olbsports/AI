@@ -266,7 +266,7 @@ export default function HorseDetailPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Analyses récentes</CardTitle>
                 <Link
-                  href={`/analyses?horseId=${horse.id}`}
+                  href={`/analyses?horseId=${horse.id}` as any}
                   className="text-sm text-primary hover:underline"
                 >
                   Voir tout →
@@ -308,7 +308,7 @@ export default function HorseDetailPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Rapports</CardTitle>
                 <Link
-                  href={`/reports?horseId=${horse.id}`}
+                  href={`/reports?horseId=${horse.id}` as any}
                   className="text-sm text-primary hover:underline"
                 >
                   Voir tout →
