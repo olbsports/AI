@@ -121,7 +121,7 @@ export default function AnalysisDetailPage() {
             Exporter
           </Button>
           <Button asChild>
-            <Link href={`/reports?analysisId=${analysis.id}`}>
+            <Link href={`/reports?analysisId=${analysis.id}` as any}>
               <FileText className="w-4 h-4 mr-2" />
               Voir le rapport
             </Link>
@@ -333,7 +333,7 @@ export default function AnalysisDetailPage() {
                 Partager les résultats
               </Button>
               <Button variant="outline" className="w-full justify-start asChild">
-                <Link href={`/analyses/new?horseId=${analysis.horse.id}`}>
+                <Link href={`/analyses/new?horseId=${analysis.horse.id}` as any}>
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Nouvelle analyse
                 </Link>
