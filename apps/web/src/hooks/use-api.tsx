@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { createApiClient, type HorseVisionApi } from '@horse-vision/api-client';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore } from '@/stores/auth';
 
 const ApiContext = createContext<HorseVisionApi | null>(null);
 

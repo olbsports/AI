@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore } from '@/stores/auth';
 import { useApi } from '@/hooks/use-api';
 
 interface User {
