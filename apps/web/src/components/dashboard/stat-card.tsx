@@ -1,8 +1,7 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@horse-vision/ui';
+import { Card, CardContent, CardHeader, CardTitle, cn } from '@horse-vision/ui';
 import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface StatCardProps {
   title: string;
