@@ -9,6 +9,9 @@ import { HorsesModule } from './modules/horses/horses.module';
 import { AnalysisModule } from './modules/analysis/analysis.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { HealthModule } from './modules/health/health.module';
+import { EmailModule } from './modules/email/email.module';
+import { InvitationsModule } from './modules/invitations/invitations.module';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { HealthModule } from './modules/health/health.module';
     // Database
     PrismaModule,
 
+    // Core modules
+    EmailModule,
+
     // Feature modules
     AuthModule,
     UsersModule,
@@ -36,6 +42,8 @@ import { HealthModule } from './modules/health/health.module';
     AnalysisModule,
     ReportsModule,
     HealthModule,
+    InvitationsModule,
+    UploadModule,
   ],
 })
 export class AppModule {}

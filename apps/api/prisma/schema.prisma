@@ -33,6 +33,7 @@ model Organization {
   riders           Rider[]
   analysisSessions AnalysisSession[]
   reports          Report[]
+  teamInvitations  TeamInvitation[]
 
   @@map("organizations")
 }
@@ -68,8 +69,10 @@ model User {
   updatedAt      DateTime @updatedAt
 
   // Relations
-  createdAnalyses AnalysisSession[]
-  reviewedReports Report[]          @relation("ReviewedBy")
+  createdAnalyses         AnalysisSession[]
+  reviewedReports         Report[]          @relation("ReviewedBy")
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 
   @@map("users")
 }
@@ -273,4 +276,55 @@ model Report {
   updatedAt        DateTime @updatedAt
 
   @@map("reports")
+}
+
+// ==================== PASSWORD RESET TOKENS ====================
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+// ==================== EMAIL VERIFICATION TOKENS ====================
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("email_verification_tokens")
+}
+
+// ==================== TEAM INVITATIONS ====================
+
+model TeamInvitation {
+  id        String   @id @default(uuid())
+  email     String
+  role      String   @default("viewer")
+  token     String   @unique
+  expiresAt DateTime
+  status    String   @default("pending") // pending, accepted, expired, cancelled
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  invitedById    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("team_invitations")
 }
