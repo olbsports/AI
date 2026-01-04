@@ -17,6 +17,9 @@ export const analysisSchema = z.object({
   riderId: z
     .string()
     .optional(),
+  notes: z
+    .string()
+    .optional(),
   competition: z.object({
     name: z.string().optional(),
     location: z.string().optional(),
