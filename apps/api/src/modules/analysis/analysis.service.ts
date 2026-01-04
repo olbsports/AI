@@ -81,7 +81,12 @@ export class AnalysisService {
     // Create analysis session
     const analysis = await this.prisma.analysisSession.create({
       data: {
-        ...data,
+        type: data.type,
+        title: data.title,
+        horseId: data.horseId,
+        riderId: data.riderId,
+        competition: data.competition as any,
+        inputMediaUrls: data.inputMediaUrls,
         organizationId,
         createdById: userId,
         status: 'pending',
