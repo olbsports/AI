@@ -29,7 +29,7 @@ export default function HorseDetailPage() {
 
   // Mock data - will be replaced with real API call
   const horse = {
-    id: params.id,
+    id: params['id'],
     name: 'Thunder',
     sireId: 'FRA12345678',
     ueln: '250123456789012',

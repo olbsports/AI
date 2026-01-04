@@ -39,7 +39,7 @@ export default function ReportDetailPage() {
 
   // Mock data - will be replaced with real API call
   const report = {
-    id: params.id,
+    id: params['id'],
     reportNumber: 'HV-RADIO-348',
     type: 'radiological',
     status: 'pending_review',
