@@ -195,12 +195,12 @@ export default function HorsesPage() {
                   </span>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/horses/${horse.id}`}>
+                      <Link href={`/horses/${horse.id}` as any}>
                         <Eye className="w-4 h-4" />
                       </Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/horses/${horse.id}/edit`}>
+                      <Link href={`/horses/${horse.id}/edit` as any}>
                         <Edit className="w-4 h-4" />
                       </Link>
                     </Button>

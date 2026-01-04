@@ -143,13 +143,13 @@ export default function HorseDetailPage() {
             Archiver
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/horses/${horse.id}/edit`}>
+            <Link href={`/horses/${horse.id}/edit` as any}>
               <Edit className="w-4 h-4 mr-2" />
               Modifier
             </Link>
           </Button>
           <Button asChild>
-            <Link href={`/analyses/new?horseId=${horse.id}`}>
+            <Link href={`/analyses/new?horseId=${horse.id}` as any}>
               <Video className="w-4 h-4 mr-2" />
               Nouvelle analyse
             </Link>
@@ -278,7 +278,7 @@ export default function HorseDetailPage() {
                 {recentAnalyses.map((analysis) => (
                   <Link
                     key={analysis.id}
-                    href={`/analyses/${analysis.id}`}
+                    href={`/analyses/${analysis.id}` as any}
                     className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -320,7 +320,7 @@ export default function HorseDetailPage() {
                 {recentReports.map((report) => (
                   <Link
                     key={report.id}
-                    href={`/reports/${report.id}`}
+                    href={`/reports/${report.id}` as any}
                     className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-3">

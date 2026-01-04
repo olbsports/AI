@@ -181,7 +181,7 @@ export default function DashboardPage() {
                 {recentAnalyses.map((analysis) => (
                   <Link
                     key={analysis.id}
-                    href={`/analyses/${analysis.id}`}
+                    href={`/analyses/${analysis.id}` as any}
                     className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted transition-colors"
                   >
                     <div
@@ -272,7 +272,7 @@ export default function DashboardPage() {
                 {pendingReports.map((report) => (
                   <Link
                     key={report.id}
-                    href={`/reports/${report.id}`}
+                    href={`/reports/${report.id}` as any}
                     className="block p-3 rounded-lg border hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center justify-between">
