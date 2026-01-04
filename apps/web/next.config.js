@@ -21,11 +21,21 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.cloudfront.net',
       },
+      {
+        protocol: 'https',
+        hostname: '*.vercel.app',
+      },
     ],
   },
   experimental: {
     typedRoutes: true,
   },
+  // Production optimizations
+  poweredByHeader: false,
+  compress: true,
+  reactStrictMode: true,
+  // Enable standalone output for containerized deployments
+  output: process.env.STANDALONE === 'true' ? 'standalone' : undefined,
 };
 
 module.exports = withNextIntl(nextConfig);
