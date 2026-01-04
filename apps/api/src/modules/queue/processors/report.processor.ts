@@ -4,7 +4,7 @@ import { Job } from 'bull';
 import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from '../../../prisma/prisma.service';
-import { QUEUE_NAMES } from '../queue.module';
+import { QUEUE_NAMES } from '../queue.constants';
 import { ReportJobData } from '../queue.service';
 
 @Processor(QUEUE_NAMES.REPORTS)
