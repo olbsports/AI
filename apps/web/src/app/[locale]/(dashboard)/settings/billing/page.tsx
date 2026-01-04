@@ -21,7 +21,7 @@ import {
   Badge,
 } from '@horse-vision/ui';
 import { useAuthStore } from '@/stores/auth';
-import { PLANS, PLAN_LIMITS, TOKEN_COSTS } from '@horse-vision/config';
+import { PLANS, PLAN_LIMITS, PLAN_DETAILS, TOKEN_COSTS } from '@horse-vision/config';
 import { formatTokenBalance, calculateTokenPrice } from '@horse-vision/core';
 
 export default function BillingSettingsPage() {
@@ -91,29 +91,29 @@ export default function BillingSettingsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <p className="text-2xl font-bold">
-                {planLimits.analysesPerMonth === -1
+                {planLimits.analyses === -1
                   ? '∞'
-                  : planLimits.analysesPerMonth}
+                  : planLimits.analyses}
               </p>
               <p className="text-sm text-muted-foreground">Analyses/mois</p>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <p className="text-2xl font-bold">
-                {planLimits.maxHorses === -1 ? '∞' : planLimits.maxHorses}
+                {planLimits.horses === -1 ? '∞' : planLimits.horses}
               </p>
               <p className="text-sm text-muted-foreground">Chevaux max</p>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <p className="text-2xl font-bold">
-                {planLimits.teamMembers === -1 ? '∞' : planLimits.teamMembers}
+                {planLimits.users === -1 ? '∞' : planLimits.users}
               </p>
               <p className="text-sm text-muted-foreground">Membres</p>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <p className="text-2xl font-bold">
-                {planLimits.apiAccess ? '✓' : '✗'}
+                {planLimits.tokens === -1 ? '∞' : planLimits.tokens}
               </p>
-              <p className="text-sm text-muted-foreground">Accès API</p>
+              <p className="text-sm text-muted-foreground">Tokens inclus</p>
             </div>
           </div>
 
@@ -290,44 +290,44 @@ export default function BillingSettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(PLANS).map(([key, plan]) => (
+            {Object.entries(PLAN_DETAILS).slice(0, 6).map(([planKey, details]) => (
               <div
-                key={key}
+                key={planKey}
                 className={`p-6 rounded-lg border-2 ${
-                  currentPlan === key
+                  currentPlan === planKey
                     ? 'border-primary bg-primary/5'
                     : 'border-muted'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-4">
-                  {key === 'enterprise' ? (
+                  {planKey === 'enterprise' ? (
                     <Building2 className="w-5 h-5 text-primary" />
                   ) : (
                     <Zap className="w-5 h-5 text-primary" />
                   )}
-                  <h3 className="font-semibold capitalize">{key}</h3>
+                  <h3 className="font-semibold capitalize">{planKey}</h3>
                 </div>
                 <p className="text-3xl font-bold mb-4">
-                  {plan.monthlyPrice === 0
+                  {details.monthlyPrice === 0
                     ? 'Gratuit'
-                    : plan.monthlyPrice === -1
+                    : details.monthlyPrice === -1
                     ? 'Sur devis'
-                    : `${plan.monthlyPrice}€/mois`}
+                    : `${details.monthlyPrice}€/mois`}
                 </p>
                 <ul className="space-y-2 text-sm">
-                  {plan.features.slice(0, 5).map((feature, i) => (
+                  {details.features.slice(0, 5).map((feature, i) => (
                     <li key={i} className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-green-500" />
                       {feature}
                     </li>
                   ))}
                 </ul>
-                {currentPlan !== key && (
+                {currentPlan !== planKey && (
                   <Button
                     className="w-full mt-4"
-                    variant={key === 'enterprise' ? 'outline' : 'default'}
+                    variant={planKey === 'enterprise' ? 'outline' : 'default'}
                   >
-                    {key === 'enterprise' ? 'Contacter' : 'Upgrader'}
+                    {planKey === 'enterprise' ? 'Contacter' : 'Upgrader'}
                   </Button>
                 )}
               </div>
