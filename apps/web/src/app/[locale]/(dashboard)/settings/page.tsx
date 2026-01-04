@@ -95,7 +95,7 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
             <div className="flex gap-6">
               <ImageUpload
-                value={formData.avatarUrl || undefined}
+                value={formData.avatarUrl || ''}
                 onChange={(url) =>
                   setFormData((prev) => ({ ...prev, avatarUrl: url }))
                 }

@@ -28,7 +28,8 @@ const nextConfig = {
     ],
   },
   experimental: {
-    typedRoutes: true,
+    // typedRoutes disabled - too strict for this codebase
+    typedRoutes: false,
   },
   // Production optimizations
   poweredByHeader: false,
