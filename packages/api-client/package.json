@@ -10,7 +10,7 @@
   "scripts": {
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
-    "build": "tsc"
+    "build": "echo 'api-client is consumed as TypeScript source'"
   },
   "dependencies": {
     "@horse-vision/types": "workspace:*",
