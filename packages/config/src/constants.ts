@@ -181,8 +181,12 @@ export const LOCALES = [
   'ar-SA',
 ] as const;
 
-export type Locale = (typeof LOCALES)[number];
+// Simplified locales for next-intl (fr, en, etc.)
+export const SUPPORTED_LOCALES = ['fr', 'en'] as const;
 
-export const DEFAULT_LOCALE: Locale = 'fr-FR';
+export type Locale = (typeof LOCALES)[number];
+export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
+
+export const DEFAULT_LOCALE: SupportedLocale = 'fr';
 
 export const RTL_LOCALES: Locale[] = ['ar-SA'];
