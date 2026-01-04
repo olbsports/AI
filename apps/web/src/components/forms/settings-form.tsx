@@ -67,7 +67,7 @@ export function SettingsForm() {
     setPasswordError(null);
     setPasswordSuccess(false);
     try {
-      await api.auth.changePassword(data.currentPassword, data.newPassword);
+      await api.auth.changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword, confirmPassword: data.confirmPassword });
       setPasswordSuccess(true);
       reset();
       setTimeout(() => setPasswordSuccess(false), 3000);
