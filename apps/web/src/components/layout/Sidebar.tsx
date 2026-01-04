@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
-  Horse,
+  Rabbit,
   Video,
   FileText,
   Settings,
@@ -26,7 +26,7 @@ interface SidebarProps {
 
 const navigation = [
   { name: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'horses', href: '/horses', icon: Horse },
+  { name: 'horses', href: '/horses', icon: Rabbit },
   { name: 'analyses', href: '/analyses', icon: Video },
   { name: 'reports', href: '/reports', icon: FileText },
 ];

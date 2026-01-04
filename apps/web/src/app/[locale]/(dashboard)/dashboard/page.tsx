@@ -9,7 +9,7 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
-  Horse,
+  Rabbit,
   Clock,
 } from 'lucide-react';
 
@@ -50,7 +50,7 @@ export default function DashboardPage() {
       value: '45',
       change: '+3',
       trend: 'up',
-      icon: Horse,
+      icon: Rabbit,
     },
     {
       name: 'Tokens utilisés',
@@ -306,7 +306,7 @@ export default function DashboardPage() {
             <CardContent className="space-y-2">
               <Button variant="outline" className="w-full justify-start" asChild>
                 <Link href="/horses/new">
-                  <Horse className="w-4 h-4 mr-2" />
+                  <span className="mr-2">🐴</span>
                   Ajouter un cheval
                 </Link>
               </Button>

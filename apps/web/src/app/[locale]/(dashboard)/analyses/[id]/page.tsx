@@ -31,7 +31,7 @@ export default function AnalysisDetailPage() {
 
   // Mock data - will be replaced with real API call
   const analysis = {
-    id: params.id,
+    id: params['id'],
     title: 'CSI*** Grand Prix Bordeaux',
     type: 'video_course',
     status: 'completed',
