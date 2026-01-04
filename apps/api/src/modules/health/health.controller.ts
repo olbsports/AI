@@ -13,28 +13,21 @@ export class HealthController {
   @Public()
   @ApiOperation({ summary: 'Health check' })
   async check() {
-    const services = {
-      database: 'ok' as const,
-      redis: 'ok' as const,
-      storage: 'ok' as const,
-    };
+    let dbStatus = 'ok';
 
-    // Check database
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      await this.prisma.$queryRawUnsafe('SELECT 1');
     } catch {
-      services.database = 'error' as const;
+      dbStatus = 'error';
     }
 
-    // TODO: Check Redis and Storage
-
-    const allOk = Object.values(services).every((s) => s === 'ok');
-
     return {
-      status: allOk ? 'ok' : 'degraded',
-      version: process.env.npm_package_version ?? '0.1.0',
+      status: dbStatus === 'ok' ? 'ok' : 'degraded',
+      version: '0.1.0',
       timestamp: new Date().toISOString(),
-      services,
+      services: {
+        database: dbStatus,
+      },
     };
   }
 
@@ -50,7 +43,7 @@ export class HealthController {
   @ApiOperation({ summary: 'Readiness probe' })
   async ready() {
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      await this.prisma.$queryRawUnsafe('SELECT 1');
       return { status: 'ok' };
     } catch {
       return { status: 'error' };

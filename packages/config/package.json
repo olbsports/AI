@@ -12,6 +12,7 @@
     "eslint-next.js"
   ],
   "scripts": {
+    "build": "echo 'No build needed - consumed as source'",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit"
   },

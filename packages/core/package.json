@@ -14,7 +14,7 @@
   "scripts": {
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
-    "build": "tsc",
+    "build": "echo 'No build needed - consumed as source'",
     "test": "vitest run",
     "test:watch": "vitest"
   },
