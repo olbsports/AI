@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Base",
+  "compilerOptions": {
+    // Type Checking
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Modules
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    // Emit
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmit": false,
+
+    // JavaScript Support
+    "allowJs": true,
+    "checkJs": false,
+
+    // Interop Constraints
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    // Language and Environment
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "skipLibCheck": true,
+
+    // Paths (to be extended)
+    "baseUrl": ".",
+    "paths": {
+      "@horse-vision/ui": ["packages/ui/src/index.ts"],
+      "@horse-vision/ui/*": ["packages/ui/src/*"],
+      "@horse-vision/core": ["packages/core/src/index.ts"],
+      "@horse-vision/core/*": ["packages/core/src/*"],
+      "@horse-vision/types": ["packages/types/src/index.ts"],
+      "@horse-vision/types/*": ["packages/types/src/*"],
+      "@horse-vision/api-client": ["packages/api-client/src/index.ts"],
+      "@horse-vision/api-client/*": ["packages/api-client/src/*"],
+      "@horse-vision/config": ["packages/config/src/index.ts"],
+      "@horse-vision/config/*": ["packages/config/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", ".next", ".turbo"]
+}

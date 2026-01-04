@@ -1,0 +1,73 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
+
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { HorsesModule } from './modules/horses/horses.module';
+import { AnalysisModule } from './modules/analysis/analysis.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { HealthModule } from './modules/health/health.module';
+import { EmailModule } from './modules/email/email.module';
+import { InvitationsModule } from './modules/invitations/invitations.module';
+import { UploadModule } from './modules/upload/upload.module';
+import { RidersModule } from './modules/riders/riders.module';
+import { QueueModule } from './modules/queue/queue.module';
+import { BillingModule } from './modules/billing/billing.module';
+import { TokensModule } from './modules/tokens/tokens.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { InvoicesModule } from './modules/invoices/invoices.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { ExportsModule } from './modules/exports/exports.module';
+import { MonitoringModule } from './modules/monitoring/monitoring.module';
+
+@Module({
+  imports: [
+    // Configuration
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
+    }),
+
+    // Rate limiting
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests per minute
+      },
+    ]),
+
+    // Database
+    PrismaModule,
+
+    // Core modules
+    EmailModule,
+
+    // Feature modules
+    AuthModule,
+    UsersModule,
+    HorsesModule,
+    RidersModule,
+    AnalysisModule,
+    ReportsModule,
+    HealthModule,
+    InvitationsModule,
+    UploadModule,
+    QueueModule,
+
+    // Billing modules
+    BillingModule,
+    TokensModule,
+    SubscriptionsModule,
+    InvoicesModule,
+
+    // Admin & Monitoring modules
+    AdminModule,
+    AnalyticsModule,
+    ExportsModule,
+    MonitoringModule,
+  ],
+})
+export class AppModule {}

@@ -1,0 +1,420 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ORGANIZATIONS ====================
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String?  @unique
+  logoUrl   String?
+
+  // Subscription
+  plan           String   @default("starter") // starter, professional, enterprise
+  subscriptionId String?
+  tokenBalance   Int      @default(0)
+
+  // Settings
+  settings  Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users             User[]
+  horses            Horse[]
+  riders            Rider[]
+  analysisSessions  AnalysisSession[]
+  reports           Report[]
+  teamInvitations   TeamInvitation[]
+  tokenTransactions TokenTransaction[]
+  tokenReservations TokenReservation[]
+  invoices          Invoice[]
+  auditLogs         AuditLog[]
+
+  @@map("organizations")
+}
+
+// ==================== USERS ====================
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  avatarUrl      String?
+  role           String   @default("viewer") // owner, admin, veterinarian, analyst, viewer
+  isActive       Boolean  @default(true)
+  emailVerified  Boolean  @default(false)
+
+  // 2FA
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
+
+  // Preferences
+  preferences    Json?
+  locale         String   @default("fr")
+
+  // Organization
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  lastLoginAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  createdAnalyses         AnalysisSession[]
+  reviewedReports         Report[]          @relation("ReviewedBy")
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+
+  @@map("users")
+}
+
+// ==================== HORSES ====================
+
+model Horse {
+  id             String   @id @default(uuid())
+  name           String
+  sireId         String?  // Numéro SIRE
+  ueln           String?  // Universal Equine Life Number
+  microchip      String?
+
+  gender         String   // male, female, gelding
+  birthDate      DateTime?
+  breed          String?
+  color          String?
+  heightCm       Int?
+
+  ownerName      String?
+  photoUrl       String?
+
+  status         String   @default("active") // active, retired, sold, deceased
+  tags           String[] @default([])
+  notes          String?
+
+  // Organization
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Rider
+  riderId        String?
+  rider          Rider?   @relation(fields: [riderId], references: [id], onDelete: SetNull)
+
+  // Timestamps
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  analysisSessions AnalysisSession[]
+  reports          Report[]
+
+  @@map("horses")
+}
+
+// ==================== RIDERS ====================
+
+model Rider {
+  id             String   @id @default(uuid())
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  photoUrl       String?
+
+  federationId   String?
+  federationName String?
+  level          String?
+  discipline     String?
+
+  // Organization
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  horses           Horse[]
+  analysisSessions AnalysisSession[]
+
+  @@map("riders")
+}
+
+// ==================== ANALYSIS SESSIONS ====================
+
+model AnalysisSession {
+  id             String   @id @default(uuid())
+
+  // Type and status
+  type           String   // video_performance, video_course, radiological, locomotion
+  status         String   @default("pending") // pending, processing, completed, failed, cancelled
+
+  title          String
+  competition    Json?    // { name, location, level, date }
+
+  // Input
+  inputMediaUrls String[]
+  inputMetadata  Json?
+
+  // Results
+  scores          Json?    // { global, horse, rider, harmony, technique }
+  obstacles       Json?    // Array of obstacle analyses
+  issues          Json?    // Array of issues
+  recommendations String[]
+
+  // AI
+  aiAnalysis      Json?
+  confidenceScore Float?
+
+  // Processing
+  startedAt       DateTime?
+  completedAt     DateTime?
+  processingTimeMs Int?
+  errorMessage    String?
+
+  // Billing
+  tokensConsumed  Int      @default(0)
+
+  // Organization
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Horse
+  horseId         String?
+  horse           Horse?   @relation(fields: [horseId], references: [id], onDelete: SetNull)
+
+  // Rider
+  riderId         String?
+  rider           Rider?   @relation(fields: [riderId], references: [id], onDelete: SetNull)
+
+  // Created by
+  createdById     String
+  createdBy       User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  report          Report?
+
+  @@map("analysis_sessions")
+}
+
+// ==================== REPORTS ====================
+
+model Report {
+  id               String   @id @default(uuid())
+  reportNumber     String   @unique // HV-RADIO-348
+
+  // Type and status
+  type             String   // course_analysis, radiological, locomotion, purchase_exam
+  status           String   @default("draft") // draft, pending_review, completed, archived
+
+  // Exam metadata
+  examDate         DateTime
+  examTime         String?
+  veterinarians    String[] @default([])
+  location         String?
+
+  // Scores
+  globalScore      Float?
+  category         String?  // A, A-, B+, B, B-, C, D
+  categoryDescription String?
+
+  // Radiological content
+  images           Json?    // Array of radiographic images
+  attentionPoints  Json?    // Array of attention points
+  pathologiesSearched Json? // Array of pathologies
+
+  // Regions
+  examinedRegions  String[] @default([])
+  missingRegions   String[] @default([])
+
+  // Recommendations
+  recommendations  String[] @default([])
+  suggestedFollowUp String?
+  conclusion       String?
+  clinicalCorrelation String?
+
+  // Generated files
+  htmlReportUrl    String?
+  pdfReportUrl     String?
+
+  // Signature
+  reviewedById     String?
+  reviewedBy       User?    @relation("ReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt       DateTime?
+  digitalSignature String?
+
+  // Sharing
+  shareToken       String?  @unique
+  shareExpiresAt   DateTime?
+
+  // Organization
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Analysis Session
+  analysisSessionId String  @unique
+  analysisSession   AnalysisSession @relation(fields: [analysisSessionId], references: [id], onDelete: Cascade)
+
+  // Horse
+  horseId          String?
+  horse            Horse?   @relation(fields: [horseId], references: [id], onDelete: SetNull)
+
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("reports")
+}
+
+// ==================== PASSWORD RESET TOKENS ====================
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+// ==================== EMAIL VERIFICATION TOKENS ====================
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("email_verification_tokens")
+}
+
+// ==================== TEAM INVITATIONS ====================
+
+model TeamInvitation {
+  id        String   @id @default(uuid())
+  email     String
+  role      String   @default("viewer")
+  token     String   @unique
+  expiresAt DateTime
+  status    String   @default("pending") // pending, accepted, expired, cancelled
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  invitedById    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("team_invitations")
+}
+
+// ==================== TOKEN TRANSACTIONS ====================
+
+model TokenTransaction {
+  id             String   @id @default(uuid())
+
+  amount         Int      // Positive for credit, negative for debit
+  type           String   // credit, debit, transfer_in, transfer_out
+  description    String
+  metadata       Json?
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("token_transactions")
+}
+
+// ==================== TOKEN RESERVATIONS ====================
+
+model TokenReservation {
+  id             String   @id @default(uuid())
+
+  amount         Int
+  analysisId     String
+  expiresAt      DateTime
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, expiresAt])
+  @@map("token_reservations")
+}
+
+// ==================== INVOICES ====================
+
+model Invoice {
+  id              String    @id @default(uuid())
+  invoiceNumber   String    @unique
+  stripeInvoiceId String?   @unique
+
+  amount          Float
+  currency        String    @default("EUR")
+  status          String    @default("pending") // draft, pending, paid, failed, refunded
+  description     String?
+
+  paidAt          DateTime?
+  dueDate         DateTime?
+
+  invoiceUrl      String?
+  pdfUrl          String?
+
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@map("invoices")
+}
+
+// ==================== AUDIT LOGS ====================
+
+model AuditLog {
+  id             String   @id @default(uuid())
+
+  action         String
+  details        Json?
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  userId         String?
+  ipAddress      String?
+  userAgent      String?
+
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, action, createdAt])
+  @@map("audit_logs")
+}
