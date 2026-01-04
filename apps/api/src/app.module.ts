@@ -12,6 +12,8 @@ import { HealthModule } from './modules/health/health.module';
 import { EmailModule } from './modules/email/email.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { RidersModule } from './modules/riders/riders.module';
+import { QueueModule } from './modules/queue/queue.module';
 
 @Module({
   imports: [
@@ -39,11 +41,13 @@ import { UploadModule } from './modules/upload/upload.module';
     AuthModule,
     UsersModule,
     HorsesModule,
+    RidersModule,
     AnalysisModule,
     ReportsModule,
     HealthModule,
     InvitationsModule,
     UploadModule,
+    QueueModule,
   ],
 })
 export class AppModule {}
