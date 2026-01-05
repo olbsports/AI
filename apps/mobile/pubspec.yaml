@@ -46,7 +46,7 @@ dependencies:
   fl_chart: ^0.66.0
 
   # Utils
-  intl: ^0.18.1
+  intl: ^0.20.2
   url_launcher: ^6.2.2
   share_plus: ^7.2.1
   package_info_plus: ^5.0.1
