@@ -352,6 +352,40 @@ class ApiService {
     return List<Map<String, dynamic>>.from(response.data);
   }
 
+  // ==================== SUBSCRIPTIONS ====================
+
+  Future<List<Map<String, dynamic>>> getPlans() async {
+    final response = await _dio.get('/subscriptions/plans');
+    return List<Map<String, dynamic>>.from(response.data);
+  }
+
+  Future<Map<String, dynamic>> getCurrentSubscription() async {
+    final response = await _dio.get('/subscriptions/current');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> upgradePlan(String planId) async {
+    final response = await _dio.post('/subscriptions/upgrade', data: {
+      'planId': planId,
+    });
+    return response.data;
+  }
+
+  Future<void> cancelSubscription() async {
+    await _dio.post('/subscriptions/cancel');
+  }
+
+  Future<void> reactivateSubscription() async {
+    await _dio.post('/subscriptions/reactivate');
+  }
+
+  // ==================== INVOICES ====================
+
+  Future<List<Map<String, dynamic>>> getInvoices() async {
+    final response = await _dio.get('/invoices');
+    return List<Map<String, dynamic>>.from(response.data);
+  }
+
   // ==================== DASHBOARD ====================
 
   Future<Map<String, dynamic>> getDashboardStats() async {
