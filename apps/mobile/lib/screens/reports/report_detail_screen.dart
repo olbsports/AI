@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../models/report.dart';
 import '../../providers/reports_provider.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/error_view.dart';
 
@@ -492,13 +494,117 @@ class ReportDetailScreen extends ConsumerWidget {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  void _shareReport(BuildContext context, Report report) {
-    if (report.pdfUrl != null) {
-      Share.share(
-        'Rapport ${report.title ?? _typeLabel(report.type)}: ${report.pdfUrl}',
-        subject: 'Rapport Horse Vision AI',
+  Future<void> _shareReport(BuildContext context, Report report) async {
+    try {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Get the API service from the ref
+      final apiService = ProviderScope.containerOf(context).read(apiServiceProvider);
+
+      // Call API to generate share link (7 days expiration)
+      final shareUrl = await apiService.shareReport(report.id, expirationDays: 7);
+
+      if (!context.mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show share dialog with options
+      _showShareDialog(context, shareUrl, report);
+    } catch (e) {
+      if (!context.mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors de la création du lien: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
+  }
+
+  void _showShareDialog(BuildContext context, String shareUrl, Report report) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Partager le rapport'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Lien de partage généré avec succès. Ce lien expirera dans 7 jours.',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      shareUrl,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: shareUrl));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Lien copié dans le presse-papiers'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    tooltip: 'Copier',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              Share.share(
+                'Consultez ce rapport : $shareUrl',
+                subject: 'Rapport ${report.title ?? _typeLabel(report.type)} - Horse Vision AI',
+              );
+            },
+            icon: const Icon(Icons.share),
+            label: const Text('Partager'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _downloadReport(BuildContext context, Report report) {

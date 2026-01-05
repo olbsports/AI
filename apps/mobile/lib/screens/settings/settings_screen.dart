@@ -42,6 +42,13 @@ class SettingsScreen extends ConsumerWidget {
           ),
           _buildSettingsTile(
             context,
+            icon: Icons.person_outline,
+            title: 'Cavaliers',
+            subtitle: 'Gérer les cavaliers',
+            onTap: () => context.push('/riders'),
+          ),
+          _buildSettingsTile(
+            context,
             icon: Icons.payment_outlined,
             title: 'Abonnement',
             subtitle: 'Gérer votre abonnement',

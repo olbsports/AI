@@ -10,6 +10,9 @@ import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/horses/horses_screen.dart';
 import 'screens/horses/horse_detail_screen.dart';
 import 'screens/horses/horse_form_screen.dart';
+import 'screens/riders/riders_screen.dart';
+import 'screens/riders/rider_detail_screen.dart';
+import 'screens/riders/rider_form_screen.dart';
 import 'screens/reports/new_report_screen.dart';
 import 'screens/analyses/analyses_screen.dart';
 import 'screens/analyses/analysis_detail_screen.dart';
@@ -102,6 +105,30 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'edit',
                     builder: (context, state) => HorseFormScreen(
                       horseId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/riders',
+            builder: (context, state) => const RidersScreen(),
+            routes: [
+              GoRoute(
+                path: 'add',
+                builder: (context, state) => const RiderFormScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => RiderDetailScreen(
+                  riderId: state.pathParameters['id']!,
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) => RiderFormScreen(
+                      riderId: state.pathParameters['id']!,
                     ),
                   ),
                 ],
