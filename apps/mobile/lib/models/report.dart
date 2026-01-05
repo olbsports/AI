@@ -3,6 +3,12 @@ enum ReportType {
   locomotion,
   courseAnalysis,
   purchaseExam,
+  // Legacy values for compatibility
+  progress,
+  veterinary,
+  training,
+  competition,
+  health,
 }
 
 enum ReportStatus {
@@ -11,6 +17,10 @@ enum ReportStatus {
   approved,
   rejected,
   archived,
+  // Legacy values for compatibility
+  generating,
+  ready,
+  failed,
 }
 
 class Report {
@@ -31,6 +41,10 @@ class Report {
   final String? category;
   final DateTime createdAt;
   final DateTime updatedAt;
+  // Additional fields for screens
+  final List<dynamic>? analyses;
+  final DateTime? generatedAt;
+  final String? pdfUrl;
 
   Report({
     required this.id,
@@ -50,6 +64,9 @@ class Report {
     this.category,
     required this.createdAt,
     required this.updatedAt,
+    this.analyses,
+    this.generatedAt,
+    this.pdfUrl,
   });
 
   String get typeLabel {
@@ -62,6 +79,16 @@ class Report {
         return 'Analyse de parcours';
       case ReportType.purchaseExam:
         return 'Visite d\'achat';
+      case ReportType.progress:
+        return 'Progression';
+      case ReportType.veterinary:
+        return 'Vétérinaire';
+      case ReportType.training:
+        return 'Entraînement';
+      case ReportType.competition:
+        return 'Compétition';
+      case ReportType.health:
+        return 'Santé';
     }
   }
 
@@ -77,6 +104,12 @@ class Report {
         return 'Rejeté';
       case ReportStatus.archived:
         return 'Archivé';
+      case ReportStatus.generating:
+        return 'Génération en cours';
+      case ReportStatus.ready:
+        return 'Prêt';
+      case ReportStatus.failed:
+        return 'Échoué';
     }
   }
 
@@ -113,6 +146,11 @@ class Report {
       category: json['category'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      analyses: json['analyses'] as List<dynamic>?,
+      generatedAt: json['generatedAt'] != null
+          ? DateTime.parse(json['generatedAt'] as String)
+          : null,
+      pdfUrl: json['pdfUrl'] as String?,
     );
   }
 
@@ -126,6 +164,16 @@ class Report {
         return ReportType.courseAnalysis;
       case 'purchase_exam':
         return ReportType.purchaseExam;
+      case 'progress':
+        return ReportType.progress;
+      case 'veterinary':
+        return ReportType.veterinary;
+      case 'training':
+        return ReportType.training;
+      case 'competition':
+        return ReportType.competition;
+      case 'health':
+        return ReportType.health;
       default:
         return ReportType.locomotion;
     }

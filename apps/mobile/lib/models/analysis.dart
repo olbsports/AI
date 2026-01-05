@@ -3,6 +3,12 @@ enum AnalysisType {
   videoCourse,
   radiological,
   locomotion,
+  // Legacy values for compatibility
+  jump,
+  posture,
+  conformation,
+  course,
+  video,
 }
 
 enum AnalysisStatus {
@@ -32,6 +38,10 @@ class Analysis {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? completedAt;
+  // Additional fields for screens
+  final String? thumbnailUrl;
+  final String? videoUrl;
+  final String? notes;
 
   Analysis({
     required this.id,
@@ -52,6 +62,9 @@ class Analysis {
     required this.createdAt,
     required this.updatedAt,
     this.completedAt,
+    this.thumbnailUrl,
+    this.videoUrl,
+    this.notes,
   });
 
   String get typeLabel {
@@ -64,6 +77,16 @@ class Analysis {
         return 'Radiologique';
       case AnalysisType.locomotion:
         return 'Locomotion';
+      case AnalysisType.jump:
+        return 'Saut';
+      case AnalysisType.posture:
+        return 'Posture';
+      case AnalysisType.conformation:
+        return 'Conformation';
+      case AnalysisType.course:
+        return 'Parcours';
+      case AnalysisType.video:
+        return 'Vidéo';
     }
   }
 
@@ -110,6 +133,9 @@ class Analysis {
       completedAt: json['completedAt'] != null
           ? DateTime.parse(json['completedAt'] as String)
           : null,
+      thumbnailUrl: json['thumbnailUrl'] as String?,
+      videoUrl: json['videoUrl'] as String?,
+      notes: json['notes'] as String?,
     );
   }
 
@@ -123,6 +149,16 @@ class Analysis {
         return AnalysisType.radiological;
       case 'locomotion':
         return AnalysisType.locomotion;
+      case 'jump':
+        return AnalysisType.jump;
+      case 'posture':
+        return AnalysisType.posture;
+      case 'conformation':
+        return AnalysisType.conformation;
+      case 'course':
+        return AnalysisType.course;
+      case 'video':
+        return AnalysisType.video;
       default:
         return AnalysisType.locomotion;
     }
@@ -138,6 +174,16 @@ class Analysis {
         return 'radiological';
       case AnalysisType.locomotion:
         return 'locomotion';
+      case AnalysisType.jump:
+        return 'jump';
+      case AnalysisType.posture:
+        return 'posture';
+      case AnalysisType.conformation:
+        return 'conformation';
+      case AnalysisType.course:
+        return 'course';
+      case AnalysisType.video:
+        return 'video';
     }
   }
 }
