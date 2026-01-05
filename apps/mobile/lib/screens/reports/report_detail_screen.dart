@@ -373,6 +373,22 @@ class ReportDetailScreen extends ConsumerWidget {
         color = AppColors.textSecondary;
         label = 'Brouillon';
         break;
+      case ReportStatus.submitted:
+        color = AppColors.info;
+        label = 'Soumis';
+        break;
+      case ReportStatus.approved:
+        color = AppColors.success;
+        label = 'Approuvé';
+        break;
+      case ReportStatus.rejected:
+        color = AppColors.error;
+        label = 'Rejeté';
+        break;
+      case ReportStatus.archived:
+        color = AppColors.textTertiary;
+        label = 'Archivé';
+        break;
       case ReportStatus.generating:
         color = AppColors.warning;
         label = 'Génération';
@@ -405,6 +421,14 @@ class ReportDetailScreen extends ConsumerWidget {
 
   Color _getTypeColor(ReportType type) {
     switch (type) {
+      case ReportType.radiological:
+        return AppColors.info;
+      case ReportType.locomotion:
+        return AppColors.secondary;
+      case ReportType.courseAnalysis:
+        return AppColors.primary;
+      case ReportType.purchaseExam:
+        return AppColors.warning;
       case ReportType.progress:
         return AppColors.primary;
       case ReportType.veterinary:
@@ -420,6 +444,14 @@ class ReportDetailScreen extends ConsumerWidget {
 
   IconData _getTypeIcon(ReportType type) {
     switch (type) {
+      case ReportType.radiological:
+        return Icons.medical_information;
+      case ReportType.locomotion:
+        return Icons.directions_walk;
+      case ReportType.courseAnalysis:
+        return Icons.analytics;
+      case ReportType.purchaseExam:
+        return Icons.fact_check;
       case ReportType.progress:
         return Icons.trending_up;
       case ReportType.veterinary:
@@ -435,6 +467,14 @@ class ReportDetailScreen extends ConsumerWidget {
 
   String _typeLabel(ReportType type) {
     switch (type) {
+      case ReportType.radiological:
+        return 'Radiologique';
+      case ReportType.locomotion:
+        return 'Locomotion';
+      case ReportType.courseAnalysis:
+        return 'Analyse parcours';
+      case ReportType.purchaseExam:
+        return 'Visite d\'achat';
       case ReportType.progress:
         return 'Progression';
       case ReportType.veterinary:

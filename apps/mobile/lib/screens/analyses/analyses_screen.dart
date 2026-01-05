@@ -295,6 +295,12 @@ class _AnalysisCard extends StatelessWidget {
 
   String _typeLabel(AnalysisType type) {
     switch (type) {
+      case AnalysisType.videoPerformance:
+        return 'Performance vidéo';
+      case AnalysisType.videoCourse:
+        return 'Parcours CSO';
+      case AnalysisType.radiological:
+        return 'Radiologique';
       case AnalysisType.locomotion:
         return 'Analyse locomotion';
       case AnalysisType.jump:
@@ -330,6 +336,10 @@ class _AnalysisCard extends StatelessWidget {
       case AnalysisStatus.failed:
         color = AppColors.error;
         label = 'Erreur';
+        break;
+      case AnalysisStatus.cancelled:
+        color = AppColors.textSecondary;
+        label = 'Annulé';
         break;
     }
 

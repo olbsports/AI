@@ -331,6 +331,14 @@ class _NewReportScreenState extends ConsumerState<NewReportScreen> {
 
   IconData _getTypeIcon(ReportType type) {
     switch (type) {
+      case ReportType.radiological:
+        return Icons.medical_information;
+      case ReportType.locomotion:
+        return Icons.directions_walk;
+      case ReportType.courseAnalysis:
+        return Icons.analytics;
+      case ReportType.purchaseExam:
+        return Icons.fact_check;
       case ReportType.progress:
         return Icons.trending_up;
       case ReportType.veterinary:
@@ -346,6 +354,14 @@ class _NewReportScreenState extends ConsumerState<NewReportScreen> {
 
   String _typeLabel(ReportType type) {
     switch (type) {
+      case ReportType.radiological:
+        return 'Radiologique';
+      case ReportType.locomotion:
+        return 'Locomotion';
+      case ReportType.courseAnalysis:
+        return 'Analyse parcours';
+      case ReportType.purchaseExam:
+        return 'Visite d\'achat';
       case ReportType.progress:
         return 'Progression';
       case ReportType.veterinary:
