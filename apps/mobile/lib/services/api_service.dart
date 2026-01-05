@@ -6,7 +6,7 @@ import '../models/models.dart';
 import 'storage_service.dart';
 
 // API Base URL - Change this to your backend URL
-const String apiBaseUrl = 'https://ai-5fkj.onrender.com/api';
+const String apiBaseUrl = 'http://87.106.3.194/api';
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
