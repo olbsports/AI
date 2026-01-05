@@ -225,6 +225,14 @@ class DashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               _FeatureCard(
+                icon: Icons.storefront,
+                title: 'Marketplace',
+                subtitle: 'Vente & Élevage',
+                gradient: [Colors.green, Colors.teal],
+                onTap: () => context.push('/marketplace'),
+              ),
+              const SizedBox(width: 12),
+              _FeatureCard(
                 icon: Icons.emoji_events,
                 title: 'Hobby Horse',
                 subtitle: 'Discipline fun',

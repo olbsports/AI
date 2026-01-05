@@ -6,3 +6,4 @@ export 'report.dart';
 export 'leaderboard.dart';
 export 'breeding.dart';
 export 'social.dart';
+export 'marketplace.dart';

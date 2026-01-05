@@ -25,6 +25,7 @@ import 'screens/settings/billing_screen.dart';
 import 'screens/leaderboard/leaderboard_screen.dart';
 import 'screens/breeding/breeding_screen.dart';
 import 'screens/social/feed_screen.dart';
+import 'screens/marketplace/marketplace_screen.dart';
 import 'theme/app_theme.dart';
 import 'widgets/main_scaffold.dart';
 
@@ -202,6 +203,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/feed',
             builder: (context, state) => const FeedScreen(),
+          ),
+          // Marketplace route
+          GoRoute(
+            path: '/marketplace',
+            builder: (context, state) => const MarketplaceScreen(),
           ),
         ],
       ),
