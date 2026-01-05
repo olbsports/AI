@@ -1,0 +1,439 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../models/horse.dart';
+import '../../providers/horses_provider.dart';
+import '../../widgets/loading_button.dart';
+
+class HorseFormScreen extends ConsumerStatefulWidget {
+  final String? horseId;
+
+  const HorseFormScreen({super.key, this.horseId});
+
+  @override
+  ConsumerState<HorseFormScreen> createState() => _HorseFormScreenState();
+}
+
+class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _sireIdController = TextEditingController();
+  final _microchipController = TextEditingController();
+  final _breedController = TextEditingController();
+  final _colorController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _notesController = TextEditingController();
+
+  HorseGender _gender = HorseGender.male;
+  HorseStatus _status = HorseStatus.active;
+  DateTime? _birthDate;
+  File? _selectedPhoto;
+  bool _isLoading = false;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isEditing = widget.horseId != null;
+    if (_isEditing) {
+      _loadHorseData();
+    }
+  }
+
+  Future<void> _loadHorseData() async {
+    final horse = await ref.read(horseProvider(widget.horseId!).future);
+    setState(() {
+      _nameController.text = horse.name;
+      _sireIdController.text = horse.sireId ?? '';
+      _microchipController.text = horse.microchip ?? '';
+      _breedController.text = horse.breed ?? '';
+      _colorController.text = horse.color ?? '';
+      _heightController.text = horse.heightCm?.toString() ?? '';
+      _notesController.text = horse.notes ?? '';
+      _gender = horse.gender ?? HorseGender.male;
+      _status = horse.status;
+      _birthDate = horse.birthDate;
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _sireIdController.dispose();
+    _microchipController.dispose();
+    _breedController.dispose();
+    _colorController.dispose();
+    _heightController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedPhoto = File(image.path);
+      });
+    }
+  }
+
+  Future<void> _selectBirthDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _birthDate ?? DateTime.now().subtract(const Duration(days: 365 * 5)),
+      firstDate: DateTime(1990),
+      lastDate: DateTime.now(),
+    );
+    if (date != null) {
+      setState(() {
+        _birthDate = date;
+      });
+    }
+  }
+
+  Future<void> _handleSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final data = {
+        'name': _nameController.text.trim(),
+        'gender': _gender.name,
+        'status': _status.name,
+        if (_sireIdController.text.isNotEmpty)
+          'sireId': _sireIdController.text.trim(),
+        if (_microchipController.text.isNotEmpty)
+          'microchip': _microchipController.text.trim(),
+        if (_breedController.text.isNotEmpty)
+          'breed': _breedController.text.trim(),
+        if (_colorController.text.isNotEmpty)
+          'color': _colorController.text.trim(),
+        if (_heightController.text.isNotEmpty)
+          'heightCm': int.tryParse(_heightController.text),
+        if (_birthDate != null)
+          'birthDate': _birthDate!.toIso8601String(),
+        if (_notesController.text.isNotEmpty)
+          'notes': _notesController.text.trim(),
+      };
+
+      Horse? horse;
+      if (_isEditing) {
+        horse = await ref.read(horsesNotifierProvider.notifier).updateHorse(
+          widget.horseId!,
+          data,
+        );
+      } else {
+        horse = await ref.read(horsesNotifierProvider.notifier).createHorse(data);
+      }
+
+      if (horse != null && _selectedPhoto != null) {
+        await ref.read(horsesNotifierProvider.notifier).uploadPhoto(
+          horse.id,
+          _selectedPhoto!,
+        );
+      }
+
+      if (mounted) {
+        if (horse != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_isEditing ? 'Cheval modifié' : 'Cheval ajouté'),
+            ),
+          );
+          context.go('/horses/${horse.id}');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erreur lors de l\'enregistrement'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isEditing ? 'Modifier le cheval' : 'Nouveau cheval'),
+      ),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Photo section
+              _buildPhotoSection(),
+              const SizedBox(height: 24),
+
+              // Name
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nom *',
+                  prefixIcon: Icon(Icons.pets),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Le nom est requis';
+                  }
+                  if (value.length < 2) {
+                    return 'Le nom doit contenir au moins 2 caractères';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Gender
+              DropdownButtonFormField<HorseGender>(
+                value: _gender,
+                decoration: const InputDecoration(
+                  labelText: 'Sexe *',
+                  prefixIcon: Icon(Icons.male),
+                ),
+                items: HorseGender.values.map((gender) {
+                  return DropdownMenuItem(
+                    value: gender,
+                    child: Text(_genderLabel(gender)),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _gender = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Birth date
+              InkWell(
+                onTap: _selectBirthDate,
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Date de naissance',
+                    prefixIcon: Icon(Icons.cake),
+                  ),
+                  child: Text(
+                    _birthDate != null
+                        ? '${_birthDate!.day}/${_birthDate!.month}/${_birthDate!.year}'
+                        : 'Sélectionner',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: _birthDate == null
+                              ? Theme.of(context).colorScheme.onSurfaceVariant
+                              : null,
+                        ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Breed
+              TextFormField(
+                controller: _breedController,
+                decoration: const InputDecoration(
+                  labelText: 'Race',
+                  prefixIcon: Icon(Icons.category),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Color
+              TextFormField(
+                controller: _colorController,
+                decoration: const InputDecoration(
+                  labelText: 'Robe',
+                  prefixIcon: Icon(Icons.palette),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Height
+              TextFormField(
+                controller: _heightController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Taille (cm)',
+                  prefixIcon: Icon(Icons.straighten),
+                ),
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    final height = int.tryParse(value);
+                    if (height == null) {
+                      return 'Entrez un nombre valide';
+                    }
+                    if (height < 100 || height > 250) {
+                      return 'La taille doit être entre 100 et 250 cm';
+                    }
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // SIRE
+              TextFormField(
+                controller: _sireIdController,
+                decoration: const InputDecoration(
+                  labelText: 'Numéro SIRE',
+                  prefixIcon: Icon(Icons.numbers),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Microchip
+              TextFormField(
+                controller: _microchipController,
+                decoration: const InputDecoration(
+                  labelText: 'Numéro de puce',
+                  prefixIcon: Icon(Icons.qr_code),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Status
+              DropdownButtonFormField<HorseStatus>(
+                value: _status,
+                decoration: const InputDecoration(
+                  labelText: 'Statut',
+                  prefixIcon: Icon(Icons.info),
+                ),
+                items: HorseStatus.values.map((status) {
+                  return DropdownMenuItem(
+                    value: status,
+                    child: Text(_statusLabel(status)),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _status = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Notes
+              TextFormField(
+                controller: _notesController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Notes',
+                  prefixIcon: Icon(Icons.notes),
+                  alignLabelWithHint: true,
+                ),
+                maxLength: 1000,
+              ),
+              const SizedBox(height: 24),
+
+              // Submit button
+              LoadingButton(
+                onPressed: _handleSubmit,
+                isLoading: _isLoading,
+                text: _isEditing ? 'Enregistrer' : 'Ajouter le cheval',
+                icon: _isEditing ? Icons.save : Icons.add,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoSection() {
+    return Center(
+      child: InkWell(
+        onTap: _pickImage,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: 150,
+          height: 150,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(16),
+            image: _selectedPhoto != null
+                ? DecorationImage(
+                    image: FileImage(_selectedPhoto!),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+          child: _selectedPhoto == null
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add_a_photo,
+                      size: 40,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Ajouter photo',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                )
+              : Stack(
+                  children: [
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  String _genderLabel(HorseGender gender) {
+    switch (gender) {
+      case HorseGender.male:
+        return 'Mâle';
+      case HorseGender.female:
+        return 'Femelle';
+      case HorseGender.gelding:
+        return 'Hongre';
+    }
+  }
+
+  String _statusLabel(HorseStatus status) {
+    switch (status) {
+      case HorseStatus.active:
+        return 'Actif';
+      case HorseStatus.retired:
+        return 'Retraité';
+      case HorseStatus.sold:
+        return 'Vendu';
+      case HorseStatus.deceased:
+        return 'Décédé';
+    }
+  }
+}
