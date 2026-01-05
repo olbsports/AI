@@ -38,7 +38,7 @@ android {
 
     defaultConfig {
         applicationId = "com.horsevision.ai"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 36
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
