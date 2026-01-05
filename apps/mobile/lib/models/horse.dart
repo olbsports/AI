@@ -19,6 +19,7 @@ class Horse {
   final String? notes;
   final String? riderId;
   final String? riderName;
+  final String? sireId;
   final String organizationId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -42,6 +43,7 @@ class Horse {
     this.notes,
     this.riderId,
     this.riderName,
+    this.sireId,
     required this.organizationId,
     required this.createdAt,
     required this.updatedAt,
@@ -110,6 +112,7 @@ class Horse {
       notes: json['notes'] as String?,
       riderId: json['riderId'] as String?,
       riderName: json['riderName'] as String?,
+      sireId: json['sireId'] as String?,
       organizationId: json['organizationId'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
