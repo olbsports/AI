@@ -150,6 +150,14 @@ class _ReportCard extends StatelessWidget {
 
   Color _getTypeColor(ReportType type) {
     switch (type) {
+      case ReportType.radiological:
+        return AppColors.info;
+      case ReportType.locomotion:
+        return AppColors.secondary;
+      case ReportType.courseAnalysis:
+        return AppColors.primary;
+      case ReportType.purchaseExam:
+        return AppColors.warning;
       case ReportType.progress:
         return AppColors.primary;
       case ReportType.veterinary:
@@ -165,6 +173,14 @@ class _ReportCard extends StatelessWidget {
 
   IconData _getTypeIcon(ReportType type) {
     switch (type) {
+      case ReportType.radiological:
+        return Icons.medical_information;
+      case ReportType.locomotion:
+        return Icons.directions_walk;
+      case ReportType.courseAnalysis:
+        return Icons.analytics;
+      case ReportType.purchaseExam:
+        return Icons.fact_check;
       case ReportType.progress:
         return Icons.trending_up;
       case ReportType.veterinary:
@@ -180,6 +196,14 @@ class _ReportCard extends StatelessWidget {
 
   String _typeLabel(ReportType type) {
     switch (type) {
+      case ReportType.radiological:
+        return 'Rapport radiologique';
+      case ReportType.locomotion:
+        return 'Rapport locomotion';
+      case ReportType.courseAnalysis:
+        return 'Analyse de parcours';
+      case ReportType.purchaseExam:
+        return 'Visite d\'achat';
       case ReportType.progress:
         return 'Rapport de progression';
       case ReportType.veterinary:
@@ -201,6 +225,22 @@ class _ReportCard extends StatelessWidget {
       case ReportStatus.draft:
         color = AppColors.textSecondary;
         label = 'Brouillon';
+        break;
+      case ReportStatus.submitted:
+        color = AppColors.info;
+        label = 'Soumis';
+        break;
+      case ReportStatus.approved:
+        color = AppColors.success;
+        label = 'Approuvé';
+        break;
+      case ReportStatus.rejected:
+        color = AppColors.error;
+        label = 'Rejeté';
+        break;
+      case ReportStatus.archived:
+        color = AppColors.textTertiary;
+        label = 'Archivé';
         break;
       case ReportStatus.generating:
         color = AppColors.warning;

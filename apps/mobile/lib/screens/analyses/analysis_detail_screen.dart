@@ -514,6 +514,10 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
         color = AppColors.error;
         label = 'Erreur';
         break;
+      case AnalysisStatus.cancelled:
+        color = AppColors.textSecondary;
+        label = 'Annulé';
+        break;
     }
 
     return Container(
@@ -534,6 +538,12 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
 
   String _typeLabel(AnalysisType type) {
     switch (type) {
+      case AnalysisType.videoPerformance:
+        return 'Performance vidéo';
+      case AnalysisType.videoCourse:
+        return 'Parcours CSO';
+      case AnalysisType.radiological:
+        return 'Radiologique';
       case AnalysisType.locomotion:
         return 'Analyse locomotion';
       case AnalysisType.jump:
