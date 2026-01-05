@@ -104,7 +104,7 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
       final data = {
         'name': _nameController.text.trim(),
         'gender': _gender.name,
-        'status': _status.name,
+        if (_isEditing) 'status': _status.name,
         if (_sireIdController.text.isNotEmpty)
           'sireId': _sireIdController.text.trim(),
         if (_microchipController.text.isNotEmpty)
@@ -117,8 +117,6 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
           'heightCm': int.tryParse(_heightController.text),
         if (_birthDate != null)
           'birthDate': _birthDate!.toIso8601String(),
-        if (_notesController.text.isNotEmpty)
-          'notes': _notesController.text.trim(),
       };
 
       Horse? horse;
