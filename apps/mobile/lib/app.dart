@@ -22,6 +22,9 @@ import 'screens/reports/report_detail_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/profile_screen.dart';
 import 'screens/settings/billing_screen.dart';
+import 'screens/leaderboard/leaderboard_screen.dart';
+import 'screens/breeding/breeding_screen.dart';
+import 'screens/social/feed_screen.dart';
 import 'theme/app_theme.dart';
 import 'widgets/main_scaffold.dart';
 
@@ -184,6 +187,21 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const BillingScreen(),
               ),
             ],
+          ),
+          // Leaderboard route
+          GoRoute(
+            path: '/leaderboard',
+            builder: (context, state) => const LeaderboardScreen(),
+          ),
+          // Breeding recommendation route
+          GoRoute(
+            path: '/breeding',
+            builder: (context, state) => const BreedingScreen(),
+          ),
+          // Community feed route
+          GoRoute(
+            path: '/feed',
+            builder: (context, state) => const FeedScreen(),
           ),
         ],
       ),

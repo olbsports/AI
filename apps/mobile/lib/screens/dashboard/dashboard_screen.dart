@@ -51,6 +51,10 @@ class DashboardScreen extends ConsumerWidget {
               _buildQuickActions(context),
               const SizedBox(height: 24),
 
+              // New features section
+              _buildNewFeaturesSection(context),
+              const SizedBox(height: 24),
+
               // Stats section
               Text(
                 'Statistiques',
@@ -174,6 +178,60 @@ class DashboardScreen extends ConsumerWidget {
             label: 'Créer\nun rapport',
             color: AppColors.success,
             onTap: () => context.push('/reports/new'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNewFeaturesSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Explorer',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 120,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _FeatureCard(
+                icon: Icons.leaderboard,
+                title: 'Classements',
+                subtitle: 'Cavaliers & Chevaux',
+                gradient: [Colors.orange, Colors.deepOrange],
+                onTap: () => context.push('/leaderboard'),
+              ),
+              const SizedBox(width: 12),
+              _FeatureCard(
+                icon: Icons.favorite,
+                title: 'Poulinage',
+                subtitle: 'Conseils élevage',
+                gradient: [Colors.pink, Colors.red],
+                onTap: () => context.push('/breeding'),
+              ),
+              const SizedBox(width: 12),
+              _FeatureCard(
+                icon: Icons.people,
+                title: 'Communauté',
+                subtitle: 'Feed & Partage',
+                gradient: [Colors.blue, Colors.indigo],
+                onTap: () => context.push('/feed'),
+              ),
+              const SizedBox(width: 12),
+              _FeatureCard(
+                icon: Icons.emoji_events,
+                title: 'Hobby Horse',
+                subtitle: 'Discipline fun',
+                gradient: [Colors.purple, Colors.deepPurple],
+                onTap: () => context.push('/leaderboard'),
+              ),
+            ],
           ),
         ),
       ],
@@ -455,6 +513,67 @@ class _QuickActionCard extends StatelessWidget {
                     ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Color> gradient;
+  final VoidCallback onTap;
+
+  const _FeatureCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.gradient,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 140,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: Colors.white, size: 28),
+                const Spacer(),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

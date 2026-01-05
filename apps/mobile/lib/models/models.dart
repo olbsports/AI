@@ -3,3 +3,6 @@ export 'horse.dart';
 export 'rider.dart';
 export 'analysis.dart';
 export 'report.dart';
+export 'leaderboard.dart';
+export 'breeding.dart';
+export 'social.dart';
