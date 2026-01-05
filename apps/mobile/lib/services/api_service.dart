@@ -130,6 +130,49 @@ class ApiService {
     });
   }
 
+  // ==================== RIDERS ====================
+
+  Future<List<Rider>> getRiders({
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+  }) async {
+    final response = await _dio.get('/riders', queryParameters: {
+      'page': page,
+      'pageSize': pageSize,
+      if (search != null) 'search': search,
+    });
+    final items = response.data['items'] as List? ?? [];
+    return items.map((json) => Rider.fromJson(json as Map<String, dynamic>)).toList();
+  }
+
+  Future<Rider> getRider(String id) async {
+    final response = await _dio.get('/riders/$id');
+    return Rider.fromJson(response.data);
+  }
+
+  Future<Rider> createRider(Map<String, dynamic> data) async {
+    final response = await _dio.post('/riders', data: data);
+    return Rider.fromJson(response.data);
+  }
+
+  Future<Rider> updateRider(String id, Map<String, dynamic> data) async {
+    final response = await _dio.patch('/riders/$id', data: data);
+    return Rider.fromJson(response.data);
+  }
+
+  Future<void> deleteRider(String id) async {
+    await _dio.delete('/riders/$id');
+  }
+
+  Future<String> uploadRiderPhoto(String riderId, File file) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(file.path),
+    });
+    final response = await _dio.post('/riders/$riderId/photo', data: formData);
+    return response.data['url'];
+  }
+
   // ==================== HORSES ====================
 
   Future<List<Horse>> getHorses({
@@ -306,6 +349,40 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> getTokenHistory() async {
     final response = await _dio.get('/billing/tokens/history');
+    return List<Map<String, dynamic>>.from(response.data);
+  }
+
+  // ==================== SUBSCRIPTIONS ====================
+
+  Future<List<Map<String, dynamic>>> getPlans() async {
+    final response = await _dio.get('/subscriptions/plans');
+    return List<Map<String, dynamic>>.from(response.data);
+  }
+
+  Future<Map<String, dynamic>> getCurrentSubscription() async {
+    final response = await _dio.get('/subscriptions/current');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> upgradePlan(String planId) async {
+    final response = await _dio.post('/subscriptions/upgrade', data: {
+      'planId': planId,
+    });
+    return response.data;
+  }
+
+  Future<void> cancelSubscription() async {
+    await _dio.post('/subscriptions/cancel');
+  }
+
+  Future<void> reactivateSubscription() async {
+    await _dio.post('/subscriptions/reactivate');
+  }
+
+  // ==================== INVOICES ====================
+
+  Future<List<Map<String, dynamic>>> getInvoices() async {
+    final response = await _dio.get('/invoices');
     return List<Map<String, dynamic>>.from(response.data);
   }
 
