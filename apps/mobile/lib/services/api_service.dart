@@ -1,12 +1,16 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../models/models.dart';
 import 'storage_service.dart';
 
 // API Base URL - Change this to your backend URL
 const String apiBaseUrl = 'http://87.106.3.194/api';
+
+// Shared secure storage instance for token access
+const _secureStorage = FlutterSecureStorage();
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
@@ -22,8 +26,7 @@ final dioProvider = Provider<Dio>((ref) {
   // Add interceptor for auth token
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) async {
-      final storage = ref.read(storageServiceProvider);
-      final token = await storage.getAccessToken();
+      final token = await _secureStorage.read(key: 'access_token');
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
@@ -32,22 +35,21 @@ final dioProvider = Provider<Dio>((ref) {
     onError: (error, handler) async {
       if (error.response?.statusCode == 401) {
         // Handle token refresh here
-        final storage = ref.read(storageServiceProvider);
-        final refreshToken = await storage.getRefreshToken();
+        final refreshToken = await _secureStorage.read(key: 'refresh_token');
         if (refreshToken != null) {
           try {
             final response = await dio.post('/auth/refresh', data: {
               'refreshToken': refreshToken,
             });
             final newToken = response.data['accessToken'];
-            await storage.saveAccessToken(newToken);
+            await _secureStorage.write(key: 'access_token', value: newToken);
 
             // Retry the failed request
             error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
             final retryResponse = await dio.fetch(error.requestOptions);
             return handler.resolve(retryResponse);
           } catch (e) {
-            await storage.clearAll();
+            await _secureStorage.deleteAll();
           }
         }
       }
@@ -142,8 +144,8 @@ class ApiService {
       if (search != null) 'search': search,
       if (status != null) 'status': status,
     });
-    final data = response.data['data'] as List;
-    return data.map((json) => Horse.fromJson(json)).toList();
+    final items = response.data['items'] as List? ?? [];
+    return items.map((json) => Horse.fromJson(json as Map<String, dynamic>)).toList();
   }
 
   Future<Horse> getHorse(String id) async {
@@ -189,8 +191,8 @@ class ApiService {
       if (status != null) 'status': status,
       if (horseId != null) 'horseId': horseId,
     });
-    final data = response.data['data'] as List;
-    return data.map((json) => Analysis.fromJson(json)).toList();
+    final items = response.data['items'] as List? ?? [];
+    return items.map((json) => Analysis.fromJson(json as Map<String, dynamic>)).toList();
   }
 
   Future<Analysis> getAnalysis(String id) async {
@@ -251,8 +253,8 @@ class ApiService {
       if (status != null) 'status': status,
       if (horseId != null) 'horseId': horseId,
     });
-    final data = response.data['data'] as List;
-    return data.map((json) => Report.fromJson(json)).toList();
+    final items = response.data['items'] as List? ?? [];
+    return items.map((json) => Report.fromJson(json as Map<String, dynamic>)).toList();
   }
 
   Future<Report> getReport(String id) async {
