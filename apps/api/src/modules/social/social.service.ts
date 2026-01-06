@@ -142,7 +142,11 @@ export class SocialService {
     mediaType?: string;
     visibility?: string;
     horseId?: string;
+    allowComments?: boolean;
+    allowSharing?: boolean;
   }) {
+    // Note: allowComments and allowSharing are accepted from the mobile app
+    // but not stored in DB (could be added to schema later)
     return this.prisma.socialPost.create({
       data: {
         content: data.content,

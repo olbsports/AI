@@ -96,6 +96,8 @@ export class SocialController {
       mediaType?: string;
       visibility?: string;
       horseId?: string;
+      allowComments?: boolean;
+      allowSharing?: boolean;
     },
   ) {
     return this.socialService.createPost(user.id, user.organizationId, body);

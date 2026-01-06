@@ -81,7 +81,8 @@ export class HorsesController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    return this.horsesService.uploadPhoto(id, user.organizationId, file);
+    const horse = await this.horsesService.uploadPhoto(id, user.organizationId, file);
+    return { url: horse.photoUrl };
   }
 
   @Delete(':id/photo')

@@ -114,7 +114,8 @@ export class RidersController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    return this.ridersService.uploadPhoto(id, user.organizationId, file);
+    const rider = await this.ridersService.uploadPhoto(id, user.organizationId, file);
+    return { url: rider.photoUrl };
   }
 
   @Delete(':id/photo')
