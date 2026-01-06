@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
@@ -32,6 +33,10 @@ import 'screens/planning/planning_screen.dart';
 import 'screens/clubs/clubs_screen.dart';
 import 'screens/gestation/gestation_screen.dart';
 import 'screens/services/services_screen.dart';
+import 'screens/categories/ecurie_home_screen.dart';
+import 'screens/categories/ia_home_screen.dart';
+import 'screens/categories/social_home_screen.dart';
+import 'screens/categories/plus_home_screen.dart';
 import 'theme/app_theme.dart';
 import 'widgets/main_scaffold.dart';
 
@@ -41,13 +46,14 @@ class HorseVisionApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: 'Horse Vision AI',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       routerConfig: router,
     );
   }
@@ -93,10 +99,29 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => MainScaffold(child: child),
         routes: [
+          // Main dashboard
           GoRoute(
             path: '/dashboard',
             builder: (context, state) => const DashboardScreen(),
           ),
+          // Category home screens
+          GoRoute(
+            path: '/ecurie',
+            builder: (context, state) => const EcurieHomeScreen(),
+          ),
+          GoRoute(
+            path: '/ia',
+            builder: (context, state) => const IAHomeScreen(),
+          ),
+          GoRoute(
+            path: '/social',
+            builder: (context, state) => const SocialHomeScreen(),
+          ),
+          GoRoute(
+            path: '/plus',
+            builder: (context, state) => const PlusHomeScreen(),
+          ),
+          // Horse management
           GoRoute(
             path: '/horses',
             builder: (context, state) => const HorsesScreen(),

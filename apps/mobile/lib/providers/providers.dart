@@ -14,3 +14,4 @@ export 'marketplace_provider.dart';
 export 'breeding_provider.dart';
 export 'social_provider.dart';
 export 'leaderboard_provider.dart';
+export 'theme_provider.dart';
