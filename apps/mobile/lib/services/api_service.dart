@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -22,6 +23,16 @@ final dioProvider = Provider<Dio>((ref) {
       'Accept': 'application/json',
     },
   ));
+
+  // Configure to accept Let's Encrypt certificates
+  (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+    final client = HttpClient();
+    client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+      // Only accept certificates for our API domain
+      return host == 'api.horsetempo.app';
+    };
+    return client;
+  };
 
   // Add logging interceptor
   dio.interceptors.add(LogInterceptor(
