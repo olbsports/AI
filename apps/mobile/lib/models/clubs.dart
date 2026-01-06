@@ -220,7 +220,7 @@ class ClubSettings {
 /// Member of a club
 class ClubMember {
   final String id;
-  final String odbc;
+  final String userId;
   final String userName;
   final String? userAvatarUrl;
   final String clubId;
@@ -244,8 +244,6 @@ class ClubMember {
     this.lastActiveAt,
     this.permissions = const [],
   });
-
-  String get userId => odbc;
 
   factory ClubMember.fromJson(Map<String, dynamic> json) {
     return ClubMember(

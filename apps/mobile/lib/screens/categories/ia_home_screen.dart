@@ -12,9 +12,13 @@ class IAHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final analyses = ref.watch(analysesProvider);
-    final reports = ref.watch(reportsProvider);
+    final analysesAsync = ref.watch(analysesProvider);
+    final reportsAsync = ref.watch(reportsProvider);
     final theme = Theme.of(context);
+
+    // Extract data from AsyncValue with fallback to empty list
+    final analysesList = analysesAsync.valueOrNull ?? [];
+    final reportsList = reportsAsync.valueOrNull ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -61,14 +65,14 @@ class IAHomeScreen extends ConsumerWidget {
                 _SectionItem(
                   icon: Icons.videocam,
                   label: 'Analyses',
-                  subtitle: '${analyses.analyses.length} effectuées',
+                  subtitle: '${analysesList.length} effectuées',
                   color: AppColors.categoryIA,
                   onTap: () => context.go('/analyses'),
                 ),
                 _SectionItem(
                   icon: Icons.description,
                   label: 'Rapports',
-                  subtitle: '${reports.reports.length} générés',
+                  subtitle: '${reportsList.length} générés',
                   color: AppColors.secondary,
                   onTap: () => context.go('/reports'),
                 ),
@@ -94,7 +98,7 @@ class IAHomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Recent analyses
-            _RecentAnalysesSection(analyses: analyses.analyses.take(3).toList()),
+            _RecentAnalysesSection(analyses: analysesList.take(3).toList()),
           ],
         ),
       ),

@@ -392,4 +392,25 @@ class ApiService {
     final response = await _dio.get('/dashboard/stats');
     return response.data;
   }
+
+  // ==================== GENERIC HTTP METHODS ====================
+
+  Future<dynamic> get(String path, {Map<String, String>? queryParams}) async {
+    final response = await _dio.get(path, queryParameters: queryParams);
+    return response.data;
+  }
+
+  Future<dynamic> post(String path, Map<String, dynamic> data) async {
+    final response = await _dio.post(path, data: data);
+    return response.data;
+  }
+
+  Future<dynamic> put(String path, Map<String, dynamic> data) async {
+    final response = await _dio.put(path, data: data);
+    return response.data;
+  }
+
+  Future<void> delete(String path) async {
+    await _dio.delete(path);
+  }
 }
