@@ -298,12 +298,10 @@ export class AdaptivePlanService {
           planned: params.plannedSession,
           actual: params.actualSession,
           outcome: params.outcome,
-        }),
-        metadata: {
           horseResponse: params.outcome.horseResponse,
           fatigueAfter: params.outcome.fatigueAfter,
           completed: params.outcome.completed,
-        },
+        }),
       },
     });
   }
