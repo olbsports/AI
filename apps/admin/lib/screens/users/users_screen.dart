@@ -343,10 +343,10 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                     onPressed: () => context.go('/users/${user.id}'),
                     tooltip: 'Voir',
                   ),
-                  PopupMenuButton(
+                  PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, size: 20),
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
+                    itemBuilder: (context) => <PopupMenuEntry<String>>[
+                      const PopupMenuItem<String>(
                         value: 'edit',
                         child: Row(
                           children: [
@@ -356,7 +356,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      const PopupMenuItem<String>(
                         value: 'impersonate',
                         child: Row(
                           children: [
@@ -367,7 +367,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                         ),
                       ),
                       const PopupMenuDivider(),
-                      PopupMenuItem(
+                      PopupMenuItem<String>(
                         value: 'ban',
                         child: Row(
                           children: [
