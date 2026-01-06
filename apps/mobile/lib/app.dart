@@ -26,6 +26,12 @@ import 'screens/leaderboard/leaderboard_screen.dart';
 import 'screens/breeding/breeding_screen.dart';
 import 'screens/social/feed_screen.dart';
 import 'screens/marketplace/marketplace_screen.dart';
+import 'screens/gamification/gamification_screen.dart';
+import 'screens/health/health_screen.dart';
+import 'screens/planning/planning_screen.dart';
+import 'screens/clubs/clubs_screen.dart';
+import 'screens/gestation/gestation_screen.dart';
+import 'screens/services/services_screen.dart';
 import 'theme/app_theme.dart';
 import 'widgets/main_scaffold.dart';
 
@@ -208,6 +214,36 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/marketplace',
             builder: (context, state) => const MarketplaceScreen(),
+          ),
+          // Gamification route
+          GoRoute(
+            path: '/gamification',
+            builder: (context, state) => const GamificationScreen(),
+          ),
+          // Health tracking route
+          GoRoute(
+            path: '/health',
+            builder: (context, state) => const HealthScreen(),
+          ),
+          // Planning route
+          GoRoute(
+            path: '/planning',
+            builder: (context, state) => const PlanningScreen(),
+          ),
+          // Clubs route
+          GoRoute(
+            path: '/clubs',
+            builder: (context, state) => const ClubsScreen(),
+          ),
+          // Gestation tracking route
+          GoRoute(
+            path: '/gestation',
+            builder: (context, state) => const GestationScreen(),
+          ),
+          // Services directory route
+          GoRoute(
+            path: '/services',
+            builder: (context, state) => const ServicesScreen(),
           ),
         ],
       ),
