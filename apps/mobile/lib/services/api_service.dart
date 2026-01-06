@@ -23,6 +23,13 @@ final dioProvider = Provider<Dio>((ref) {
     },
   ));
 
+  // Add logging interceptor
+  dio.interceptors.add(LogInterceptor(
+    requestBody: true,
+    responseBody: true,
+    logPrint: (obj) => print('DIO: $obj'),
+  ));
+
   // Add interceptor for auth token
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) async {
