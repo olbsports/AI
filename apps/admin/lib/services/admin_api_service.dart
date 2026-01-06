@@ -1,6 +1,7 @@
-import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/admin_models.dart';
 
@@ -9,7 +10,38 @@ class AdminApiService {
   static const String _tokenKey = 'admin_auth_token';
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final Dio _dio;
   String? _token;
+
+  AdminApiService() : _dio = Dio(BaseOptions(
+    baseUrl: _baseUrl,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+  )) {
+    // Configure to accept Let's Encrypt certificates
+    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+      final client = HttpClient();
+      client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+        // Only accept certificates for our API domain
+        return host == 'api.horsetempo.app';
+      };
+      return client;
+    };
+
+    // Add interceptor for auth token
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        if (_token != null) {
+          options.headers['Authorization'] = 'Bearer $_token';
+        }
+        return handler.next(options);
+      },
+    ));
+  }
 
   Future<String?> getStoredToken() async {
     _token = await _storage.read(key: _tokenKey);
@@ -26,35 +58,33 @@ class AdminApiService {
     await _storage.delete(key: _tokenKey);
   }
 
-  Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (_token != null) 'Authorization': 'Bearer $_token',
-      };
-
   Future<Map<String, dynamic>?> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse('$_baseUrl/auth/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
-    );
+    try {
+      final response = await _dio.post('/auth/login', data: {
+        'email': email,
+        'password': password,
+      });
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      await _saveToken(data['token']);
-      return {
-        'user': AdminUser.fromJson(data['user']),
-        'token': data['token'],
-      };
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        final token = data['accessToken'] ?? data['token'];
+        if (token != null) {
+          await _saveToken(token);
+        }
+        return {
+          'user': AdminUser.fromJson(data['user']),
+          'token': token,
+        };
+      }
+    } catch (e) {
+      print('Login error: $e');
     }
     return null;
   }
 
   Future<void> logout() async {
     try {
-      await http.post(
-        Uri.parse('$_baseUrl/auth/logout'),
-        headers: _headers,
-      );
+      await _dio.post('/auth/logout');
     } catch (e) {
       // Ignore logout errors
     }
@@ -62,62 +92,34 @@ class AdminApiService {
   }
 
   Future<AdminUser?> getCurrentAdmin() async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/auth/me'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return AdminUser.fromJson(jsonDecode(response.body));
+    try {
+      final response = await _dio.get('/auth/me');
+      if (response.statusCode == 200) {
+        return AdminUser.fromJson(response.data);
+      }
+    } catch (e) {
+      print('Get current admin error: $e');
     }
     return null;
   }
 
   Future<dynamic> get(String path, {Map<String, String>? queryParams}) async {
-    final uri = Uri.parse('$_baseUrl$path').replace(queryParameters: queryParams);
-    final response = await http.get(uri, headers: _headers);
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-    throw Exception('Request failed: ${response.statusCode}');
+    final response = await _dio.get(path, queryParameters: queryParams);
+    return response.data;
   }
 
   Future<dynamic> post(String path, Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$_baseUrl$path'),
-      headers: _headers,
-      body: jsonEncode(data),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
-    }
-    throw Exception('Request failed: ${response.statusCode}');
+    final response = await _dio.post(path, data: data);
+    return response.data;
   }
 
   Future<dynamic> put(String path, Map<String, dynamic> data) async {
-    final response = await http.put(
-      Uri.parse('$_baseUrl$path'),
-      headers: _headers,
-      body: jsonEncode(data),
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-    throw Exception('Request failed: ${response.statusCode}');
+    final response = await _dio.put(path, data: data);
+    return response.data;
   }
 
   Future<void> delete(String path) async {
-    final response = await http.delete(
-      Uri.parse('$_baseUrl$path'),
-      headers: _headers,
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Request failed: ${response.statusCode}');
-    }
+    await _dio.delete(path);
   }
 }
 
