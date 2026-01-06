@@ -1,7 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../models/marketplace.dart';
 import '../models/leaderboard.dart';
 import '../services/api_service.dart';
+
+/// Helper to check if error is 404
+bool _is404Error(Object error) {
+  if (error is DioException) {
+    return error.response?.statusCode == 404;
+  }
+  return false;
+}
 
 /// Marketplace search filters
 class MarketplaceFilters {
@@ -63,16 +72,26 @@ final marketplaceFiltersProvider = StateProvider<MarketplaceFilters>((ref) {
 final marketplaceSearchProvider =
     FutureProvider.family<List<MarketplaceListing>, MarketplaceFilters>((ref, filters) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/marketplace/search', queryParams: filters.toQueryParams());
-  return (response as List).map((e) => MarketplaceListing.fromJson(e)).toList();
+  try {
+    final response = await api.get('/marketplace/search', queryParams: filters.toQueryParams());
+    return ((response as List?) ?? []).map((e) => MarketplaceListing.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Listings by type
 final listingsByTypeProvider =
     FutureProvider.family<List<MarketplaceListing>, ListingType>((ref, type) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/marketplace', queryParams: {'type': type.name});
-  return (response as List).map((e) => MarketplaceListing.fromJson(e)).toList();
+  try {
+    final response = await api.get('/marketplace', queryParams: {'type': type.name});
+    return ((response as List?) ?? []).map((e) => MarketplaceListing.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Listing detail by ID
@@ -187,29 +206,49 @@ final breedingListingsProvider =
 /// User's own listings
 final myListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/marketplace/my-listings');
-  return (response as List).map((e) => MarketplaceListing.fromJson(e)).toList();
+  try {
+    final response = await api.get('/marketplace/my-listings');
+    return ((response as List?) ?? []).map((e) => MarketplaceListing.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// User's favorite listings
 final favoriteListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/marketplace/favorites');
-  return (response as List).map((e) => MarketplaceListing.fromJson(e)).toList();
+  try {
+    final response = await api.get('/marketplace/favorites');
+    return ((response as List?) ?? []).map((e) => MarketplaceListing.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Featured listings
 final featuredListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/marketplace/featured');
-  return (response as List).map((e) => MarketplaceListing.fromJson(e)).toList();
+  try {
+    final response = await api.get('/marketplace/featured');
+    return ((response as List?) ?? []).map((e) => MarketplaceListing.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Recent listings
 final recentListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/marketplace/recent');
-  return (response as List).map((e) => MarketplaceListing.fromJson(e)).toList();
+  try {
+    final response = await api.get('/marketplace/recent');
+    return ((response as List?) ?? []).map((e) => MarketplaceListing.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Breeding matches for a mare
