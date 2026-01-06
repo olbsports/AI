@@ -796,7 +796,7 @@ class _MareSelectionSheet extends ConsumerWidget {
                       title: Text(mare.name),
                       subtitle: Text([
                         if (mare.breed != null) mare.breed!,
-                        if (mare.birthYear != null) '${DateTime.now().year - mare.birthYear!} ans',
+                        if (mare.age != null) '${mare.age} ans',
                       ].join(' • ')),
                       onTap: () => onMareSelected(mare),
                     );
@@ -1000,16 +1000,13 @@ class _StallionDetailSheet extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         // Price
-        if (stallion.pricePerDose != null || stallion.naturalServicePrice != null) ...[
+        if (stallion.studFee != null) ...[
           Text(
             'Tarifs',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          if (stallion.pricePerDose != null)
-            Text('Dose de semence: ${stallion.pricePerDose} EUR'),
-          if (stallion.naturalServicePrice != null)
-            Text('Monte naturelle: ${stallion.naturalServicePrice} EUR'),
+          Text('Prix de saillie: ${stallion.studFee} EUR'),
           const SizedBox(height: 24),
         ],
         // Analysis from recommendation
