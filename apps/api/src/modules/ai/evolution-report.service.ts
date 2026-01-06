@@ -103,12 +103,12 @@ export class EvolutionReportService {
     const healthRecords = await this.prisma.healthRecord.findMany({
       where: {
         horseId: params.horseId,
-        recordDate: {
+        date: {
           gte: params.periodStart,
           lte: params.periodEnd,
         },
       },
-      orderBy: { recordDate: 'desc' },
+      orderBy: { date: 'desc' },
     });
 
     // Get competitions
@@ -194,20 +194,20 @@ export class EvolutionReportService {
       },
       health: {
         recordCount: healthRecords.length,
-        lastCheckDate: healthRecords[0]?.recordDate || null,
-        issues: healthRecords.filter((h) => (h.data as any)?.hasIssue).length,
+        lastCheckDate: healthRecords[0]?.date || null,
+        issues: healthRecords.filter((h) => h.type === 'injury' || h.type === 'surgery').length,
       },
       competitions: {
         count: competitions.length,
         results: competitions.map((c) => ({
           date: c.competitionDate,
           discipline: c.discipline,
-          level: c.level,
-          ranking: c.ranking,
+          level: c.eventLevel,
+          ranking: c.rank,
           score: c.score,
         })),
         bestResult: competitions.reduce(
-          (best, c) => (c.ranking && (!best || c.ranking < best.ranking) ? c : best),
+          (best, c) => (c.rank && (!best || c.rank < best.rank) ? c : best),
           null as any
         ),
       },

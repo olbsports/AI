@@ -528,11 +528,11 @@ Format JSON:
       where: { id: params.horseId },
       include: {
         gestations: {
-          orderBy: { startDate: 'desc' },
+          orderBy: { breedingDate: 'desc' },
           take: 1,
         },
         breedingRecords: {
-          orderBy: { date: 'desc' },
+          orderBy: { year: 'desc' },
           take: 5,
         },
       },

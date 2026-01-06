@@ -476,7 +476,7 @@ RÉSULTATS CHRONOLOGIQUES:
 ${results.map(r => `
 - ${r.competitionDate.toISOString().split('T')[0]} | ${r.competitionName}
   Épreuve: ${r.eventName || 'N/A'} | Classement: ${r.rank || 'N/A'}/${r.totalParticipants || 'N/A'}
-  ${r.score ? `Score: ${r.score}` : ''} ${r.penaltyPoints ? `Pénalités: ${r.penaltyPoints}` : ''}
+  ${r.score ? `Score: ${r.score}` : ''} ${r.penalties ? `Pénalités: ${r.penalties}` : ''}
 `).join('')}
 
 Analyse:
