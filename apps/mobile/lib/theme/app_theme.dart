@@ -71,6 +71,12 @@ class AppColors {
   static const Color categoryIA = Color(0xFF06B6D4);        // Cyan for AI
   static const Color categorySocial = Color(0xFFEC4899);    // Pink for social
   static const Color categoryPlus = Color(0xFF6B7280);      // Gray for more
+
+  // ==================== CONVENIENCE ALIASES ====================
+  // These reference light theme by default for backwards compatibility
+  static const Color textSecondary = lightTextSecondary;
+  static const Color textTertiary = lightTextTertiary;
+  static const Color textPrimary = lightTextPrimary;
 }
 
 /// Main theme configuration

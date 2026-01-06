@@ -5,7 +5,8 @@ export 'analysis.dart';
 export 'report.dart';
 export 'leaderboard.dart';
 export 'breeding.dart';
-export 'social.dart';
+// Hide Badge classes from social.dart to avoid conflict with gamification.dart
+export 'social.dart' hide Badge, BadgeCategory, BadgeRarity;
 export 'marketplace.dart';
 export 'gamification.dart';
 export 'health.dart';

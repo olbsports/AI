@@ -422,7 +422,7 @@ enum ChallengeDifficulty {
 /// User streak tracking
 class UserStreak {
   final String id;
-  final String odbc;
+  final String userId;
   final int currentStreak;
   final int longestStreak;
   final DateTime? lastActivityDate;
@@ -438,8 +438,6 @@ class UserStreak {
     this.activityDates = const [],
     this.isActiveToday = false,
   });
-
-  String get userId => odbc;
 
   factory UserStreak.fromJson(Map<String, dynamic> json) {
     return UserStreak(
@@ -601,7 +599,7 @@ enum ReferralStatus {
 
 /// User's referral stats
 class ReferralStats {
-  final String odbc;
+  final String userId;
   final String referralCode;
   final String referralLink;
   final int totalReferrals;
@@ -620,8 +618,6 @@ class ReferralStats {
     this.totalTokensEarned = 0,
     this.recentReferrals = const [],
   });
-
-  String get userId => odbc;
 
   factory ReferralStats.fromJson(Map<String, dynamic> json) {
     return ReferralStats(

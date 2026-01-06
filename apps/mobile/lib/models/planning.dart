@@ -381,7 +381,7 @@ enum ReminderMethod {
 /// SMART Goal
 class Goal {
   final String id;
-  final String odbc;
+  final String userId;
   final String title;
   final String? description;
   final GoalCategory category;
@@ -419,8 +419,6 @@ class Goal {
     required this.createdAt,
     this.completedAt,
   });
-
-  String get userId => odbc;
   double get progress => targetValue > 0 ? (currentValue / targetValue).clamp(0, 1) : 0;
   bool get isCompleted => status == GoalStatus.completed;
   bool get isOverdue => DateTime.now().isAfter(targetDate) && !isCompleted;

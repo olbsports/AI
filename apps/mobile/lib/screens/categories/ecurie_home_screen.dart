@@ -12,9 +12,13 @@ class EcurieHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final horses = ref.watch(horsesProvider);
-    final riders = ref.watch(ridersProvider);
+    final horsesAsync = ref.watch(horsesProvider);
+    final ridersAsync = ref.watch(ridersProvider);
     final theme = Theme.of(context);
+
+    // Extract data from AsyncValue with fallback to empty list
+    final horsesList = horsesAsync.valueOrNull ?? [];
+    final ridersList = ridersAsync.valueOrNull ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -35,8 +39,8 @@ class EcurieHomeScreen extends ConsumerWidget {
           children: [
             // Quick stats
             _QuickStats(
-              horsesCount: horses.horses.length,
-              ridersCount: riders.riders.length,
+              horsesCount: horsesList.length,
+              ridersCount: ridersList.length,
             ),
 
             const SizedBox(height: 24),
@@ -53,14 +57,14 @@ class EcurieHomeScreen extends ConsumerWidget {
                 _SectionItem(
                   icon: Icons.pets,
                   label: 'Chevaux',
-                  subtitle: '${horses.horses.length} enregistrés',
+                  subtitle: '${horsesList.length} enregistrés',
                   color: AppColors.categoryEcurie,
                   onTap: () => context.go('/horses'),
                 ),
                 _SectionItem(
                   icon: Icons.person,
                   label: 'Cavaliers',
-                  subtitle: '${riders.riders.length} enregistrés',
+                  subtitle: '${ridersList.length} enregistrés',
                   color: AppColors.secondary,
                   onTap: () => context.go('/riders'),
                 ),
@@ -84,7 +88,7 @@ class EcurieHomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Recent activity
-            _RecentActivitySection(horses: horses.horses.take(3).toList()),
+            _RecentActivitySection(horses: horsesList.take(3).toList()),
           ],
         ),
       ),
