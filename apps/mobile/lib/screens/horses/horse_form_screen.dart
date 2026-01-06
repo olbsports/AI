@@ -44,19 +44,32 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
   }
 
   Future<void> _loadHorseData() async {
-    final horse = await ref.read(horseProvider(widget.horseId!).future);
-    setState(() {
-      _nameController.text = horse.name;
-      _sireIdController.text = horse.sireId ?? '';
-      _microchipController.text = horse.microchip ?? '';
-      _breedController.text = horse.breed ?? '';
-      _colorController.text = horse.color ?? '';
-      _heightController.text = horse.heightCm?.toString() ?? '';
-      _notesController.text = horse.notes ?? '';
-      _gender = horse.gender ?? HorseGender.male;
-      _status = horse.status;
-      _birthDate = horse.birthDate;
-    });
+    try {
+      final horse = await ref.read(horseProvider(widget.horseId!).future);
+      if (mounted) {
+        setState(() {
+          _nameController.text = horse.name;
+          _sireIdController.text = horse.sireId ?? '';
+          _microchipController.text = horse.microchip ?? '';
+          _breedController.text = horse.breed ?? '';
+          _colorController.text = horse.color ?? '';
+          _heightController.text = horse.heightCm?.toString() ?? '';
+          _notesController.text = horse.notes ?? '';
+          _gender = horse.gender;
+          _status = horse.status;
+          _birthDate = horse.birthDate;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors du chargement des données'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -130,10 +143,29 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
       }
 
       if (horse != null && _selectedPhoto != null) {
-        await ref.read(horsesNotifierProvider.notifier).uploadPhoto(
-          horse.id,
-          _selectedPhoto!,
-        );
+        try {
+          final photoUrl = await ref.read(horsesNotifierProvider.notifier).uploadPhoto(
+            horse.id,
+            _selectedPhoto!,
+          );
+          if (photoUrl == null && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('La photo n\'a pas pu être téléchargée'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Erreur lors du téléchargement de la photo'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
       }
 
       if (mounted) {

@@ -51,7 +51,7 @@ class AdminTheme {
           color: AdminColors.textPrimary,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AdminColors.darkSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -111,7 +111,7 @@ class AdminTheme {
         }),
         dividerThickness: 1,
       ),
-      tabBarTheme: const TabBarTheme(
+      tabBarTheme: const TabBarThemeData(
         labelColor: AdminColors.primary,
         unselectedLabelColor: AdminColors.textSecondary,
         indicatorColor: AdminColors.primary,
@@ -124,7 +124,7 @@ class AdminTheme {
           side: const BorderSide(color: AdminColors.darkBorder),
         ),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AdminColors.darkSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -166,7 +166,7 @@ class AdminTheme {
         ),
         iconTheme: IconThemeData(color: Color(0xFF1E293B)),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AdminColors.lightSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(

@@ -38,14 +38,27 @@ class _RiderFormScreenState extends ConsumerState<RiderFormScreen> {
   }
 
   Future<void> _loadRiderData() async {
-    final rider = await ref.read(riderProvider(widget.riderId!).future);
-    setState(() {
-      _firstNameController.text = rider.firstName;
-      _lastNameController.text = rider.lastName;
-      _emailController.text = rider.email ?? '';
-      _phoneController.text = rider.phone ?? '';
-      _notesController.text = rider.notes ?? '';
-    });
+    try {
+      final rider = await ref.read(riderProvider(widget.riderId!).future);
+      if (mounted) {
+        setState(() {
+          _firstNameController.text = rider.firstName;
+          _lastNameController.text = rider.lastName;
+          _emailController.text = rider.email ?? '';
+          _phoneController.text = rider.phone ?? '';
+          _notesController.text = rider.notes ?? '';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors du chargement des données'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -96,10 +109,29 @@ class _RiderFormScreenState extends ConsumerState<RiderFormScreen> {
       }
 
       if (rider != null && _selectedPhoto != null) {
-        await ref.read(ridersNotifierProvider.notifier).uploadPhoto(
-              rider.id,
-              _selectedPhoto!,
+        try {
+          final photoUrl = await ref.read(ridersNotifierProvider.notifier).uploadPhoto(
+                rider.id,
+                _selectedPhoto!,
+              );
+          if (photoUrl == null && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('La photo n\'a pas pu être téléchargée'),
+                backgroundColor: Colors.orange,
+              ),
             );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Erreur lors du téléchargement de la photo'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
       }
 
       if (mounted) {
