@@ -395,7 +395,7 @@ class ApiService {
 
   // ==================== GENERIC HTTP METHODS ====================
 
-  Future<dynamic> get(String path, {Map<String, String>? queryParams}) async {
+  Future<dynamic> get(String path, {Map<String, dynamic>? queryParams}) async {
     final response = await _dio.get(path, queryParameters: queryParams);
     return response.data;
   }
