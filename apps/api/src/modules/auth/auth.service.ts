@@ -97,8 +97,12 @@ export class AuthService {
       organizationName: dto.organizationName,
     });
 
-    // Send verification email
-    await this.sendVerificationEmail(user.id);
+    // Send verification email (don't block registration if email fails)
+    try {
+      await this.sendVerificationEmail(user.id);
+    } catch (error) {
+      console.warn('Failed to send verification email, but registration succeeded:', error.message);
+    }
 
     return this.login({ email: dto.email, password: dto.password });
   }
