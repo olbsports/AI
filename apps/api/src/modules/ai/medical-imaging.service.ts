@@ -26,7 +26,11 @@ export class MedicalImagingService {
         'Fourbure (rotation P3)',
         'Sidebones',
       ],
-      criticalAreas: ['Os naviculaire', 'P3 (phalange distale)', 'Articulation interphalangienne distale'],
+      criticalAreas: [
+        'Os naviculaire',
+        'P3 (phalange distale)',
+        'Articulation interphalangienne distale',
+      ],
     },
     boulet: {
       name: 'Boulet (Métacarpo/tarso-phalangienne)',
@@ -55,13 +59,7 @@ export class MedicalImagingService {
     jarret: {
       name: 'Jarret (Tarse)',
       views: ['latéro-médiale', 'dorso-plantaire', 'obliques'],
-      commonFindings: [
-        'Éparvin',
-        'OCD',
-        'Bog spavin',
-        'Arthrose tarsienne',
-        'Fracture malléole',
-      ],
+      commonFindings: ['Éparvin', 'OCD', 'Bog spavin', 'Arthrose tarsienne', 'Fracture malléole'],
       criticalAreas: ['Articulation tibio-tarsienne', 'Petits os du tarse', 'Calcanéum'],
     },
     grasset: {
@@ -172,7 +170,7 @@ export class MedicalImagingService {
   // Classification des lésions tendineuses
   private readonly TENDON_LESION_GRADES = {
     0: 'Normal - Pas de lésion visible',
-    1: 'Légère - Perte <25% échogénicité, pas d\'augmentation volume',
+    1: "Légère - Perte <25% échogénicité, pas d'augmentation volume",
     2: 'Modérée - Perte 25-50% échogénicité, légère augmentation volume',
     3: 'Sévère - Perte >50% échogénicité, augmentation volume marquée',
     4: 'Très sévère - Zone anéchogène (rupture partielle)',
@@ -180,7 +178,7 @@ export class MedicalImagingService {
 
   constructor(
     private prisma: PrismaService,
-    private anthropic: AnthropicService,
+    private anthropic: AnthropicService
   ) {}
 
   /**
@@ -238,10 +236,10 @@ ${params.clinicalHistory ? `HISTORIQUE CLINIQUE: ${params.clinicalHistory}` : ''
 ${params.suspectedCondition ? `SUSPICION CLINIQUE: ${params.suspectedCondition}` : ''}
 
 ZONES CRITIQUES À EXAMINER:
-${regionInfo.criticalAreas.map(a => `- ${a}`).join('\n')}
+${regionInfo.criticalAreas.map((a) => `- ${a}`).join('\n')}
 
 LÉSIONS COURANTES À RECHERCHER:
-${regionInfo.commonFindings.map(f => `- ${f}`).join('\n')}
+${regionInfo.commonFindings.map((f) => `- ${f}`).join('\n')}
 
 ANALYSE DEMANDÉE:
 1. Qualité technique de l'image (positionnement, exposition)
@@ -275,8 +273,8 @@ Format JSON:
 }
 `;
 
-        return this.anthropic.analyzeImage(image, prompt, { type: 'health' });
-      }),
+        return this.anthropic.analyzeImage(image, prompt, { type: 'general' });
+      })
     );
 
     // Synthesize findings
@@ -302,7 +300,7 @@ Pour un contexte de VISITE D'ACHAT (si applicable):
     const synthesis = await this.anthropic.analyze(synthesisPrompt, 'health');
 
     // Parse results
-    let findings: RadioFinding[] = [];
+    const findings: RadioFinding[] = [];
     let overallGrade = 0;
 
     try {
@@ -312,7 +310,9 @@ Pour un contexte de VISITE D'ACHAT (si applicable):
           const parsed = JSON.parse(jsonMatch[0]);
           if (parsed.anomaliesDetectees) {
             findings.push(...parsed.anomaliesDetectees);
-            const maxSeverity = Math.max(...parsed.anomaliesDetectees.map((a: any) => a.severite || 0));
+            const maxSeverity = Math.max(
+              ...parsed.anomaliesDetectees.map((a: any) => a.severite || 0)
+            );
             overallGrade = Math.max(overallGrade, maxSeverity);
           }
         }
@@ -399,10 +399,10 @@ CONTEXTE: ${params.context}
 ${params.previousExam ? `EXAMEN PRÉCÉDENT (${params.previousExam.date.toISOString().split('T')[0]}): ${params.previousExam.findings}` : ''}
 
 STRUCTURES À ANALYSER:
-${regionInfo.structures.map(s => `- ${s}`).join('\n')}
+${regionInfo.structures.map((s) => `- ${s}`).join('\n')}
 
 LÉSIONS À RECHERCHER:
-${regionInfo.commonFindings.map(f => `- ${f}`).join('\n')}
+${regionInfo.commonFindings.map((f) => `- ${f}`).join('\n')}
 
 ${regionInfo.zones ? `ZONES D'EXAMEN: ${regionInfo.zones.join(', ')}` : ''}
 
@@ -459,12 +459,12 @@ Format JSON:
 }
 `;
 
-        return this.anthropic.analyzeImage(image, prompt, { type: 'health' });
-      }),
+        return this.anthropic.analyzeImage(image, prompt, { type: 'general' });
+      })
     );
 
     // Parse and aggregate findings
-    let allLesions: UltrasoundLesion[] = [];
+    const allLesions: UltrasoundLesion[] = [];
     let structures: StructureAnalysis[] = [];
     let maxGrade = 0;
 
@@ -501,7 +501,8 @@ Format JSON:
       structures,
       lesions: allLesions,
       maxGrade,
-      gradeDescription: this.TENDON_LESION_GRADES[maxGrade as keyof typeof this.TENDON_LESION_GRADES],
+      gradeDescription:
+        this.TENDON_LESION_GRADES[maxGrade as keyof typeof this.TENDON_LESION_GRADES],
       interpretation: imageAnalyses[0]?.analysis || 'Analyse non disponible',
       protocol,
       returnToWorkEstimate: this.estimateReturnToWork(maxGrade),
@@ -660,8 +661,8 @@ Format JSON:
             break;
         }
 
-        return this.anthropic.analyzeImage(image, prompt, { type: 'breeding' });
-      }),
+        return this.anthropic.analyzeImage(image, prompt, { type: 'general' });
+      })
     );
 
     // Parse results
@@ -705,7 +706,7 @@ Format JSON:
       0: 'Normal - Aucune anomalie détectée',
       1: 'Anomalie légère - Variante anatomique ou changement minime',
       2: 'Anomalie modérée - Surveillance recommandée',
-      3: 'Anomalie significative - Impact potentiel sur l\'utilisation',
+      3: "Anomalie significative - Impact potentiel sur l'utilisation",
       4: 'Anomalie sévère - Risque élevé',
     };
     return descriptions[grade] || 'Non classifié';
@@ -746,7 +747,11 @@ Format JSON:
         restDays: 7,
         phases: [
           { name: 'Repos relatif', duration: '1 semaine', activities: ['Paddock', 'Pas en main'] },
-          { name: 'Reprise progressive', duration: '1 semaine', activities: ['Pas monté', 'Trot léger'] },
+          {
+            name: 'Reprise progressive',
+            duration: '1 semaine',
+            activities: ['Pas monté', 'Trot léger'],
+          },
         ],
         treatments: ['Glaçage si nécessaire'],
         followUp: '2 semaines',
@@ -756,8 +761,16 @@ Format JSON:
       return {
         restDays: 30,
         phases: [
-          { name: 'Repos strict', duration: '2 semaines', activities: ['Box', 'Pas en main 10min'] },
-          { name: 'Repos modéré', duration: '2 semaines', activities: ['Paddock restreint', 'Pas en main 20min'] },
+          {
+            name: 'Repos strict',
+            duration: '2 semaines',
+            activities: ['Box', 'Pas en main 10min'],
+          },
+          {
+            name: 'Repos modéré',
+            duration: '2 semaines',
+            activities: ['Paddock restreint', 'Pas en main 20min'],
+          },
           { name: 'Reprise', duration: '4 semaines', activities: ['Pas monté', 'Trot progressif'] },
         ],
         treatments: ['Ondes de choc', 'Anti-inflammatoires', 'Bandes de repos'],
@@ -770,8 +783,16 @@ Format JSON:
         phases: [
           { name: 'Repos strict', duration: '1 mois', activities: ['Box strict'] },
           { name: 'Mobilisation', duration: '1 mois', activities: ['Pas en main 10min'] },
-          { name: 'Réhabilitation', duration: '2 mois', activities: ['Pas progressif', 'Marcheur'] },
-          { name: 'Remise en travail', duration: '2 mois', activities: ['Trot progressif', 'Travail plat'] },
+          {
+            name: 'Réhabilitation',
+            duration: '2 mois',
+            activities: ['Pas progressif', 'Marcheur'],
+          },
+          {
+            name: 'Remise en travail',
+            duration: '2 mois',
+            activities: ['Trot progressif', 'Travail plat'],
+          },
         ],
         treatments: ['PRP/Cellules souches', 'Ondes de choc', 'Ferrure orthopédique'],
         followUp: '1 mois contrôle écho',
@@ -782,12 +803,18 @@ Format JSON:
 
   private estimateReturnToWork(grade: number): string {
     switch (grade) {
-      case 0: return 'Immédiat';
-      case 1: return '2-4 semaines';
-      case 2: return '2-3 mois';
-      case 3: return '4-6 mois';
-      case 4: return '6-12 mois ou carrière compromise';
-      default: return 'À évaluer';
+      case 0:
+        return 'Immédiat';
+      case 1:
+        return '2-4 semaines';
+      case 2:
+        return '2-3 mois';
+      case 3:
+        return '4-6 mois';
+      case 4:
+        return '6-12 mois ou carrière compromise';
+      default:
+        return 'À évaluer';
     }
   }
 
@@ -799,7 +826,9 @@ Format JSON:
   private calculateNextReproExam(examType: string, findings: any): Date {
     switch (examType) {
       case 'suivi_chaleurs':
-        return new Date(Date.now() + (findings.ovulationEstimee?.includes('24') ? 1 : 2) * 24 * 60 * 60 * 1000);
+        return new Date(
+          Date.now() + (findings.ovulationEstimee?.includes('24') ? 1 : 2) * 24 * 60 * 60 * 1000
+        );
       case 'diagnostic_gestation':
         return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       case 'suivi_gestation':

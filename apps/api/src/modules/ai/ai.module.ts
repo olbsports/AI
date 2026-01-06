@@ -1,10 +1,14 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { AnthropicService } from './anthropic.service';
 import { AIAnalysisService } from './analysis.service';
 import { VideoAnalysisService } from './video-analysis.service';
 import { MedicalImagingService } from './medical-imaging.service';
 import { ExaminationPackagesService } from './examination-packages.service';
+import { AutoDetectionService } from './auto-detection.service';
+import { AdaptivePlanService } from './adaptive-plan.service';
+import { CourseDesignerService } from './course-designer.service';
+import { CostOptimizationService } from './cost-optimization.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
@@ -20,6 +24,10 @@ import { PrismaModule } from '../../prisma/prisma.module';
     VideoAnalysisService,
     MedicalImagingService,
     ExaminationPackagesService,
+    AutoDetectionService,
+    AdaptivePlanService,
+    CourseDesignerService,
+    CostOptimizationService,
   ],
   exports: [
     AnthropicService,
@@ -27,6 +35,10 @@ import { PrismaModule } from '../../prisma/prisma.module';
     VideoAnalysisService,
     MedicalImagingService,
     ExaminationPackagesService,
+    AutoDetectionService,
+    AdaptivePlanService,
+    CourseDesignerService,
+    CostOptimizationService,
   ],
 })
 export class AIModule {}

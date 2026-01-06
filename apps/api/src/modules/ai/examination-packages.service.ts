@@ -41,7 +41,7 @@ export class ExaminationPackagesService {
       features: [
         'Analyse locomotion complète',
         'Bilan de santé détaillé',
-        'Plan d\'entraînement 4 semaines',
+        "Plan d'entraînement 4 semaines",
         'Conseils nutrition de base',
         'Score par critère',
         '10 recommandations personnalisées',
@@ -55,12 +55,16 @@ export class ExaminationPackagesService {
       tokens: 30,
       color: '#9C27B0',
       includes: [
-        'locomotion_full', 'health_detailed', 'training_full',
-        'nutrition_full', 'mental_assessment', 'competition_prep',
+        'locomotion_full',
+        'health_detailed',
+        'training_full',
+        'nutrition_full',
+        'mental_assessment',
+        'competition_prep',
       ],
       features: [
         'Toutes les analyses Standard',
-        'Plan d\'entraînement 12 semaines',
+        "Plan d'entraînement 12 semaines",
         'Plan nutritionnel complet',
         'Évaluation comportementale',
         'Préparation compétition',
@@ -76,9 +80,14 @@ export class ExaminationPackagesService {
       tokens: 50,
       color: '#FF9800',
       includes: [
-        'locomotion_biomechanics', 'health_complete', 'training_periodization',
-        'nutrition_performance', 'mental_full', 'competition_strategy',
-        'breeding_assessment', 'career_planning',
+        'locomotion_biomechanics',
+        'health_complete',
+        'training_periodization',
+        'nutrition_performance',
+        'mental_full',
+        'competition_strategy',
+        'breeding_assessment',
+        'career_planning',
       ],
       features: [
         'Toutes les analyses Premium',
@@ -95,13 +104,17 @@ export class ExaminationPackagesService {
     },
     VISITE_ACHAT: {
       id: 'visite_achat',
-      name: 'Visite d\'Achat',
+      name: "Visite d'Achat",
       description: 'Analyse complète pré-achat',
       tokens: 40,
       color: '#F44336',
       includes: [
-        'locomotion_full', 'health_complete', 'radios_analysis',
-        'conformation', 'career_potential', 'value_estimation',
+        'locomotion_full',
+        'health_complete',
+        'radios_analysis',
+        'conformation',
+        'career_potential',
+        'value_estimation',
       ],
       features: [
         'Analyse locomotion toutes allures',
@@ -195,7 +208,7 @@ export class ExaminationPackagesService {
       name: 'Plan Entraînement - 4 semaines',
       category: 'training',
       tokens: 5,
-      description: 'Programme d\'entraînement sur 4 semaines',
+      description: "Programme d'entraînement sur 4 semaines",
       outputs: ['planning_4sem', 'exercices', 'intensite', 'repos'],
     },
     training_full: {
@@ -274,7 +287,12 @@ export class ExaminationPackagesService {
       category: 'competition',
       tokens: 15,
       description: 'Stratégie complète saison compétition',
-      outputs: ['calendrier_optimise', 'objectifs', 'preparation_specifique', 'analyse_adversaires'],
+      outputs: [
+        'calendrier_optimise',
+        'objectifs',
+        'preparation_specifique',
+        'analyse_adversaires',
+      ],
     },
 
     // Élevage
@@ -284,7 +302,12 @@ export class ExaminationPackagesService {
       category: 'breeding',
       tokens: 10,
       description: 'Évaluation pour la reproduction',
-      outputs: ['potentiel_genetique', 'compatibilites', 'recommandations_etalons', 'produits_attendus'],
+      outputs: [
+        'potentiel_genetique',
+        'compatibilites',
+        'recommandations_etalons',
+        'produits_attendus',
+      ],
     },
 
     // Carrière
@@ -330,7 +353,7 @@ export class ExaminationPackagesService {
     private prisma: PrismaService,
     private anthropic: AnthropicService,
     private videoAnalysis: VideoAnalysisService,
-    private medicalImaging: MedicalImagingService,
+    private medicalImaging: MedicalImagingService
   ) {}
 
   // ==================== PACKAGE OPERATIONS ====================
@@ -353,16 +376,19 @@ export class ExaminationPackagesService {
    * Get modules by category
    */
   getModulesByCategory(category: string): Module[] {
-    return Object.values(this.MODULES).filter(m => m.category === category);
+    return Object.values(this.MODULES).filter((m) => m.category === category);
   }
 
   /**
    * Calculate total tokens for custom selection
    */
-  calculateTokens(moduleIds: string[]): { total: number; breakdown: { id: string; tokens: number }[] } {
+  calculateTokens(moduleIds: string[]): {
+    total: number;
+    breakdown: { id: string; tokens: number }[];
+  } {
     const breakdown = moduleIds
-      .filter(id => this.MODULES[id])
-      .map(id => ({ id, tokens: this.MODULES[id].tokens }));
+      .filter((id) => this.MODULES[id])
+      .map((id) => ({ id, tokens: this.MODULES[id].tokens }));
 
     return {
       total: breakdown.reduce((sum, m) => sum + m.tokens, 0),
@@ -391,7 +417,9 @@ export class ExaminationPackagesService {
     });
 
     if (!org || org.tokenBalance < pkg.tokens) {
-      throw new Error(`Insufficient tokens. Required: ${pkg.tokens}, Available: ${org?.tokenBalance || 0}`);
+      throw new Error(
+        `Insufficient tokens. Required: ${pkg.tokens}, Available: ${org?.tokenBalance || 0}`
+      );
     }
 
     const horse = await this.prisma.horse.findUnique({
@@ -471,7 +499,9 @@ export class ExaminationPackagesService {
     });
 
     if (!org || org.tokenBalance < total) {
-      throw new Error(`Insufficient tokens. Required: ${total}, Available: ${org?.tokenBalance || 0}`);
+      throw new Error(
+        `Insufficient tokens. Required: ${total}, Available: ${org?.tokenBalance || 0}`
+      );
     }
 
     const horse = await this.prisma.horse.findUnique({
@@ -622,8 +652,8 @@ Fournis en JSON:
       return this.videoAnalysis.analyzeLocomotion({
         horseId: horse.id,
         videoFrames: data.videoFrames,
-        surface: data.surface || 'souple',
-        allure: data.allure || 'tous',
+        surface: (data.surface || 'souple') as 'souple' | 'dur' | 'mixte',
+        allure: (data.allure || 'tous') as 'tous' | 'pas' | 'trot' | 'galop',
         context: data.context as any,
       });
     }
@@ -748,7 +778,11 @@ Fournis:
     };
   }
 
-  private async generateTrainingPlan(horse: any, data: PackageInputData, weeks: number): Promise<TrainingPlan> {
+  private async generateTrainingPlan(
+    horse: any,
+    data: PackageInputData,
+    weeks: number
+  ): Promise<TrainingPlan> {
     const discipline = data.discipline || (horse.disciplines as string[])?.[0] || 'CSO';
     const level = data.level || horse.level || 'club';
     const objective = data.objective || 'Progression générale';
@@ -922,7 +956,10 @@ Génère en JSON:
     };
   }
 
-  private async generateNutritionPerformance(horse: any, data: PackageInputData): Promise<NutritionPlan> {
+  private async generateNutritionPerformance(
+    horse: any,
+    data: PackageInputData
+  ): Promise<NutritionPlan> {
     const prompt = `
 Nutrition PERFORMANCE pour ${horse.name} - Niveau ${horse.level || 'Pro'}
 
@@ -1200,11 +1237,17 @@ Analyse:
     return reminders;
   }
 
-  private async generatePackageSummary(horse: any, pkg: Package, results: Record<string, any>): Promise<string> {
+  private async generatePackageSummary(
+    horse: any,
+    pkg: Package,
+    results: Record<string, any>
+  ): Promise<string> {
     const summaryPrompt = `
 Résume les résultats du package ${pkg.name} pour ${horse.name}:
 
-${Object.entries(results).map(([k, v]) => `${k}: ${JSON.stringify(v).slice(0, 200)}`).join('\n')}
+${Object.entries(results)
+  .map(([k, v]) => `${k}: ${JSON.stringify(v).slice(0, 200)}`)
+  .join('\n')}
 
 Fournis un résumé exécutif de 3-4 phrases.
 `;

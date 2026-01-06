@@ -938,6 +938,27 @@ model AIAnalysisCache {
   @@map("ai_analysis_cache")
 }
 
+// ==================== AI COST METRICS ====================
+
+model AICostMetric {
+  id        String   @id @default(uuid())
+
+  // Task information
+  task      String   // video_analysis, chat, breeding_match, etc.
+  model     String   // claude-3-haiku, claude-sonnet-4, etc.
+
+  // Cost tracking
+  cost      Float    @default(0) // Actual cost in USD
+  saved     Float    @default(0) // Savings vs always using Sonnet
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  @@index([task, createdAt])
+  @@index([model, createdAt])
+  @@map("ai_cost_metrics")
+}
+
 // ==================== RIDERS ====================
 
 model Rider {
