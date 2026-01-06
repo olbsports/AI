@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../models/models.dart';
+import '../../providers/social_provider.dart';
 import '../../theme/app_theme.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -12,14 +13,25 @@ class FeedScreen extends ConsumerStatefulWidget {
   ConsumerState<FeedScreen> createState() => _FeedScreenState();
 }
 
-class _FeedScreenState extends ConsumerState<FeedScreen> {
+class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final _scrollController = ScrollController();
 
   @override
-  Widget build(BuildContext context) {
-    // Mock data - will be replaced with API
-    final posts = _getMockPosts();
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Communauté'),
@@ -28,34 +40,22 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             icon: const Icon(Icons.search),
             onPressed: () => _showSearch(context),
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-          ),
+          _buildNotificationButton(),
         ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Refresh feed
-          await Future.delayed(const Duration(seconds: 1));
-        },
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            // Story-style highlights (like Instagram)
-            SliverToBoxAdapter(
-              child: _buildStoriesSection(),
-            ),
-            const SliverToBoxAdapter(child: Divider()),
-            // Feed posts
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => _buildPostCard(posts[index]),
-                childCount: posts.length,
-              ),
-            ),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Pour toi'),
+            Tab(text: 'Abonnements'),
           ],
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildFeedTab(forYouFeedProvider),
+          _buildFeedTab(followingFeedProvider),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreatePostSheet(context),
@@ -64,104 +64,157 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  Widget _buildStoriesSection() {
-    return SizedBox(
-      height: 110,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        children: [
-          // Add story button
-          _buildAddStoryButton(),
-          // Mock stories
-          _buildStoryAvatar('Marie', 'assets/avatar1.jpg', true),
-          _buildStoryAvatar('Thomas', 'assets/avatar2.jpg', true),
-          _buildStoryAvatar('Sophie', 'assets/avatar3.jpg', false),
-          _buildStoryAvatar('Lucas', 'assets/avatar4.jpg', true),
-          _buildStoryAvatar('Emma', 'assets/avatar5.jpg', false),
-        ],
-      ),
+  Widget _buildNotificationButton() {
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
+
+    return Stack(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          onPressed: () => _showNotifications(context),
+        ),
+        unreadCount.when(
+          data: (count) => count > 0
+              ? Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+          loading: () => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 
-  Widget _buildAddStoryButton() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: Column(
-        children: [
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.shade300, width: 2),
-            ),
-            child: Center(
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.grey.shade100,
+  Widget _buildFeedTab(FutureProvider<List<PublicNote>> feedProvider) {
+    final feedAsync = ref.watch(feedProvider);
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(feedProvider);
+      },
+      child: feedAsync.when(
+        data: (posts) {
+          if (posts.isEmpty) {
+            return _buildEmptyFeed();
+          }
+          return CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // Trending tags section
+              SliverToBoxAdapter(
+                child: _buildTrendingTags(),
+              ),
+              const SliverToBoxAdapter(child: Divider()),
+              // Feed posts
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _buildPostCard(posts[index]),
+                  childCount: posts.length,
                 ),
-                child: Icon(Icons.add, color: AppColors.primary, size: 28),
               ),
-            ),
-          ),
-          const SizedBox(height: 4),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => _buildErrorWidget(error, feedProvider),
+      ),
+    );
+  }
+
+  Widget _buildEmptyFeed() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.feed_outlined, size: 64, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
           const Text(
-            'Votre story',
-            style: TextStyle(fontSize: 12),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            'Aucune publication',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Soyez le premier à partager !',
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => _showCreatePostSheet(context),
+            icon: const Icon(Icons.add),
+            label: const Text('Créer une publication'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStoryAvatar(String name, String imageUrl, bool hasUnread) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12),
+  Widget _buildErrorWidget(Object error, FutureProvider<List<PublicNote>> provider) {
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: hasUnread
-                  ? LinearGradient(
-                      colors: [AppColors.primary, AppColors.secondary],
-                    )
-                  : null,
-              border: hasUnread
-                  ? null
-                  : Border.all(color: Colors.grey.shade300, width: 2),
-            ),
-            padding: const EdgeInsets.all(2),
-            child: Container(
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-              ),
-              padding: const EdgeInsets.all(2),
-              child: CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.grey.shade300,
-                child: Text(name[0]),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
+          Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+          const SizedBox(height: 16),
+          const Text('Erreur de chargement'),
+          const SizedBox(height: 8),
           Text(
-            name,
-            style: const TextStyle(fontSize: 12),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            error.toString().length > 100
+                ? '${error.toString().substring(0, 100)}...'
+                : error.toString(),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () => ref.invalidate(provider),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Réessayer'),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTrendingTags() {
+    final tagsAsync = ref.watch(trendingTagsProvider);
+
+    return tagsAsync.when(
+      data: (tags) {
+        if (tags.isEmpty) return const SizedBox.shrink();
+        return SizedBox(
+          height: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: tags.length,
+            itemBuilder: (context, index) {
+              final tag = tags[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ActionChip(
+                  label: Text('#${tag.tag}'),
+                  onPressed: () => _showTagPosts(context, tag.tag),
+                ),
+              );
+            },
+          ),
+        );
+      },
+      loading: () => const SizedBox(height: 50),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
@@ -178,7 +231,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   ? NetworkImage(post.authorPhotoUrl!)
                   : null,
               child: post.authorPhotoUrl == null
-                  ? Text(post.authorName[0])
+                  ? Text(post.authorName.isNotEmpty ? post.authorName[0] : '?')
                   : null,
             ),
             title: Text(
@@ -229,13 +282,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Wrap(
                 spacing: 4,
-                children: post.tags.map((tag) => Text(
-                      '#$tag',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 12,
-                      ),
-                    )).toList(),
+                children: post.tags.map((tag) => InkWell(
+                  onTap: () => _showTagPosts(context, tag),
+                  child: Text(
+                    '#$tag',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                    ),
+                  ),
+                )).toList(),
               ),
             ),
           ],
@@ -249,7 +305,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
                   label: post.likeCount > 0 ? '${post.likeCount}' : '',
                   color: post.isLiked ? Colors.red : null,
-                  onTap: () {},
+                  onTap: () => _toggleLike(post),
                 ),
                 const SizedBox(width: 16),
                 // Comment
@@ -273,7 +329,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     post.isSaved ? Icons.bookmark : Icons.bookmark_border,
                     color: post.isSaved ? AppColors.primary : null,
                   ),
-                  onPressed: () {},
+                  onPressed: () => _toggleSave(post),
                 ),
               ],
             ),
@@ -311,9 +367,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     if (urls.length == 1) {
       return AspectRatio(
         aspectRatio: 16 / 9,
-        child: Container(
-          color: Colors.grey.shade200,
-          child: const Center(child: Icon(Icons.image, size: 48)),
+        child: Image.network(
+          urls[0],
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            color: Colors.grey.shade200,
+            child: const Center(child: Icon(Icons.image, size: 48)),
+          ),
         ),
       );
     }
@@ -323,10 +383,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       crossAxisCount: 2,
       mainAxisSpacing: 2,
       crossAxisSpacing: 2,
-      children: urls.take(4).map((url) => Container(
-            color: Colors.grey.shade200,
-            child: const Center(child: Icon(Icons.image)),
-          )).toList(),
+      children: urls.take(4).map((url) => Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          color: Colors.grey.shade200,
+          child: const Center(child: Icon(Icons.image)),
+        ),
+      )).toList(),
     );
   }
 
@@ -356,10 +420,57 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     }
   }
 
+  void _toggleLike(PublicNote post) async {
+    final notifier = ref.read(socialNotifierProvider.notifier);
+    if (post.isLiked) {
+      await notifier.unlikeNote(post.id);
+    } else {
+      await notifier.likeNote(post.id);
+    }
+    ref.invalidate(forYouFeedProvider);
+    ref.invalidate(followingFeedProvider);
+  }
+
+  void _toggleSave(PublicNote post) async {
+    final notifier = ref.read(socialNotifierProvider.notifier);
+    if (post.isSaved) {
+      await notifier.unsaveNote(post.id);
+    } else {
+      await notifier.saveNote(post.id);
+    }
+    ref.invalidate(forYouFeedProvider);
+    ref.invalidate(followingFeedProvider);
+  }
+
   void _showSearch(BuildContext context) {
     showSearch(
       context: context,
-      delegate: _FeedSearchDelegate(),
+      delegate: _FeedSearchDelegate(ref),
+    );
+  }
+
+  void _showTagPosts(BuildContext context, String tag) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TagPostsScreen(tag: tag),
+      ),
+    );
+  }
+
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => _NotificationsSheet(
+          scrollController: scrollController,
+        ),
+      ),
     );
   }
 
@@ -368,9 +479,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) => CreateNoteSheet(
-        onPost: (note) {
-          // Create post
-          Navigator.pop(context);
+        onPost: (noteData) async {
+          final notifier = ref.read(socialNotifierProvider.notifier);
+          final result = await notifier.createNote(noteData);
+          if (result != null) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Publication créée !')),
+            );
+          }
         },
       ),
     );
@@ -383,176 +500,100 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: const Icon(Icons.bookmark_add),
-            title: const Text('Enregistrer'),
-            onTap: () => Navigator.pop(context),
+            leading: Icon(post.isSaved ? Icons.bookmark_remove : Icons.bookmark_add),
+            title: Text(post.isSaved ? 'Retirer des favoris' : 'Enregistrer'),
+            onTap: () {
+              Navigator.pop(context);
+              _toggleSave(post);
+            },
           ),
           ListTile(
             leading: const Icon(Icons.link),
             title: const Text('Copier le lien'),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.share),
-            title: const Text('Partager en story'),
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              Navigator.pop(context);
+              // Copy link functionality
+            },
           ),
           ListTile(
             leading: const Icon(Icons.report_outlined),
             title: const Text('Signaler'),
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              Navigator.pop(context);
+              _showReportDialog(context, post);
+            },
           ),
         ],
       ),
     );
   }
 
+  void _showReportDialog(BuildContext context, PublicNote post) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Signaler cette publication'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Contenu inapproprié'),
+              onTap: () => _submitReport(context, post.id, 'inappropriate'),
+            ),
+            ListTile(
+              title: const Text('Spam'),
+              onTap: () => _submitReport(context, post.id, 'spam'),
+            ),
+            ListTile(
+              title: const Text('Harcèlement'),
+              onTap: () => _submitReport(context, post.id, 'harassment'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submitReport(BuildContext context, String noteId, String reason) async {
+    Navigator.pop(context);
+    final notifier = ref.read(socialNotifierProvider.notifier);
+    final success = await notifier.reportNote(noteId, reason, null);
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Signalement envoyé')),
+      );
+    }
+  }
+
   void _showComments(BuildContext context, PublicNote post) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Commentaires (${post.commentCount})',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            const Divider(),
-            Expanded(
-              child: post.commentCount == 0
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.chat_bubble_outline,
-                              size: 48, color: Colors.grey.shade400),
-                          const SizedBox(height: 8),
-                          const Text('Aucun commentaire'),
-                          const Text('Soyez le premier à commenter !'),
-                        ],
-                      ),
-                    )
-                  : ListView(
-                      controller: scrollController,
-                      children: const [
-                        // Comments would go here
-                      ],
-                    ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: Colors.grey.shade200)),
-              ),
-              child: Row(
-                children: [
-                  const CircleAvatar(child: Icon(Icons.person)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Ajouter un commentaire...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.send, color: AppColors.primary),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      builder: (context) => CommentsSheet(noteId: post.id),
     );
   }
 
-  void _sharePost(PublicNote post) {
+  void _sharePost(PublicNote post) async {
+    final notifier = ref.read(socialNotifierProvider.notifier);
+    await notifier.shareNote(post.id);
     Share.share(
-      '${post.content}\n\n- ${post.authorName} sur Horse Vision AI',
+      '${post.content}\n\n- ${post.authorName}',
       subject: 'Partage de ${post.authorName}',
     );
-  }
-
-  List<PublicNote> _getMockPosts() {
-    return [
-      PublicNote(
-        id: '1',
-        authorId: 'u1',
-        authorName: 'Marie Dupont',
-        horseName: 'Étoile du Matin',
-        content:
-            'Superbe séance de dressage aujourd\'hui ! 🐴 Belle progression sur les changements de pied. L\'analyse IA m\'a vraiment aidé à corriger ma position.',
-        visibility: ContentVisibility.public,
-        likeCount: 24,
-        commentCount: 5,
-        shareCount: 2,
-        isLiked: true,
-        tags: ['dressage', 'progression', 'analyse'],
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      PublicNote(
-        id: '2',
-        authorId: 'u2',
-        authorName: 'Thomas Martin',
-        horseName: 'Spirit',
-        content:
-            'Premier parcours sans faute ! 🏆 6 mois de travail et d\'analyses pour en arriver là. Merci à toute l\'équipe !',
-        mediaUrls: ['image1.jpg'],
-        visibility: ContentVisibility.public,
-        likeCount: 156,
-        commentCount: 23,
-        shareCount: 8,
-        tags: ['cso', 'victoire', 'sansfaute'],
-        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      ),
-      PublicNote(
-        id: '3',
-        authorId: 'u3',
-        authorName: 'Sophie Leroux',
-        horseName: 'Tornado',
-        content:
-            'Analyse de locomotion très intéressante aujourd\'hui. L\'IA a détecté une légère irrégularité que je n\'avais pas vue. On va pouvoir travailler dessus ! 💪',
-        visibility: ContentVisibility.followers,
-        likeCount: 12,
-        commentCount: 3,
-        tags: ['locomotion', 'santé', 'prévention'],
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      PublicNote(
-        id: '4',
-        authorId: 'u4',
-        authorName: 'Club Équestre du Parc',
-        content:
-            '🎉 Nouveau record du club ! Notre classement leaderboard ne cesse de grimper. Bravo à tous nos cavaliers et leurs montures !',
-        visibility: ContentVisibility.public,
-        likeCount: 89,
-        commentCount: 15,
-        shareCount: 12,
-        tags: ['club', 'leaderboard', 'fierté'],
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-    ];
   }
 }
 
 class _FeedSearchDelegate extends SearchDelegate<String> {
+  final WidgetRef ref;
+
+  _FeedSearchDelegate(this.ref);
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
@@ -573,37 +614,318 @@ class _FeedSearchDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildResults(BuildContext context) {
-    return Center(child: Text('Résultats pour "$query"'));
+    if (query.startsWith('#')) {
+      return TagPostsScreen(tag: query.substring(1));
+    }
+    return _buildUserResults();
+  }
+
+  Widget _buildUserResults() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final usersAsync = ref.watch(searchUsersProvider(query));
+        return usersAsync.when(
+          data: (users) => ListView.builder(
+            itemCount: users.length,
+            itemBuilder: (context, index) {
+              final user = users[index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: user.photoUrl != null
+                      ? NetworkImage(user.photoUrl!)
+                      : null,
+                  child: user.photoUrl == null ? Text(user.name[0]) : null,
+                ),
+                title: Text(user.name),
+                onTap: () {
+                  // Navigate to user profile
+                },
+              );
+            },
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => const Center(child: Text('Erreur de recherche')),
+        );
+      },
+    );
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    final suggestions = [
-      '#dressage',
-      '#cso',
-      '#hobbyHorse',
-      'Marie Dupont',
-      'Club du Parc',
-    ].where((s) => s.toLowerCase().contains(query.toLowerCase())).toList();
+    return Consumer(
+      builder: (context, ref, child) {
+        final tagsAsync = ref.watch(trendingTagsProvider);
+        return tagsAsync.when(
+          data: (tags) {
+            final suggestions = tags
+                .where((t) => t.tag.toLowerCase().contains(query.toLowerCase()))
+                .take(10)
+                .toList();
+            return ListView.builder(
+              itemCount: suggestions.length,
+              itemBuilder: (context, index) => ListTile(
+                leading: const Icon(Icons.tag),
+                title: Text('#${suggestions[index].tag}'),
+                trailing: Text('${suggestions[index].postCount} posts'),
+                onTap: () {
+                  query = '#${suggestions[index].tag}';
+                  showResults(context);
+                },
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => const SizedBox.shrink(),
+        );
+      },
+    );
+  }
+}
 
-    return ListView.builder(
-      itemCount: suggestions.length,
-      itemBuilder: (context, index) => ListTile(
-        leading: Icon(
-          suggestions[index].startsWith('#') ? Icons.tag : Icons.person,
-        ),
-        title: Text(suggestions[index]),
-        onTap: () {
-          query = suggestions[index];
-          showResults(context);
+class TagPostsScreen extends ConsumerWidget {
+  final String tag;
+
+  const TagPostsScreen({super.key, required this.tag});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final postsAsync = ref.watch(postsByTagProvider(tag));
+
+    return Scaffold(
+      appBar: AppBar(title: Text('#$tag')),
+      body: postsAsync.when(
+        data: (posts) {
+          if (posts.isEmpty) {
+            return const Center(child: Text('Aucune publication avec ce tag'));
+          }
+          return ListView.builder(
+            itemCount: posts.length,
+            itemBuilder: (context, index) {
+              // Simplified post card for tag view
+              final post = posts[index];
+              return Card(
+                margin: const EdgeInsets.all(8),
+                child: ListTile(
+                  title: Text(post.authorName),
+                  subtitle: Text(
+                    post.content,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              );
+            },
+          );
         },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Erreur: $e')),
       ),
     );
   }
 }
 
+class _NotificationsSheet extends ConsumerWidget {
+  final ScrollController scrollController;
+
+  const _NotificationsSheet({required this.scrollController});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notificationsAsync = ref.watch(notificationsProvider);
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Text(
+                'Notifications',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () {
+                  ref.read(socialNotifierProvider.notifier).markAllNotificationsRead();
+                },
+                child: const Text('Tout marquer lu'),
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        Expanded(
+          child: notificationsAsync.when(
+            data: (notifications) {
+              if (notifications.isEmpty) {
+                return const Center(child: Text('Aucune notification'));
+              }
+              return ListView.builder(
+                controller: scrollController,
+                itemCount: notifications.length,
+                itemBuilder: (context, index) {
+                  final notif = notifications[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: notif.actorPhotoUrl != null
+                          ? NetworkImage(notif.actorPhotoUrl!)
+                          : null,
+                      child: notif.actorPhotoUrl == null
+                          ? Text(notif.actorName[0])
+                          : null,
+                    ),
+                    title: Text(notif.message),
+                    subtitle: Text(_formatTimeAgo(notif.createdAt)),
+                    tileColor: notif.isRead ? null : Colors.blue.withOpacity(0.1),
+                  );
+                },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('Erreur: $e')),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatTimeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}min';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    return '${diff.inDays}j';
+  }
+}
+
+class CommentsSheet extends ConsumerStatefulWidget {
+  final String noteId;
+
+  const CommentsSheet({super.key, required this.noteId});
+
+  @override
+  ConsumerState<CommentsSheet> createState() => _CommentsSheetState();
+}
+
+class _CommentsSheetState extends ConsumerState<CommentsSheet> {
+  final _commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final commentsAsync = ref.watch(noteCommentsProvider(widget.noteId));
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) => Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Commentaires',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          const Divider(),
+          Expanded(
+            child: commentsAsync.when(
+              data: (comments) {
+                if (comments.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.chat_bubble_outline,
+                            size: 48, color: Colors.grey.shade400),
+                        const SizedBox(height: 8),
+                        const Text('Aucun commentaire'),
+                        const Text('Soyez le premier à commenter !'),
+                      ],
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  controller: scrollController,
+                  itemCount: comments.length,
+                  itemBuilder: (context, index) {
+                    final comment = comments[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: comment.authorPhotoUrl != null
+                            ? NetworkImage(comment.authorPhotoUrl!)
+                            : null,
+                        child: comment.authorPhotoUrl == null
+                            ? Text(comment.authorName[0])
+                            : null,
+                      ),
+                      title: Text(comment.authorName),
+                      subtitle: Text(comment.content),
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Erreur: $e')),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: Row(
+              children: [
+                const CircleAvatar(child: Icon(Icons.person)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _commentController,
+                    decoration: InputDecoration(
+                      hintText: 'Ajouter un commentaire...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send, color: AppColors.primary),
+                  onPressed: _submitComment,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submitComment() async {
+    final content = _commentController.text.trim();
+    if (content.isEmpty) return;
+
+    final notifier = ref.read(socialNotifierProvider.notifier);
+    final result = await notifier.addComment(widget.noteId, content);
+
+    if (result != null) {
+      _commentController.clear();
+    }
+  }
+}
+
 class CreateNoteSheet extends StatefulWidget {
-  final Function(PublicNote) onPost;
+  final Function(Map<String, dynamic>) onPost;
 
   const CreateNoteSheet({super.key, required this.onPost});
 
@@ -617,6 +939,13 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
   bool _allowComments = true;
   bool _allowSharing = true;
   String? _selectedHorseId;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _contentController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -653,7 +982,6 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            // Visibility selector
             Row(
               children: [
                 const Text('Visibilité :'),
@@ -679,7 +1007,6 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
               ],
             ),
             const SizedBox(height: 8),
-            // Options
             Row(
               children: [
                 Expanded(
@@ -703,7 +1030,6 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
               ],
             ),
             const SizedBox(height: 16),
-            // Action buttons
             Row(
               children: [
                 IconButton(
@@ -721,19 +1047,18 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                   onPressed: () {},
                   tooltip: 'Associer un cheval',
                 ),
-                IconButton(
-                  icon: const Icon(Icons.analytics),
-                  onPressed: () {},
-                  tooltip: 'Lier une analyse',
-                ),
                 const Spacer(),
                 FilledButton(
-                  onPressed: _contentController.text.isEmpty
+                  onPressed: _isLoading || _contentController.text.trim().isEmpty
                       ? null
-                      : () {
-                          // Create post
-                        },
-                  child: const Text('Publier'),
+                      : _submitPost,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Publier'),
                 ),
               ],
             ),
@@ -741,5 +1066,16 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
         ),
       ),
     );
+  }
+
+  void _submitPost() {
+    setState(() => _isLoading = true);
+    widget.onPost({
+      'content': _contentController.text.trim(),
+      'visibility': _visibility.name,
+      'allowComments': _allowComments,
+      'allowSharing': _allowSharing,
+      if (_selectedHorseId != null) 'horseId': _selectedHorseId,
+    });
   }
 }

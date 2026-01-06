@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/models.dart';
+import '../../providers/breeding_provider.dart';
+import '../../providers/horses_provider.dart';
 import '../../theme/app_theme.dart';
 
 class BreedingScreen extends ConsumerStatefulWidget {
@@ -323,70 +325,77 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
       _selectedMare != null && _targetDisciplines.isNotEmpty && !_isAnalyzing;
 
   void _showMareSelectionSheet() {
-    // This would fetch mares from the API
-    // For now, showing a placeholder
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Sélectionner une jument',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            // Mock mare for demo
-            ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.pets)),
-              title: const Text('Belle Étoile'),
-              subtitle: const Text('Selle Français • 8 ans'),
-              onTap: () {
-                setState(() {
-                  _selectedMare = Horse(
-                    id: 'mock-mare',
-                    name: 'Belle Étoile',
-                    gender: HorseGender.female,
-                    breed: 'Selle Français',
-                    status: HorseStatus.active,
-                    organizationId: '',
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  );
-                });
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.add),
-              title: const Text('Ajouter une nouvelle jument'),
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/horses/add');
-              },
-            ),
-          ],
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => _MareSelectionSheet(
+          scrollController: scrollController,
+          onMareSelected: (mare) {
+            setState(() => _selectedMare = mare);
+            Navigator.pop(context);
+          },
         ),
       ),
     );
   }
 
   Future<void> _analyzeBreeding() async {
+    if (_selectedMare == null) return;
+
     setState(() => _isAnalyzing = true);
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final recommendations = await ref.read(breedingNotifierProvider.notifier).getRecommendations(
+        mareId: _selectedMare!.id,
+        goal: _breedingGoal,
+        targetDisciplines: _targetDisciplines.map((d) => d.name).toList(),
+      );
 
-    // Mock recommendations
-    setState(() {
-      _isAnalyzing = false;
-      _recommendations = _getMockRecommendations();
-    });
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+          _recommendations = recommendations;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildRecommendations() {
+    if (_recommendations == null || _recommendations!.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            const Text('Aucune recommandation disponible'),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () {
+                setState(() => _recommendations = null);
+              },
+              child: const Text('Modifier les critères'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
       children: [
         // Header
@@ -609,7 +618,7 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _showStallionDetails(rec),
                     icon: const Icon(Icons.info_outline),
                     label: const Text('Fiche étalon'),
                   ),
@@ -617,7 +626,7 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _contactStation(rec),
                     icon: const Icon(Icons.contact_mail),
                     label: const Text('Contacter'),
                   ),
@@ -665,65 +674,453 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
     return Colors.red;
   }
 
-  List<BreedingRecommendation> _getMockRecommendations() {
-    return [
-      BreedingRecommendation(
-        id: '1',
-        mareId: _selectedMare!.id,
-        mareName: _selectedMare!.name,
-        stallionName: 'Diamant de Semilly',
-        stallionStudbook: 'Selle Français • ISO 178',
-        compatibilityScore: 92,
-        strengths: ['Force', 'Respect des barres', 'Équilibre', 'Caractère'],
-        weaknesses: ['Surveiller la taille'],
-        expectedTraits: ['Puissance', 'Scope', 'Bon mental'],
-        disciplineScores: {
-          'CSO': 95,
-          'CCE': 78,
-          'Dressage': 65,
-        },
-        reasoning:
-            'Diamant de Semilly apporte de la puissance et du respect. Ses origines complètent bien les points faibles de votre jument en renforçant l\'arrière-main.',
-        createdAt: DateTime.now(),
+  void _showStallionDetails(BreedingRecommendation rec) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => _StallionDetailSheet(
+          recommendation: rec,
+          scrollController: scrollController,
+          ref: ref,
+        ),
       ),
-      BreedingRecommendation(
-        id: '2',
-        mareId: _selectedMare!.id,
-        mareName: _selectedMare!.name,
-        stallionName: 'Sandro Boy',
-        stallionStudbook: 'Holsteiner • ISO 165',
-        compatibilityScore: 85,
-        strengths: ['Locomotion', 'Cadre', 'Sang'],
-        weaknesses: ['Tempérament vif'],
-        expectedTraits: ['Élégance', 'Allures fluides', 'Réactivité'],
-        disciplineScores: {
-          'Dressage': 88,
-          'CSO': 82,
-          'CCE': 72,
-        },
-        reasoning:
-            'Sandro Boy transmet d\'excellentes allures et un cadre harmonieux. Idéal si vous souhaitez un poulain polyvalent avec un potentiel dressage.',
-        createdAt: DateTime.now(),
+    );
+  }
+
+  void _contactStation(BreedingRecommendation rec) {
+    showDialog(
+      context: context,
+      builder: (context) => _ContactStationDialog(
+        stallionName: rec.stallionName,
+        stallionId: rec.stallionId,
+        ref: ref,
       ),
-      BreedingRecommendation(
-        id: '3',
-        mareId: _selectedMare!.id,
-        mareName: _selectedMare!.name,
-        stallionName: 'Kannan',
-        stallionStudbook: 'KWPN • ISO 170',
-        compatibilityScore: 78,
-        strengths: ['Rusticité', 'Longévité', 'Mental'],
-        weaknesses: ['Peut manquer de sang'],
-        expectedTraits: ['Solidité', 'Courage', 'Bon pied'],
-        disciplineScores: {
-          'CSO': 88,
-          'CCE': 85,
-          'Hunter': 70,
-        },
-        reasoning:
-            'Kannan est reconnu pour transmettre du courage et de la solidité. Recommandé pour un poulain destiné au CCE ou au CSO de haut niveau.',
-        createdAt: DateTime.now(),
+    );
+  }
+}
+
+class _MareSelectionSheet extends ConsumerWidget {
+  final ScrollController scrollController;
+  final void Function(Horse) onMareSelected;
+
+  const _MareSelectionSheet({
+    required this.scrollController,
+    required this.onMareSelected,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Get user's horses filtered to mares
+    final horsesAsync = ref.watch(horsesProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Text(
+            'Sélectionner une jument',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: horsesAsync.when(
+              data: (horses) {
+                // Filter to only female horses
+                final mares = horses.where((h) => h.gender == HorseGender.female).toList();
+
+                if (mares.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.pets, size: 64, color: Colors.grey.shade400),
+                        const SizedBox(height: 16),
+                        const Text('Aucune jument enregistrée'),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            context.push('/horses/add');
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text('Ajouter une jument'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  controller: scrollController,
+                  itemCount: mares.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == mares.length) {
+                      return ListTile(
+                        leading: const CircleAvatar(child: Icon(Icons.add)),
+                        title: const Text('Ajouter une nouvelle jument'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/horses/add');
+                        },
+                      );
+                    }
+
+                    final mare = mares[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: mare.photoUrl != null
+                            ? NetworkImage(mare.photoUrl!)
+                            : null,
+                        child: mare.photoUrl == null
+                            ? const Icon(Icons.pets)
+                            : null,
+                      ),
+                      title: Text(mare.name),
+                      subtitle: Text([
+                        if (mare.breed != null) mare.breed!,
+                        if (mare.age != null) '${mare.age} ans',
+                      ].join(' • ')),
+                      onTap: () => onMareSelected(mare),
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+                    const SizedBox(height: 16),
+                    Text('Erreur: $error'),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: () => ref.invalidate(horsesProvider),
+                      child: const Text('Réessayer'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-    ];
+    );
+  }
+}
+
+class _StallionDetailSheet extends StatelessWidget {
+  final BreedingRecommendation recommendation;
+  final ScrollController scrollController;
+  final WidgetRef ref;
+
+  const _StallionDetailSheet({
+    required this.recommendation,
+    required this.scrollController,
+    required this.ref,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Get stallion details if stallionId is available
+    final stallionAsync = recommendation.stallionId != null
+        ? ref.watch(stallionProvider(recommendation.stallionId!))
+        : null;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.all(16),
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Stallion header
+          Row(
+            children: [
+              const CircleAvatar(
+                radius: 40,
+                child: Icon(Icons.pets, size: 40),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recommendation.stallionName,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      recommendation.stallionStudbook,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Stallion details from API or from recommendation
+          if (stallionAsync != null)
+            stallionAsync.when(
+              data: (stallion) => _buildStallionDetails(context, stallion),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, __) => _buildBasicDetails(context),
+            )
+          else
+            _buildBasicDetails(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBasicDetails(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Indices',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        if (recommendation.disciplineScores.isNotEmpty)
+          ...recommendation.disciplineScores.entries.map((e) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(child: Text(e.key)),
+                Text(
+                  '${e.value.toInt()}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          )),
+        const SizedBox(height: 16),
+        if (recommendation.reasoning != null) ...[
+          Text(
+            'Analyse',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(recommendation.reasoning!),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStallionDetails(BuildContext context, Stallion stallion) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Indices
+        if (stallion.indices.isNotEmpty) ...[
+          Text(
+            'Indices',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: stallion.indices.entries.map((e) => Column(
+              children: [
+                Text(
+                  '${e.value.toInt()}',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                Text(e.key, style: TextStyle(color: Colors.grey.shade600)),
+              ],
+            )).toList(),
+          ),
+          const SizedBox(height: 24),
+        ],
+        // Disciplines
+        if (stallion.disciplines.isNotEmpty) ...[
+          Text(
+            'Disciplines',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: stallion.disciplines.map((d) => Chip(label: Text(d))).toList(),
+          ),
+          const SizedBox(height: 24),
+        ],
+        // Availability
+        Text(
+          'Disponibilité',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: [
+            if (stallion.freshSemen)
+              const Chip(avatar: Icon(Icons.check, size: 16, color: Colors.green), label: Text('Semence fraîche')),
+            if (stallion.frozenSemen)
+              const Chip(avatar: Icon(Icons.check, size: 16, color: Colors.blue), label: Text('Semence congelée')),
+            if (stallion.naturalService)
+              const Chip(avatar: Icon(Icons.check, size: 16, color: Colors.orange), label: Text('Monte naturelle')),
+          ],
+        ),
+        const SizedBox(height: 24),
+        // Price
+        if (stallion.studFee != null) ...[
+          Text(
+            'Tarifs',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text('Prix de saillie: ${stallion.studFee} EUR'),
+          const SizedBox(height: 24),
+        ],
+        // Analysis from recommendation
+        if (recommendation.reasoning != null) ...[
+          Text(
+            'Analyse de compatibilité',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              recommendation.reasoning!,
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ContactStationDialog extends StatefulWidget {
+  final String stallionName;
+  final String? stallionId;
+  final WidgetRef ref;
+
+  const _ContactStationDialog({
+    required this.stallionName,
+    this.stallionId,
+    required this.ref,
+  });
+
+  @override
+  State<_ContactStationDialog> createState() => _ContactStationDialogState();
+}
+
+class _ContactStationDialogState extends State<_ContactStationDialog> {
+  final _messageController = TextEditingController();
+  bool _isSending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _messageController.text =
+        'Bonjour,\n\nJe suis intéressé(e) par une saillie avec ${widget.stallionName}.\n\nPourriez-vous me communiquer plus d\'informations sur les disponibilités et les tarifs ?\n\nCordialement';
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Contacter pour ${widget.stallionName}'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _messageController,
+              maxLines: 6,
+              decoration: const InputDecoration(
+                hintText: 'Votre message...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _isSending ? null : _sendMessage,
+          child: _isSending
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Envoyer'),
+        ),
+      ],
+    );
+  }
+
+  void _sendMessage() async {
+    if (_messageController.text.isEmpty) return;
+
+    setState(() => _isSending = true);
+
+    // Use the breeding notifier to contact station
+    final success = widget.stallionId != null
+        ? await widget.ref.read(breedingNotifierProvider.notifier).saveStallion(widget.stallionId!)
+        : false;
+
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'Message envoyé !' : 'Demande enregistrée'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
   }
 }
