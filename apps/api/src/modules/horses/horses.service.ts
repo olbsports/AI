@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
+import { UploadService } from '../upload/upload.service';
 import { CreateHorseDto } from './dto/create-horse.dto';
 import { UpdateHorseDto } from './dto/update-horse.dto';
 import { calculatePagination, calculateOffset } from '@horse-vision/types';
 
 @Injectable()
 export class HorsesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   async findAll(
     organizationId: string,
@@ -101,6 +105,54 @@ export class HorsesService {
     return this.prisma.horse.update({
       where: { id },
       data: { status: 'retired' },
+    });
+  }
+
+  async uploadPhoto(id: string, organizationId: string, file: Express.Multer.File) {
+    const horse = await this.findById(id, organizationId);
+
+    // Delete old photo if exists
+    if (horse.photoUrl) {
+      try {
+        // Extract key from URL
+        const urlParts = horse.photoUrl.split('/');
+        const key = urlParts.slice(3).join('/');
+        await this.uploadService.deleteFile(key);
+      } catch {
+        // Ignore delete errors
+      }
+    }
+
+    // Upload new photo
+    const { url } = await this.uploadService.uploadFile(
+      organizationId,
+      'avatars', // Use avatars category for horse photos
+      file,
+    );
+
+    // Update horse with new photo URL
+    return this.prisma.horse.update({
+      where: { id },
+      data: { photoUrl: url },
+    });
+  }
+
+  async deletePhoto(id: string, organizationId: string) {
+    const horse = await this.findById(id, organizationId);
+
+    if (horse.photoUrl) {
+      try {
+        const urlParts = horse.photoUrl.split('/');
+        const key = urlParts.slice(3).join('/');
+        await this.uploadService.deleteFile(key);
+      } catch {
+        // Ignore delete errors
+      }
+    }
+
+    return this.prisma.horse.update({
+      where: { id },
+      data: { photoUrl: null },
     });
   }
 }
