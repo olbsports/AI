@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/admin_models.dart';
 
 class AdminApiService {
-  static const String _baseUrl = 'http://87.106.3.194/api';
+  static const String _baseUrl = 'https://api.horsetempo.app/api';
   static const String _tokenKey = 'admin_auth_token';
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
