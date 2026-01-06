@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/models.dart';
-import '../../models/breeding.dart';
 import '../../providers/breeding_provider.dart';
-import '../../providers/horse_provider.dart';
+import '../../providers/horses_provider.dart';
 import '../../theme/app_theme.dart';
 
 class BreedingScreen extends ConsumerStatefulWidget {

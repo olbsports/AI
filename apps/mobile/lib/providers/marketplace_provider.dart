@@ -109,8 +109,8 @@ final horseSaleListingProvider =
             .toList() ??
         [],
     level: response['level'],
-    equiCote: response['equiCote'] != null ? HorseEquiCote.fromJson(response['equiCote']) : null,
-    equiTrace: response['equiTrace'] != null ? HorseEquiTrace.fromJson(response['equiTrace']) : null,
+    argus: response['argus'] != null ? HorseArgus.fromJson(response['argus']) : null,
+    histovec: response['histovec'] != null ? HorseHistovec.fromJson(response['histovec']) : null,
     aiProfile: response['aiProfile'] != null ? HorseAIProfile.fromJson(response['aiProfile']) : null,
   );
 });

@@ -13,5 +13,5 @@ export 'services_provider.dart';
 export 'marketplace_provider.dart';
 export 'breeding_provider.dart';
 export 'social_provider.dart';
-export 'leaderboard_provider.dart';
+export 'leaderboard_provider.dart' hide clubLeaderboardProvider;
 export 'theme_provider.dart';
