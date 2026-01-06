@@ -62,7 +62,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      print('LOGIN: Attempting login for $email');
       final response = await _api.login(email, password);
+      print('LOGIN: Success!');
       await _storage.saveTokens(response.accessToken, response.refreshToken);
       await _storage.saveUserId(response.user.id);
       state = state.copyWith(
@@ -72,9 +74,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
+      print('LOGIN ERROR: $e');
       state = state.copyWith(
         isLoading: false,
-        error: _getErrorMessage(e),
+        error: 'Erreur: ${e.toString().substring(0, e.toString().length > 100 ? 100 : e.toString().length)}',
       );
       return false;
     }
