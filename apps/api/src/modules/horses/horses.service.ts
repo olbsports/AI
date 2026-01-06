@@ -108,7 +108,7 @@ export class HorsesService {
     });
   }
 
-  async uploadPhoto(id: string, organizationId: string, file: Express.Multer.File) {
+  async uploadPhoto(id: string, organizationId: string, file: any) {
     const horse = await this.findById(id, organizationId);
 
     // Delete old photo if exists

@@ -131,7 +131,7 @@ export class AuthController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadProfilePhoto(
     @CurrentUser() user: any,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');

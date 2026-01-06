@@ -76,7 +76,7 @@ export class HorsesController {
   async uploadPhoto(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');

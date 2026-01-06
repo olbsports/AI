@@ -194,7 +194,7 @@ export class UploadService {
   async uploadFile(
     organizationId: string,
     category: string,
-    file: Express.Multer.File,
+    file: any,
   ): Promise<{ url: string; key: string }> {
     // Validate content type
     const allowedTypes = this.allowedTypes[category];

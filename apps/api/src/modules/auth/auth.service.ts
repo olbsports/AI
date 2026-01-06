@@ -331,7 +331,7 @@ export class AuthService {
     return user;
   }
 
-  async uploadProfilePhoto(userId: string, organizationId: string, file: Express.Multer.File) {
+  async uploadProfilePhoto(userId: string, organizationId: string, file: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
