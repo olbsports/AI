@@ -7,7 +7,7 @@ final healthRecordsProvider =
     FutureProvider.family<List<HealthRecord>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/health');
-  return (response as List).map((e) => HealthRecord.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => HealthRecord.fromJson(e)).toList();
 });
 
 /// Health records by type
@@ -23,7 +23,7 @@ final weightRecordsProvider =
     FutureProvider.family<List<WeightRecord>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/weight');
-  return (response as List).map((e) => WeightRecord.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => WeightRecord.fromJson(e)).toList();
 });
 
 /// Body condition records
@@ -31,7 +31,7 @@ final bodyConditionRecordsProvider =
     FutureProvider.family<List<BodyConditionRecord>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/body-condition');
-  return (response as List).map((e) => BodyConditionRecord.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => BodyConditionRecord.fromJson(e)).toList();
 });
 
 /// Active nutrition plan for a horse
@@ -51,14 +51,14 @@ final nutritionPlansProvider =
     FutureProvider.family<List<NutritionPlan>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/nutrition');
-  return (response as List).map((e) => NutritionPlan.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => NutritionPlan.fromJson(e)).toList();
 });
 
 /// Health reminders for all horses
 final healthRemindersProvider = FutureProvider<List<HealthReminder>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/health/reminders');
-  return (response as List).map((e) => HealthReminder.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => HealthReminder.fromJson(e)).toList();
 });
 
 /// Overdue reminders

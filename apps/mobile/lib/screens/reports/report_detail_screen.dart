@@ -43,7 +43,7 @@ class ReportDetailScreen extends ConsumerWidget {
           if (report.status == ReportStatus.ready) ...[
             IconButton(
               icon: const Icon(Icons.share),
-              onPressed: () => _shareReport(context, report),
+              onPressed: () => _shareReport(context, ref, report),
             ),
             IconButton(
               icon: const Icon(Icons.download),
@@ -494,7 +494,7 @@ class ReportDetailScreen extends ConsumerWidget {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  Future<void> _shareReport(BuildContext context, Report report) async {
+  Future<void> _shareReport(BuildContext context, WidgetRef ref, Report report) async {
     try {
       // Show loading
       showDialog(
@@ -506,7 +506,7 @@ class ReportDetailScreen extends ConsumerWidget {
       );
 
       // Get the API service from the ref
-      final apiService = ProviderScope.containerOf(context).read(apiServiceProvider);
+      final apiService = ref.read(apiServiceProvider);
 
       // Call API to generate share link (7 days expiration)
       final shareUrl = await apiService.shareReport(report.id, expirationDays: 7);
