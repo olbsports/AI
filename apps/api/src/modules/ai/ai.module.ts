@@ -1,17 +1,32 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { AnthropicService } from './anthropic.service';
 import { AIAnalysisService } from './analysis.service';
+import { VideoAnalysisService } from './video-analysis.service';
+import { MedicalImagingService } from './medical-imaging.service';
+import { ExaminationPackagesService } from './examination-packages.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
   imports: [
     HttpModule.register({
-      timeout: 120000, // 2 minutes for AI calls
+      timeout: 180000, // 3 minutes for AI calls (complex analyses)
     }),
     PrismaModule,
   ],
-  providers: [AnthropicService, AIAnalysisService],
-  exports: [AnthropicService, AIAnalysisService],
+  providers: [
+    AnthropicService,
+    AIAnalysisService,
+    VideoAnalysisService,
+    MedicalImagingService,
+    ExaminationPackagesService,
+  ],
+  exports: [
+    AnthropicService,
+    AIAnalysisService,
+    VideoAnalysisService,
+    MedicalImagingService,
+    ExaminationPackagesService,
+  ],
 })
 export class AIModule {}
