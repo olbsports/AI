@@ -9,6 +9,9 @@ import { AutoDetectionService } from './auto-detection.service';
 import { AdaptivePlanService } from './adaptive-plan.service';
 import { CourseDesignerService } from './course-designer.service';
 import { CostOptimizationService } from './cost-optimization.service';
+import { ProgressTrackingService } from './progress-tracking.service';
+import { ComparisonService } from './comparison.service';
+import { EvolutionReportService } from './evolution-report.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
@@ -28,6 +31,9 @@ import { PrismaModule } from '../../prisma/prisma.module';
     AdaptivePlanService,
     CourseDesignerService,
     CostOptimizationService,
+    ProgressTrackingService,
+    ComparisonService,
+    EvolutionReportService,
   ],
   exports: [
     AnthropicService,
@@ -39,6 +45,9 @@ import { PrismaModule } from '../../prisma/prisma.module';
     AdaptivePlanService,
     CourseDesignerService,
     CostOptimizationService,
+    ProgressTrackingService,
+    ComparisonService,
+    EvolutionReportService,
   ],
 })
 export class AIModule {}

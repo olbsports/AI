@@ -959,6 +959,216 @@ model AICostMetric {
   @@map("ai_cost_metrics")
 }
 
+// ==================== PERFORMANCE TRACKING ====================
+
+model PerformanceSnapshot {
+  id             String   @id @default(uuid())
+
+  // Subject (horse or rider)
+  subjectType    String   // horse, rider, pair
+  horseId        String?
+  riderId        String?
+
+  // Snapshot date
+  snapshotDate   DateTime @default(now())
+  periodType     String   // daily, weekly, monthly, competition
+
+  // Discipline and level
+  discipline     String   // CSO, Dressage, CCE, Hunter, Endurance
+  level          String   // Club4, Club3, Club2, Club1, Amateur, Pro
+
+  // Global scores (0-100)
+  globalScore    Float?
+  techniqueScore Float?
+  physicalScore  Float?
+  mentalScore    Float?
+  harmonyScore   Float?  // For pair evaluations
+
+  // Detailed metrics (JSON for flexibility)
+  metrics        Json     // { "impulsion": 75, "equilibre": 80, ... }
+
+  // AI Analysis summary
+  aiAnalysis     Json?    // Detailed AI feedback
+  strengths      Json     @default("[]") // ["good_rhythm", "clean_jumps"]
+  weaknesses     Json     @default("[]") // ["needs_impulsion", "late_changes"]
+  recommendations Json    @default("[]")
+
+  // Source data references
+  analysisSessionId String?
+  competitionId     String?
+
+  // Timestamps
+  createdAt      DateTime @default(now())
+
+  @@index([horseId, snapshotDate])
+  @@index([riderId, snapshotDate])
+  @@index([subjectType, discipline, snapshotDate])
+  @@map("performance_snapshots")
+}
+
+model ProgressMetric {
+  id             String   @id @default(uuid())
+
+  // Subject
+  subjectType    String   // horse, rider, pair
+  horseId        String?
+  riderId        String?
+
+  // Metric info
+  metricName     String   // impulsion, equilibre, position, regularity, etc.
+  metricCategory String   // technique, physical, mental, competition
+
+  // Value tracking
+  value          Float
+  previousValue  Float?
+  targetValue    Float?
+  unit           String?  // percent, score, seconds, cm, etc.
+
+  // Context
+  discipline     String?
+  level          String?
+  context        String?  // training, competition, exam
+
+  // Trend
+  trend          String?  // improving, stable, declining
+  trendStrength  Float?   // -1 to 1
+
+  // Date
+  recordedAt     DateTime @default(now())
+
+  @@index([horseId, metricName, recordedAt])
+  @@index([riderId, metricName, recordedAt])
+  @@index([metricCategory, recordedAt])
+  @@map("progress_metrics")
+}
+
+model EvolutionGoal {
+  id             String   @id @default(uuid())
+
+  // Subject
+  subjectType    String   // horse, rider, pair
+  horseId        String?
+  riderId        String?
+
+  // Goal details
+  title          String
+  description    String?
+  goalType       String   // performance, technique, competition, health
+
+  // Target metrics
+  targetMetric   String   // metric name to track
+  startValue     Float
+  targetValue    Float
+  currentValue   Float?
+  unit           String?
+
+  // Timeline
+  startDate      DateTime @default(now())
+  targetDate     DateTime
+  completedDate  DateTime?
+
+  // Status
+  status         String   @default("active") // active, achieved, failed, paused
+  progress       Float    @default(0) // 0-100 percent
+
+  // Milestones
+  milestones     Json     @default("[]") // [{ date, value, note }]
+
+  // AI recommendations
+  aiPlan         Json?    // Training plan to achieve goal
+  adjustments    Json     @default("[]") // Plan modifications history
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([horseId, status])
+  @@index([riderId, status])
+  @@index([targetDate])
+  @@map("evolution_goals")
+}
+
+model ComparisonReport {
+  id             String   @id @default(uuid())
+
+  // Comparison type
+  comparisonType String   // temporal, cross_subject, benchmark
+
+  // Subjects being compared
+  subjects       Json     // [{ type, id, name, period? }]
+
+  // Parameters
+  discipline     String?
+  level          String?
+  metrics        Json     @default("[]") // Metrics included in comparison
+  periodStart    DateTime?
+  periodEnd      DateTime?
+
+  // Results
+  results        Json     // Detailed comparison data
+  rankings       Json?    // For cross-subject comparisons
+  insights       Json     @default("[]") // AI-generated insights
+  recommendations Json    @default("[]")
+
+  // Visualization data
+  chartData      Json?    // Pre-computed chart data
+
+  // Metadata
+  generatedBy    String?  // user_id
+  createdAt      DateTime @default(now())
+
+  @@index([comparisonType, createdAt])
+  @@map("comparison_reports")
+}
+
+model TrainingSession {
+  id             String   @id @default(uuid())
+
+  // Participants
+  horseId        String
+  riderId        String?
+
+  // Session info
+  sessionDate    DateTime
+  duration       Int      // minutes
+  sessionType    String   // flatwork, jumping, dressage, hack, lunging
+  discipline     String?
+
+  // Conditions
+  weather        Json?    // { temp, humidity, wind, conditions }
+  surface        String?  // sand, grass, hard, mixed
+  location       String?
+
+  // Planned work
+  plannedExercises Json   @default("[]")
+  objectives     Json     @default("[]")
+
+  // Actual work
+  completedExercises Json @default("[]")
+  notes          String?
+
+  // Performance data
+  metrics        Json?    // { avg_heart_rate, distance, etc. }
+  scores         Json?    // Exercise scores
+
+  // AI feedback
+  aiFeedback     Json?
+  improvementAreas Json   @default("[]")
+
+  // Fatigue tracking
+  horseFatigueBefore Int? // 1-10
+  horseFatigueAfter  Int? // 1-10
+  riderFatigueBefore Int?
+  riderFatigueAfter  Int?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([horseId, sessionDate])
+  @@index([riderId, sessionDate])
+  @@index([sessionType, sessionDate])
+  @@map("training_sessions")
+}
+
 // ==================== RIDERS ====================
 
 model Rider {
