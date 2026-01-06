@@ -1,12 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../models/clubs.dart';
 import '../services/api_service.dart';
+
+/// Helper to check if error is 404
+bool _is404Error(Object error) {
+  if (error is DioException) {
+    return error.response?.statusCode == 404;
+  }
+  return false;
+}
 
 /// User's clubs
 final myClubsProvider = FutureProvider<List<Club>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/my');
-  return (response as List).map((e) => Club.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/my');
+    return ((response as List?) ?? []).map((e) => Club.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Club by ID
@@ -20,68 +34,113 @@ final clubProvider = FutureProvider.family<Club, String>((ref, clubId) async {
 final clubMembersProvider =
     FutureProvider.family<List<ClubMember>, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/$clubId/members');
-  return (response as List).map((e) => ClubMember.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/$clubId/members');
+    return ((response as List?) ?? []).map((e) => ClubMember.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Club leaderboard
 final clubLeaderboardProvider = FutureProvider<List<ClubLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/leaderboard');
-  return (response as List).map((e) => ClubLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/leaderboard');
+    return ((response as List?) ?? []).map((e) => ClubLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Club leaderboard by type
 final clubLeaderboardByTypeProvider =
     FutureProvider.family<List<ClubLeaderboardEntry>, ClubType>((ref, type) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/leaderboard', queryParams: {'type': type.name});
-  return (response as List).map((e) => ClubLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/leaderboard', queryParams: {'type': type.name});
+    return ((response as List?) ?? []).map((e) => ClubLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Club challenges
 final clubChallengesProvider =
     FutureProvider.family<List<ClubChallenge>, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/$clubId/challenges');
-  return (response as List).map((e) => ClubChallenge.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/$clubId/challenges');
+    return ((response as List?) ?? []).map((e) => ClubChallenge.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Active club challenges
 final activeClubChallengesProvider = FutureProvider<List<ClubChallenge>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/challenges/active');
-  return (response as List).map((e) => ClubChallenge.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/challenges/active');
+    return ((response as List?) ?? []).map((e) => ClubChallenge.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Club events
 final clubEventsProvider =
     FutureProvider.family<List<ClubEvent>, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/$clubId/events');
-  return (response as List).map((e) => ClubEvent.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/$clubId/events');
+    return ((response as List?) ?? []).map((e) => ClubEvent.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Upcoming club events
 final upcomingClubEventsProvider = FutureProvider<List<ClubEvent>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/events/upcoming');
-  return (response as List).map((e) => ClubEvent.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/events/upcoming');
+    return ((response as List?) ?? []).map((e) => ClubEvent.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Club posts/feed
 final clubPostsProvider =
     FutureProvider.family<List<ClubPost>, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/$clubId/posts');
-  return (response as List).map((e) => ClubPost.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/$clubId/posts');
+    return ((response as List?) ?? []).map((e) => ClubPost.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Club invitations
 final clubInvitationsProvider = FutureProvider<List<ClubInvitation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/clubs/invitations');
-  return (response as List).map((e) => ClubInvitation.fromJson(e)).toList();
+  try {
+    final response = await api.get('/clubs/invitations');
+    return ((response as List?) ?? []).map((e) => ClubInvitation.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Club statistics

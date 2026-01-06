@@ -331,7 +331,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
       children: [
         // Discipline filter
         Container(
-          height: 50,
+          height: 40,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: ListView(
             scrollDirection: Axis.horizontal,
@@ -344,12 +344,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
         ),
         // Category filter
         Container(
-          height: 50,
+          height: 40,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              _buildCategoryChip(null, 'Tous niveaux'),
+              _buildCategoryChip(null, 'Tous'),
               for (final category in HorseCategory.values)
                 _buildCategoryChip(category, category.displayName),
             ],
@@ -397,10 +397,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   Widget _buildDisciplineChip(HorseDiscipline? discipline, String label) {
     final isSelected = _selectedDiscipline == discipline;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
       child: FilterChip(
-        label: Text(label, style: const TextStyle(fontSize: 12)),
+        label: Text(label, style: const TextStyle(fontSize: 11)),
         selected: isSelected,
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         onSelected: (selected) {
           setState(() => _selectedDiscipline = selected ? discipline : null);
         },
@@ -411,10 +413,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   Widget _buildCategoryChip(HorseCategory? category, String label) {
     final isSelected = _selectedCategory == category;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
       child: FilterChip(
-        label: Text(label, style: const TextStyle(fontSize: 12)),
+        label: Text(label, style: const TextStyle(fontSize: 11)),
         selected: isSelected,
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         onSelected: (selected) {
           setState(() => _selectedCategory = selected ? category : null);
         },
@@ -489,38 +493,41 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             _buildRankChange(entry.rankChange),
           ],
         ),
-        subtitle: Row(
-          children: [
-            const SizedBox(width: 36),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
+        subtitle: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              const SizedBox(width: 36),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  entry.discipline.displayName,
+                  style: TextStyle(fontSize: 10, color: AppColors.secondary),
+                ),
               ),
-              child: Text(
-                entry.discipline.displayName,
-                style: TextStyle(fontSize: 10, color: AppColors.secondary),
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  entry.category.displayName,
+                  style: const TextStyle(fontSize: 10),
+                ),
               ),
-            ),
-            const SizedBox(width: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                entry.category.displayName,
-                style: const TextStyle(fontSize: 10),
-              ),
-            ),
-            const SizedBox(width: 8),
-            if (entry.averageScore > 0) ...[
-              const Icon(Icons.star, size: 14, color: Colors.amber),
-              Text(' ${entry.averageScore.toStringAsFixed(1)}'),
+              const SizedBox(width: 8),
+              if (entry.averageScore > 0) ...[
+                const Icon(Icons.star, size: 14, color: Colors.amber),
+                Text(' ${entry.averageScore.toStringAsFixed(1)}'),
+              ],
             ],
-          ],
+          ),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -23,6 +23,13 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { ExportsModule } from './modules/exports/exports.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
 
+// New social/mobile modules
+import { SocialModule } from './modules/social/social.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ClubsModule } from './modules/clubs/clubs.module';
+import { MarketplaceModule } from './modules/marketplace/marketplace.module';
+import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
+
 @Module({
   imports: [
     // Configuration
@@ -68,6 +75,13 @@ import { MonitoringModule } from './modules/monitoring/monitoring.module';
     AnalyticsModule,
     ExportsModule,
     MonitoringModule,
+
+    // Social & Mobile modules
+    SocialModule,
+    NotificationsModule,
+    ClubsModule,
+    MarketplaceModule,
+    LeaderboardModule,
   ],
 })
 export class AppModule {}

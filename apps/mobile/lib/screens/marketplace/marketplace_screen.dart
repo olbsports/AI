@@ -503,117 +503,131 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         onTap: () => _showBreedingListingDetail(listing),
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: listing.mediaUrls.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          listing.mediaUrls.first,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stack) => Icon(
-                            isMare ? Icons.female : Icons.male,
-                            size: 40,
-                            color: isMare ? Colors.pink : Colors.blue,
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        isMare ? Icons.female : Icons.male,
-                        size: 40,
-                        color: isMare ? Colors.pink : Colors.blue,
-                      ),
-              ),
-              const SizedBox(width: 12),
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: isMare ? Colors.pink.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            isMare ? '♀ Jument' : '♂ Étalon',
-                            style: TextStyle(
-                              fontSize: 10,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: listing.mediaUrls.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            listing.mediaUrls.first,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stack) => Icon(
+                              isMare ? Icons.female : Icons.male,
+                              size: 32,
                               color: isMare ? Colors.pink : Colors.blue,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
+                        )
+                      : Icon(
+                          isMare ? Icons.female : Icons.male,
+                          size: 32,
+                          color: isMare ? Colors.pink : Colors.blue,
                         ),
-                        const Spacer(),
-                        Text(
-                          listing.priceDisplay,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      listing.horseName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (listing.studbook != null)
-                      Text(
-                        listing.studbook!,
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                      ),
-                    const SizedBox(height: 4),
-                    // Indices for stallions
-                    if (!isMare && listing.indices != null && listing.indices!.isNotEmpty)
-                      Wrap(
-                        spacing: 8,
-                        children: listing.indices!.entries.take(3).map((e) => Text(
-                              '${e.key}: ${e.value.toInt()}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )).toList(),
-                      ),
-                    // Availability for stallions
-                    if (!isMare)
+                ),
+                const SizedBox(width: 12),
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Row(
                         children: [
-                          if (listing.freshSemen)
-                            _buildAvailabilityChip('Frais', Colors.green),
-                          if (listing.frozenSemen)
-                            _buildAvailabilityChip('Congelé', Colors.blue),
-                          if (listing.naturalService)
-                            _buildAvailabilityChip('Monte', Colors.orange),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isMare ? Colors.pink.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              isMare ? '♀ Jument' : '♂ Étalon',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: isMare ? Colors.pink : Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          Flexible(
+                            child: Text(
+                              listing.priceDisplay,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                                fontSize: 13,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
-                    // Mare info
-                    if (isMare && listing.previousFoals != null)
+                      const SizedBox(height: 2),
                       Text(
-                        '${listing.previousFoals} poulains précédents',
-                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                        listing.horseName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                  ],
+                      if (listing.studbook != null)
+                        Text(
+                          listing.studbook!,
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      const SizedBox(height: 2),
+                      // Indices for stallions
+                      if (!isMare && listing.indices != null && listing.indices!.isNotEmpty)
+                        Wrap(
+                          spacing: 6,
+                          children: listing.indices!.entries.take(3).map((e) => Text(
+                                '${e.key}: ${e.value.toInt()}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )).toList(),
+                        ),
+                      // Availability for stallions
+                      if (!isMare)
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              if (listing.freshSemen)
+                                _buildAvailabilityChip('Frais', Colors.green),
+                              if (listing.frozenSemen)
+                                _buildAvailabilityChip('Congelé', Colors.blue),
+                              if (listing.naturalService)
+                                _buildAvailabilityChip('Monte', Colors.orange),
+                            ],
+                          ),
+                        ),
+                      // Mare info
+                      if (isMare && listing.previousFoals != null)
+                        Text(
+                          '${listing.previousFoals} poulains précédents',
+                          style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -622,8 +636,8 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
 
   Widget _buildAvailabilityChip(String label, Color color) {
     return Container(
-      margin: const EdgeInsets.only(right: 4, top: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: const EdgeInsets.only(right: 4, top: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
@@ -631,7 +645,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 10, color: color),
+        style: TextStyle(fontSize: 9, color: color),
       ),
     );
   }

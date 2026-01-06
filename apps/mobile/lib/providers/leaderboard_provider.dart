@@ -1,6 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../models/leaderboard.dart';
 import '../services/api_service.dart';
+
+/// Helper to check if error is 404
+bool _is404Error(Object error) {
+  if (error is DioException) {
+    return error.response?.statusCode == 404;
+  }
+  return false;
+}
 
 /// Current leaderboard period
 final leaderboardPeriodProvider = StateProvider<LeaderboardPeriod>((ref) {
@@ -27,8 +36,13 @@ final riderLeaderboardProvider =
   if (params.galopLevel != null) {
     queryParams['galopLevel'] = params.galopLevel.toString();
   }
-  final response = await api.get('/leaderboard/riders', queryParams: queryParams);
-  return (response as List).map((e) => RiderLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/leaderboard/riders', queryParams: queryParams);
+    return ((response as List?) ?? []).map((e) => RiderLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Horse leaderboard
@@ -48,8 +62,13 @@ final horseLeaderboardProvider =
   if (params.category != null) {
     queryParams['category'] = params.category!.name;
   }
-  final response = await api.get('/leaderboard/horses', queryParams: queryParams);
-  return (response as List).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/leaderboard/horses', queryParams: queryParams);
+    return ((response as List?) ?? []).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Current user's rider ranking
@@ -66,56 +85,91 @@ final myRiderRankingProvider = FutureProvider<RiderLeaderboardEntry?>((ref) asyn
 /// Current user's horse rankings
 final myHorseRankingsProvider = FutureProvider<List<HorseLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/leaderboard/horses/mine');
-  return (response as List).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/leaderboard/horses/mine');
+    return ((response as List?) ?? []).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Top riders overall
 final topRidersProvider = FutureProvider<List<RiderLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/leaderboard/riders/top');
-  return (response as List).map((e) => RiderLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/leaderboard/riders/top');
+    return ((response as List?) ?? []).map((e) => RiderLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Top horses overall
 final topHorsesProvider = FutureProvider<List<HorseLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/leaderboard/horses/top');
-  return (response as List).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/leaderboard/horses/top');
+    return ((response as List?) ?? []).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Riders by galop level
 final ridersByGalopProvider =
     FutureProvider.family<List<RiderLeaderboardEntry>, int>((ref, galopLevel) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/leaderboard/riders', queryParams: {
-    'galopLevel': galopLevel.toString(),
-  });
-  return (response as List).map((e) => RiderLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/leaderboard/riders', queryParams: {
+      'galopLevel': galopLevel.toString(),
+    });
+    return ((response as List?) ?? []).map((e) => RiderLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Horses by discipline
 final horsesByDisciplineProvider =
     FutureProvider.family<List<HorseLeaderboardEntry>, HorseDiscipline>((ref, discipline) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/leaderboard/horses', queryParams: {
-    'discipline': discipline.name,
-  });
-  return (response as List).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/leaderboard/horses', queryParams: {
+      'discipline': discipline.name,
+    });
+    return ((response as List?) ?? []).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Rising riders (most improved)
 final risingRidersProvider = FutureProvider<List<RiderLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/leaderboard/riders/rising');
-  return (response as List).map((e) => RiderLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/leaderboard/riders/rising');
+    return ((response as List?) ?? []).map((e) => RiderLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Rising horses (most improved)
 final risingHorsesProvider = FutureProvider<List<HorseLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/leaderboard/horses/rising');
-  return (response as List).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  try {
+    final response = await api.get('/leaderboard/horses/rising');
+    return ((response as List?) ?? []).map((e) => HorseLeaderboardEntry.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Leaderboard statistics

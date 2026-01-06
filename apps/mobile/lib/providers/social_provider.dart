@@ -1,6 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../models/social.dart';
 import '../services/api_service.dart';
+
+/// Helper to check if error is 404
+bool _is404Error(Object error) {
+  if (error is DioException) {
+    return error.response?.statusCode == 404;
+  }
+  return false;
+}
 
 /// Feed type
 enum FeedType {
@@ -27,22 +36,37 @@ final socialFeedProvider =
 /// For You feed
 final forYouFeedProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/feed/for-you');
-  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  try {
+    final response = await api.get('/feed/for-you');
+    return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Following feed
 final followingFeedProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/feed/following');
-  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  try {
+    final response = await api.get('/feed/following');
+    return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Trending posts
 final trendingPostsProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/feed/trending');
-  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  try {
+    final response = await api.get('/feed/trending');
+    return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Note by ID
@@ -57,30 +81,50 @@ final noteProvider =
 final noteCommentsProvider =
     FutureProvider.family<List<NoteComment>, String>((ref, noteId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/notes/$noteId/comments');
-  return ((response as List?) ?? []).map((e) => NoteComment.fromJson(e)).toList();
+  try {
+    final response = await api.get('/notes/$noteId/comments');
+    return ((response as List?) ?? []).map((e) => NoteComment.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// User's own notes
 final myNotesProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/notes/my');
-  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  try {
+    final response = await api.get('/notes/my');
+    return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// User's saved notes
 final savedNotesProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/notes/saved');
-  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  try {
+    final response = await api.get('/notes/saved');
+    return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Notes by horse
 final horseNotesProvider =
     FutureProvider.family<List<PublicNote>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/horses/$horseId/notes');
-  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  try {
+    final response = await api.get('/horses/$horseId/notes');
+    return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// User profile
@@ -143,24 +187,39 @@ class UserProfile {
 final userNotesProvider =
     FutureProvider.family<List<PublicNote>, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/users/$userId/notes');
-  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  try {
+    final response = await api.get('/users/$userId/notes');
+    return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// User followers
 final userFollowersProvider =
     FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/users/$userId/followers');
-  return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
+  try {
+    final response = await api.get('/users/$userId/followers');
+    return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// User following
 final userFollowingProvider =
     FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/users/$userId/following');
-  return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
+  try {
+    final response = await api.get('/users/$userId/following');
+    return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Follow user model
@@ -191,29 +250,49 @@ class FollowUser {
 final searchUsersProvider =
     FutureProvider.family<List<FollowUser>, String>((ref, query) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/users/search', queryParams: {'q': query});
-  return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
+  try {
+    final response = await api.get('/users/search', queryParams: {'q': query});
+    return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Suggested users to follow
 final suggestedUsersProvider = FutureProvider<List<FollowUser>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/users/suggested');
-  return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
+  try {
+    final response = await api.get('/users/suggested');
+    return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Notifications
 final notificationsProvider = FutureProvider<List<SocialNotification>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/notifications');
-  return ((response as List?) ?? []).map((e) => SocialNotification.fromJson(e)).toList();
+  try {
+    final response = await api.get('/notifications');
+    return ((response as List?) ?? []).map((e) => SocialNotification.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Unread notification count
 final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/notifications/unread-count');
-  return response['count'] as int? ?? 0;
+  try {
+    final response = await api.get('/notifications/unread-count');
+    return response['count'] as int? ?? 0;
+  } catch (e) {
+    if (_is404Error(e)) return 0;
+    rethrow;
+  }
 });
 
 /// Social notification model
@@ -297,8 +376,13 @@ enum NotificationType {
 /// Trending tags
 final trendingTagsProvider = FutureProvider<List<TrendingTag>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/feed/trending-tags');
-  return ((response as List?) ?? []).map((e) => TrendingTag.fromJson(e)).toList();
+  try {
+    final response = await api.get('/feed/trending-tags');
+    return ((response as List?) ?? []).map((e) => TrendingTag.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Trending tag model
@@ -326,8 +410,13 @@ class TrendingTag {
 final postsByTagProvider =
     FutureProvider.family<List<PublicNote>, String>((ref, tag) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/feed/tags/$tag');
-  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  try {
+    final response = await api.get('/feed/tags/$tag');
+    return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
 });
 
 /// Social notifier for CRUD operations
