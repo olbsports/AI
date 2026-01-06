@@ -2,13 +2,18 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { HorsesService } from './horses.service';
@@ -63,5 +68,152 @@ export class HorsesController {
   @ApiOperation({ summary: 'Archive a horse' })
   async archive(@CurrentUser() user: any, @Param('id') id: string) {
     return this.horsesService.archive(id, user.organizationId);
+  }
+
+  @Post(':id/photo')
+  @ApiOperation({ summary: 'Upload horse photo' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadPhoto(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    return this.horsesService.uploadPhoto(id, user.organizationId, file);
+  }
+
+  @Delete(':id/photo')
+  @ApiOperation({ summary: 'Delete horse photo' })
+  async deletePhoto(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.deletePhoto(id, user.organizationId);
+  }
+
+  // ========== HEALTH RECORDS ==========
+
+  @Get(':id/health')
+  @ApiOperation({ summary: 'Get health records for a horse' })
+  async getHealthRecords(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getHealthRecords(id, user.organizationId);
+  }
+
+  @Get(':id/health/summary')
+  @ApiOperation({ summary: 'Get health summary for a horse' })
+  async getHealthSummary(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getHealthSummary(id, user.organizationId);
+  }
+
+  @Post(':id/health')
+  @ApiOperation({ summary: 'Add health record' })
+  async addHealthRecord(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() data: {
+      type: string;
+      date: string;
+      title: string;
+      description?: string;
+      vetName?: string;
+      cost?: number;
+      nextDueDate?: string;
+    },
+  ) {
+    return this.horsesService.addHealthRecord(id, user.organizationId, data);
+  }
+
+  @Put(':id/health/:recordId')
+  @ApiOperation({ summary: 'Update health record' })
+  async updateHealthRecord(
+    @CurrentUser() user: any,
+    @Param('id') horseId: string,
+    @Param('recordId') recordId: string,
+    @Body() data: any,
+  ) {
+    return this.horsesService.updateHealthRecord(horseId, recordId, user.organizationId, data);
+  }
+
+  @Delete(':id/health/:recordId')
+  @ApiOperation({ summary: 'Delete health record' })
+  async deleteHealthRecord(
+    @CurrentUser() user: any,
+    @Param('id') horseId: string,
+    @Param('recordId') recordId: string,
+  ) {
+    return this.horsesService.deleteHealthRecord(horseId, recordId, user.organizationId);
+  }
+
+  // ========== WEIGHT & BODY CONDITION ==========
+
+  @Get(':id/weight')
+  @ApiOperation({ summary: 'Get weight records' })
+  async getWeightRecords(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getWeightRecords(id, user.organizationId);
+  }
+
+  @Post(':id/weight')
+  @ApiOperation({ summary: 'Add weight record' })
+  async addWeightRecord(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() data: { weight: number; date: string; notes?: string },
+  ) {
+    return this.horsesService.addWeightRecord(id, user.organizationId, data);
+  }
+
+  @Get(':id/body-condition')
+  @ApiOperation({ summary: 'Get body condition records' })
+  async getBodyConditionRecords(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getBodyConditionRecords(id, user.organizationId);
+  }
+
+  @Post(':id/body-condition')
+  @ApiOperation({ summary: 'Add body condition record' })
+  async addBodyConditionRecord(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() data: { score: number; date: string; notes?: string },
+  ) {
+    return this.horsesService.addBodyConditionRecord(id, user.organizationId, data);
+  }
+
+  // ========== NUTRITION ==========
+
+  @Get(':id/nutrition')
+  @ApiOperation({ summary: 'Get nutrition plans' })
+  async getNutritionPlans(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getNutritionPlans(id, user.organizationId);
+  }
+
+  @Get(':id/nutrition/active')
+  @ApiOperation({ summary: 'Get active nutrition plan' })
+  async getActiveNutritionPlan(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getActiveNutritionPlan(id, user.organizationId);
+  }
+
+  @Post(':id/nutrition')
+  @ApiOperation({ summary: 'Create nutrition plan' })
+  async createNutritionPlan(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() data: any,
+  ) {
+    return this.horsesService.createNutritionPlan(id, user.organizationId, data);
+  }
+
+  // ========== GESTATIONS ==========
+
+  @Get(':id/gestations')
+  @ApiOperation({ summary: 'Get gestation records' })
+  async getGestations(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getGestations(id, user.organizationId);
+  }
+
+  // ========== EVENTS ==========
+
+  @Get(':id/events')
+  @ApiOperation({ summary: 'Get calendar events for horse' })
+  async getHorseEvents(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getHorseEvents(id, user.organizationId);
   }
 }

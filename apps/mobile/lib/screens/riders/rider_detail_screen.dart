@@ -87,7 +87,7 @@ class RiderDetailScreen extends ConsumerWidget {
                       _InfoRow(
                         icon: Icons.pets,
                         label: 'Chevaux',
-                        value: '${rider.horseCount} cheval${rider.horseCount > 1 ? 'x' : ''}',
+                        value: rider.horseCount == 1 ? '1 cheval' : '${rider.horseCount} chevaux',
                       ),
                     ],
                   ),

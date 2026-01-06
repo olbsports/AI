@@ -167,7 +167,7 @@ class _RiderCard extends StatelessWidget {
                     ),
                     if (rider.horseCount > 0)
                       Text(
-                        '${rider.horseCount} cheval${rider.horseCount > 1 ? 'x' : ''}',
+                        rider.horseCount == 1 ? '1 cheval' : '${rider.horseCount} chevaux',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                             ),

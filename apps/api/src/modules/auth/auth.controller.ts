@@ -1,4 +1,16 @@
-import { Controller, Post, Body, UseGuards, Get, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Query,
+  Patch,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
@@ -97,5 +109,33 @@ export class AuthController {
   @ApiOperation({ summary: 'Resend verification email' })
   async resendVerification(@CurrentUser() user: any) {
     return this.authService.sendVerificationEmail(user.id);
+  }
+
+  // ========== PROFILE ==========
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update user profile' })
+  async updateProfile(
+    @CurrentUser() user: any,
+    @Body() data: { firstName?: string; lastName?: string; bio?: string; isPublic?: boolean },
+  ) {
+    return this.authService.updateProfile(user.id, data);
+  }
+
+  @Post('profile/photo')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload profile photo' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProfilePhoto(
+    @CurrentUser() user: any,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    return this.authService.uploadProfilePhoto(user.id, user.organizationId, file);
   }
 }

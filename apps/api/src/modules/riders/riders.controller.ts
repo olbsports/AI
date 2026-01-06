@@ -8,7 +8,11 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { RidersService } from './riders.service';
@@ -95,5 +99,29 @@ export class RidersController {
     @Param('horseId') horseId: string,
   ) {
     return this.ridersService.unassignHorse(id, user.organizationId, horseId);
+  }
+
+  @Post(':id/photo')
+  @UseGuards(RolesGuard)
+  @Roles('analyst', 'admin', 'owner')
+  @ApiOperation({ summary: 'Upload rider photo' })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadPhoto(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    return this.ridersService.uploadPhoto(id, user.organizationId, file);
+  }
+
+  @Delete(':id/photo')
+  @UseGuards(RolesGuard)
+  @Roles('analyst', 'admin', 'owner')
+  @ApiOperation({ summary: 'Delete rider photo' })
+  async deletePhoto(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.ridersService.deletePhoto(id, user.organizationId);
   }
 }

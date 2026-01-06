@@ -11,11 +11,13 @@ import { RolesGuard } from './guards/roles.guard';
 import { OrganizationGuard } from './guards/organization.guard';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
+import { UploadModule } from '../upload/upload.module';
 
 @Module({
   imports: [
     UsersModule,
     EmailModule,
+    UploadModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],

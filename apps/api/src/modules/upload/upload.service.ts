@@ -187,4 +187,56 @@ export class UploadService {
 
     return getSignedUrl(this.s3Client, command, { expiresIn });
   }
+
+  /**
+   * Upload a file directly to S3
+   */
+  async uploadFile(
+    organizationId: string,
+    category: string,
+    file: Express.Multer.File,
+  ): Promise<{ url: string; key: string }> {
+    // Validate content type
+    const allowedTypes = this.allowedTypes[category];
+    if (allowedTypes && !allowedTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `Invalid content type ${file.mimetype} for category ${category}`,
+      );
+    }
+
+    // Validate file size
+    const maxSize = this.maxSizes[category];
+    if (maxSize && file.size > maxSize) {
+      throw new BadRequestException(
+        `File size exceeds maximum of ${maxSize / (1024 * 1024)}MB for ${category}`,
+      );
+    }
+
+    // Generate unique key
+    const ext = path.extname(file.originalname);
+    const fileId = uuidv4();
+    const key = `${organizationId}/${category}/${fileId}${ext}`;
+
+    // Upload to S3
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      Metadata: {
+        'original-filename': file.originalname,
+        'organization-id': organizationId,
+        category: category,
+      },
+    });
+
+    await this.s3Client.send(command);
+
+    // Generate file URL
+    const url = this.cdnUrl
+      ? `${this.cdnUrl}/${key}`
+      : `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
+
+    return { url, key };
+  }
 }
