@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/models.dart';
+import '../../models/marketplace.dart';
+import '../../providers/marketplace_provider.dart';
 import '../../theme/app_theme.dart';
 
 class MarketplaceScreen extends ConsumerStatefulWidget {
@@ -15,8 +17,8 @@ class MarketplaceScreen extends ConsumerStatefulWidget {
 class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  ListingType? _selectedType;
-  String? _searchQuery;
+  ListingType? _selectedSaleType;
+  ListingType? _selectedBreedingType;
   RangeValues _priceRange = const RangeValues(0, 100000);
 
   @override
@@ -70,7 +72,10 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
   }
 
   Widget _buildSalesTab() {
-    final listings = _getMockSalesListings();
+    // Get listings based on selected type filter
+    final listingsAsync = _selectedSaleType != null
+        ? ref.watch(listingsByTypeProvider(_selectedSaleType!))
+        : ref.watch(recentListingsProvider);
 
     return Column(
       children: [
@@ -81,17 +86,17 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              _buildFilterChip('Tous', _selectedType == null, () {
-                setState(() => _selectedType = null);
+              _buildFilterChip('Tous', _selectedSaleType == null, () {
+                setState(() => _selectedSaleType = null);
               }),
-              _buildFilterChip('Chevaux', _selectedType == ListingType.horseForSale, () {
-                setState(() => _selectedType = ListingType.horseForSale);
+              _buildFilterChip('Chevaux', _selectedSaleType == ListingType.horseForSale, () {
+                setState(() => _selectedSaleType = ListingType.horseForSale);
               }),
-              _buildFilterChip('Poulains', _selectedType == ListingType.foalForSale, () {
-                setState(() => _selectedType = ListingType.foalForSale);
+              _buildFilterChip('Poulains', _selectedSaleType == ListingType.foalForSale, () {
+                setState(() => _selectedSaleType = ListingType.foalForSale);
               }),
-              _buildFilterChip('Location', _selectedType == ListingType.horseForLease, () {
-                setState(() => _selectedType = ListingType.horseForLease);
+              _buildFilterChip('Location', _selectedSaleType == ListingType.horseForLease, () {
+                setState(() => _selectedSaleType = ListingType.horseForLease);
               }),
             ],
           ),
@@ -99,22 +104,56 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         const Divider(height: 1),
         // Listings
         Expanded(
-          child: listings.isEmpty
-              ? _buildEmptyState('Aucune annonce disponible')
-              : ListView.builder(
-                  itemCount: listings.length,
+          child: RefreshIndicator(
+            onRefresh: () async {
+              if (_selectedSaleType != null) {
+                ref.invalidate(listingsByTypeProvider(_selectedSaleType!));
+              } else {
+                ref.invalidate(recentListingsProvider);
+              }
+            },
+            child: listingsAsync.when(
+              data: (listings) {
+                // Filter out breeding types for sale tab
+                final saleListings = listings.where((l) =>
+                  l.type == ListingType.horseForSale ||
+                  l.type == ListingType.foalForSale ||
+                  l.type == ListingType.horseForLease
+                ).toList();
+
+                if (saleListings.isEmpty) {
+                  return _buildEmptyState('Aucune annonce disponible');
+                }
+                return ListView.builder(
+                  itemCount: saleListings.length,
                   padding: const EdgeInsets.all(8),
                   itemBuilder: (context, index) {
-                    return _buildSaleListingCard(listings[index]);
+                    return _buildSaleListingCard(saleListings[index]);
                   },
-                ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => _buildErrorWidget(error, () {
+                if (_selectedSaleType != null) {
+                  ref.invalidate(listingsByTypeProvider(_selectedSaleType!));
+                } else {
+                  ref.invalidate(recentListingsProvider);
+                }
+              }),
+            ),
+          ),
         ),
       ],
     );
   }
 
   Widget _buildBreedingTab() {
-    final listings = _getMockBreedingListings();
+    // Get breeding listings
+    final breedingType = _selectedBreedingType ?? ListingType.stallionSemen;
+    final listingsAsync = ref.watch(breedingListingsProvider((
+      type: breedingType,
+      breed: null,
+    )));
 
     return Column(
       children: [
@@ -125,17 +164,14 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              _buildFilterChip('Tous', _selectedType == null, () {
-                setState(() => _selectedType = null);
+              _buildFilterChip('Étalons', _selectedBreedingType == null || _selectedBreedingType == ListingType.stallionSemen, () {
+                setState(() => _selectedBreedingType = ListingType.stallionSemen);
               }),
-              _buildFilterChip('Juments', _selectedType == ListingType.mareForBreeding, () {
-                setState(() => _selectedType = ListingType.mareForBreeding);
+              _buildFilterChip('Juments', _selectedBreedingType == ListingType.mareForBreeding, () {
+                setState(() => _selectedBreedingType = ListingType.mareForBreeding);
               }),
-              _buildFilterChip('Semence', _selectedType == ListingType.stallionSemen, () {
-                setState(() => _selectedType = ListingType.stallionSemen);
-              }),
-              _buildFilterChip('Embryons', _selectedType == ListingType.embryo, () {
-                setState(() => _selectedType = ListingType.embryo);
+              _buildFilterChip('Embryons', _selectedBreedingType == ListingType.embryo, () {
+                setState(() => _selectedBreedingType = ListingType.embryo);
               }),
             ],
           ),
@@ -187,17 +223,72 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         ),
         // Listings
         Expanded(
-          child: listings.isEmpty
-              ? _buildEmptyState('Aucune annonce disponible')
-              : ListView.builder(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(breedingListingsProvider((
+                type: breedingType,
+                breed: null,
+              )));
+            },
+            child: listingsAsync.when(
+              data: (listings) {
+                if (listings.isEmpty) {
+                  return _buildEmptyState('Aucune annonce disponible');
+                }
+                return ListView.builder(
                   itemCount: listings.length,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   itemBuilder: (context, index) {
                     return _buildBreedingListingCard(listings[index]);
                   },
-                ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => _buildErrorWidget(error, () {
+                ref.invalidate(breedingListingsProvider((
+                  type: breedingType,
+                  breed: null,
+                )));
+              }),
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildErrorWidget(Object error, VoidCallback onRetry) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'Erreur de chargement',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -212,7 +303,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
     );
   }
 
-  Widget _buildSaleListingCard(HorseSaleListing listing) {
+  Widget _buildSaleListingCard(MarketplaceListing listing) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       clipBehavior: Clip.antiAlias,
@@ -228,7 +319,14 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                   height: 180,
                   color: Colors.grey.shade200,
                   child: listing.mediaUrls.isNotEmpty
-                      ? Image.network(listing.mediaUrls.first, fit: BoxFit.cover)
+                      ? Image.network(
+                          listing.mediaUrls.first,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (context, error, stack) => const Center(
+                            child: Icon(Icons.pets, size: 64, color: Colors.grey),
+                          ),
+                        )
                       : const Center(child: Icon(Icons.pets, size: 64, color: Colors.grey)),
                 ),
                 // Badges
@@ -281,7 +379,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                     ],
                   ),
                 ),
-                // Favorite
+                // Favorite button
                 Positioned(
                   top: 8,
                   right: 8,
@@ -290,40 +388,32 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                       listing.isFavorited ? Icons.favorite : Icons.favorite_border,
                       color: listing.isFavorited ? Colors.red : Colors.white,
                     ),
-                    onPressed: () {},
+                    onPressed: () => _toggleFavorite(listing.id),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.black26,
                     ),
                   ),
                 ),
-                // Argus badge
-                if (listing.argus != null)
-                  Positioned(
-                    bottom: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.analytics, color: Colors.white, size: 14),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Argus: ${listing.argus!.priceRange}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                // Type badge
+                Positioned(
+                  bottom: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      listing.type.displayName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
+                ),
               ],
             ),
             // Content
@@ -336,11 +426,13 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                     children: [
                       Expanded(
                         child: Text(
-                          listing.horseName,
+                          listing.title,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Text(
@@ -354,109 +446,19 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                     ],
                   ),
                   const SizedBox(height: 4),
-                  // Details
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      if (listing.breed != null)
-                        _buildTag(listing.breed!, Icons.pets),
-                      if (listing.age != null)
-                        _buildTag('${listing.age} ans', Icons.calendar_today),
-                      if (listing.gender != null)
-                        _buildTag(listing.gender!, Icons.male),
-                      if (listing.heightCm != null)
-                        _buildTag('${listing.heightCm} cm', Icons.height),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Disciplines
-                  if (listing.disciplines.isNotEmpty)
-                    Wrap(
-                      spacing: 4,
-                      children: listing.disciplines.take(3).map((d) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.secondary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              d.displayName,
-                              style: TextStyle(fontSize: 10, color: AppColors.secondary),
-                            ),
-                          )).toList(),
-                    ),
-                  const SizedBox(height: 8),
-                  // AI Profile indicator
-                  if (listing.aiProfile != null)
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.purple.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                  // Description
+                  if (listing.description.isNotEmpty)
+                    Text(
+                      listing.description,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.auto_awesome, size: 16, color: Colors.purple),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Profil IA disponible',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.purple,
-                                  ),
-                                ),
-                                Text(
-                                  '${listing.aiProfile!.analysisCount} analyses • Confiance ${listing.aiProfile!.confidenceLevel.toInt()}%',
-                                  style: TextStyle(fontSize: 10, color: Colors.purple.shade300),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            '${listing.aiProfile!.overallScore.toStringAsFixed(1)}/10',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.purple,
-                            ),
-                          ),
-                        ],
-                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   const SizedBox(height: 8),
-                  // Histovec indicator
-                  if (listing.histovec != null)
-                    Row(
-                      children: [
-                        Icon(
-                          listing.histovec!.isClean ? Icons.verified_user : Icons.warning,
-                          size: 16,
-                          color: listing.histovec!.isClean ? AppColors.success : Colors.orange,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Histovec: ${listing.histovec!.ownerCount} propriétaire(s)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: listing.histovec!.isClean ? AppColors.success : Colors.orange,
-                          ),
-                        ),
-                        if (!listing.histovec!.isClean) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            '• ${listing.histovec!.alerts.length} alerte(s)',
-                            style: const TextStyle(fontSize: 12, color: Colors.orange),
-                          ),
-                        ],
-                      ],
-                    ),
-                  const SizedBox(height: 8),
-                  // Location & contact
+                  // Seller info and stats
                   Row(
                     children: [
                       if (listing.sellerLocation != null) ...[
@@ -515,7 +517,15 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                 child: listing.mediaUrls.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(listing.mediaUrls.first, fit: BoxFit.cover),
+                        child: Image.network(
+                          listing.mediaUrls.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stack) => Icon(
+                            isMare ? Icons.female : Icons.male,
+                            size: 40,
+                            color: isMare ? Colors.pink : Colors.blue,
+                          ),
+                        ),
                       )
                     : Icon(
                         isMare ? Icons.female : Icons.male,
@@ -594,26 +604,11 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                             _buildAvailabilityChip('Monte', Colors.orange),
                         ],
                       ),
-                    // AI Profile
-                    if (listing.aiProfile != null)
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.auto_awesome, size: 12, color: Colors.purple),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Profil IA: ${listing.aiProfile!.overallScore.toStringAsFixed(1)}/10',
-                              style: const TextStyle(fontSize: 10, color: Colors.purple),
-                            ),
-                          ],
-                        ),
+                    // Mare info
+                    if (isMare && listing.previousFoals != null)
+                      Text(
+                        '${listing.previousFoals} poulains précédents',
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                       ),
                   ],
                 ),
@@ -641,20 +636,6 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
     );
   }
 
-  Widget _buildTag(String label, IconData icon) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 12, color: Colors.grey.shade600),
-        const SizedBox(width: 2),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-        ),
-      ],
-    );
-  }
-
   Widget _buildEmptyState(String message) {
     return Center(
       child: Column(
@@ -663,15 +644,33 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(message, style: TextStyle(color: Colors.grey.shade600)),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () => _showCreateListingSheet(context),
+            icon: const Icon(Icons.add),
+            label: const Text('Créer une annonce'),
+          ),
         ],
       ),
     );
   }
 
+  void _toggleFavorite(String listingId) async {
+    final success = await ref.read(marketplaceNotifierProvider.notifier).toggleFavorite(listingId);
+    if (success && mounted) {
+      // Refresh the listings
+      if (_selectedSaleType != null) {
+        ref.invalidate(listingsByTypeProvider(_selectedSaleType!));
+      } else {
+        ref.invalidate(recentListingsProvider);
+      }
+    }
+  }
+
   void _showSearch(BuildContext context) {
     showSearch(
       context: context,
-      delegate: _MarketplaceSearchDelegate(),
+      delegate: _MarketplaceSearchDelegate(ref),
     );
   }
 
@@ -698,7 +697,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                   const Spacer(),
                   TextButton(
                     onPressed: () {
-                      // Reset filters
+                      setState(() {
+                        _priceRange = const RangeValues(0, 100000);
+                      });
                     },
                     child: const Text('Réinitialiser'),
                   ),
@@ -778,10 +779,10 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                 child: const Icon(Icons.sell, color: Colors.green),
               ),
               title: const Text('Vendre un cheval'),
-              subtitle: const Text('Avec Argus & Histovec automatique'),
+              subtitle: const Text('Avec estimation de prix automatique'),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to create sale listing
+                context.push('/marketplace/create/sale');
               },
             ),
             ListTile(
@@ -797,6 +798,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               subtitle: const Text('Pour poulinage'),
               onTap: () {
                 Navigator.pop(context);
+                context.push('/marketplace/create/mare');
               },
             ),
             ListTile(
@@ -812,6 +814,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               subtitle: const Text('Étalon agréé'),
               onTap: () {
                 Navigator.pop(context);
+                context.push('/marketplace/create/stallion');
               },
             ),
           ],
@@ -820,7 +823,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
     );
   }
 
-  void _showListingDetail(HorseSaleListing listing) {
+  void _showListingDetail(MarketplaceListing listing) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -832,218 +835,36 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         builder: (context, scrollController) => _SaleListingDetailSheet(
           listing: listing,
           scrollController: scrollController,
+          ref: ref,
         ),
       ),
     );
   }
 
   void _showBreedingListingDetail(BreedingListing listing) {
-    // Similar to _showListingDetail but for breeding
-  }
-
-  // Mock data
-  List<HorseSaleListing> _getMockSalesListings() {
-    return [
-      HorseSaleListing(
-        id: '1',
-        type: ListingType.horseForSale,
-        sellerId: 's1',
-        sellerName: 'Écurie du Parc',
-        sellerLocation: 'Normandie',
-        title: 'Superbe hongre SF',
-        description: 'Cheval polyvalent, gentil et généreux...',
-        price: 25000,
-        priceNegotiable: true,
-        isPremium: true,
-        isVerified: true,
-        viewCount: 342,
-        favoriteCount: 28,
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        horseId: 'h1',
-        horseName: 'Donatello du Parc',
-        breed: 'Selle Français',
-        studbook: 'SF',
-        birthYear: 2016,
-        gender: 'Hongre',
-        heightCm: 168,
-        color: 'Bai',
-        disciplines: [HorseDiscipline.cso, HorseDiscipline.cce],
-        level: 'Amateur 2',
-        argus: HorseArgus(
-          id: 'a1',
-          horseId: 'h1',
-          estimatedMinPrice: 22000,
-          estimatedMaxPrice: 28000,
-          marketAveragePrice: 25000,
-          confidenceScore: 85,
-          factors: ArgusFactors(
-            ageImpact: -5,
-            breedImpact: 15,
-            levelImpact: 20,
-            healthImpact: 5,
-          ),
-          marketTrend: 'stable',
-          calculatedAt: DateTime.now(),
-        ),
-        histovec: HorseHistovec(
-          id: 'hv1',
-          horseId: 'h1',
-          ueln: '250259600123456',
-          microchip: '250259600123456',
-          ownershipHistory: [
-            OwnershipRecord(
-              id: 'o1',
-              ownerName: 'Élevage Martin',
-              location: 'Orne',
-              startDate: DateTime(2016),
-              endDate: DateTime(2020),
-            ),
-            OwnershipRecord(
-              id: 'o2',
-              ownerName: 'Écurie du Parc',
-              location: 'Normandie',
-              startDate: DateTime(2020),
-            ),
-          ],
-          isClean: true,
-          lastUpdated: DateTime.now(),
-        ),
-        aiProfile: HorseAIProfile(
-          id: 'ai1',
-          horseId: 'h1',
-          character: CharacterProfile(
-            temperament: 55,
-            sensitivity: 60,
-            willingness: 85,
-            confidence: 70,
-            traits: ['Généreux', 'Attentif', 'Volontaire'],
-          ),
-          conformation: ConformationProfile(
-            frame: 8.0,
-            balance: 7.5,
-            limbs: 8.0,
-          ),
-          locomotion: LocomotionProfile(
-            walk: 7.0,
-            trot: 8.0,
-            canter: 8.5,
-          ),
-          overallScore: 8.2,
-          analysisCount: 12,
-          confidenceLevel: 88,
-          lastAnalysisAt: DateTime.now().subtract(const Duration(days: 5)),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => _BreedingListingDetailSheet(
+          listing: listing,
+          scrollController: scrollController,
+          ref: ref,
         ),
       ),
-      HorseSaleListing(
-        id: '2',
-        type: ListingType.horseForSale,
-        sellerId: 's2',
-        sellerName: 'Particulier',
-        sellerLocation: 'Île-de-France',
-        title: 'Jument dressage confirmée',
-        description: 'Jument exceptionnelle...',
-        price: 45000,
-        isVerified: true,
-        viewCount: 156,
-        favoriteCount: 15,
-        createdAt: DateTime.now().subtract(const Duration(days: 5)),
-        horseId: 'h2',
-        horseName: 'Délice',
-        breed: 'KWPN',
-        birthYear: 2014,
-        gender: 'Jument',
-        heightCm: 172,
-        disciplines: [HorseDiscipline.dressage],
-        level: 'Pro 2',
-        aiProfile: HorseAIProfile(
-          id: 'ai2',
-          horseId: 'h2',
-          character: CharacterProfile(
-            temperament: 45,
-            sensitivity: 75,
-            willingness: 90,
-          ),
-          conformation: ConformationProfile(),
-          locomotion: LocomotionProfile(
-            walk: 9.0,
-            trot: 9.5,
-            canter: 8.5,
-          ),
-          overallScore: 9.0,
-          analysisCount: 24,
-          confidenceLevel: 95,
-          lastAnalysisAt: DateTime.now().subtract(const Duration(days: 2)),
-        ),
-      ),
-    ];
-  }
-
-  List<BreedingListing> _getMockBreedingListings() {
-    return [
-      BreedingListing(
-        id: 'b1',
-        type: ListingType.stallionSemen,
-        sellerId: 's3',
-        sellerName: 'Haras de la Vallée',
-        sellerLocation: 'Loire-Atlantique',
-        title: 'Semence étalon CSO',
-        description: 'Étalon performant...',
-        price: 800,
-        createdAt: DateTime.now(),
-        horseId: 'h3',
-        horseName: 'Donatello',
-        breed: 'Selle Français',
-        studbook: 'SF • Approuvé',
-        birthYear: 2010,
-        freshSemen: true,
-        frozenSemen: true,
-        indices: {'ISO': 165, 'IDR': 140},
-        offspringCount: 156,
-        aiProfile: HorseAIProfile(
-          id: 'ai3',
-          horseId: 'h3',
-          character: CharacterProfile(
-            temperament: 60,
-            willingness: 85,
-            traits: ['Courage', 'Sang-froid', 'Généreux'],
-          ),
-          conformation: ConformationProfile(
-            frame: 8.5,
-            hindquarters: 9.0,
-          ),
-          locomotion: LocomotionProfile(),
-          overallScore: 8.8,
-          breedingScore: 9.2,
-          analysisCount: 8,
-          confidenceLevel: 82,
-          lastAnalysisAt: DateTime.now().subtract(const Duration(days: 30)),
-        ),
-      ),
-      BreedingListing(
-        id: 'b2',
-        type: ListingType.mareForBreeding,
-        sellerId: 's4',
-        sellerName: 'Élevage des Prés',
-        sellerLocation: 'Calvados',
-        title: 'Jument SF à poulinière',
-        description: 'Excellentes origines...',
-        price: null,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        horseId: 'h4',
-        horseName: 'Belle Étoile',
-        breed: 'Selle Français',
-        studbook: 'SF',
-        birthYear: 2012,
-        previousFoals: 3,
-        embryoTransfer: true,
-        sireName: 'Diamant de Semilly',
-        damSireName: 'Quidam de Revel',
-      ),
-    ];
+    );
   }
 }
 
 class _MarketplaceSearchDelegate extends SearchDelegate<String> {
+  final WidgetRef ref;
+
+  _MarketplaceSearchDelegate(this.ref);
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
@@ -1064,7 +885,66 @@ class _MarketplaceSearchDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildResults(BuildContext context) {
-    return Center(child: Text('Résultats pour "$query"'));
+    if (query.isEmpty) {
+      return const Center(child: Text('Entrez un terme de recherche'));
+    }
+
+    final filters = MarketplaceFilters(
+      sortBy: 'recent',
+    );
+
+    return Consumer(
+      builder: (context, ref, child) {
+        final searchAsync = ref.watch(marketplaceSearchProvider(filters));
+
+        return searchAsync.when(
+          data: (listings) {
+            // Filter by search query locally
+            final filtered = listings.where((l) =>
+              l.title.toLowerCase().contains(query.toLowerCase()) ||
+              l.description.toLowerCase().contains(query.toLowerCase()) ||
+              l.sellerName.toLowerCase().contains(query.toLowerCase())
+            ).toList();
+
+            if (filtered.isEmpty) {
+              return Center(child: Text('Aucun résultat pour "$query"'));
+            }
+
+            return ListView.builder(
+              itemCount: filtered.length,
+              padding: const EdgeInsets.all(8),
+              itemBuilder: (context, index) {
+                final listing = filtered[index];
+                return ListTile(
+                  leading: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: listing.mediaUrls.isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(listing.mediaUrls.first, fit: BoxFit.cover),
+                          )
+                        : const Icon(Icons.pets, color: Colors.grey),
+                  ),
+                  title: Text(listing.title),
+                  subtitle: Text(listing.priceDisplay),
+                  trailing: Text(listing.type.displayName, style: const TextStyle(fontSize: 12)),
+                  onTap: () {
+                    close(context, listing.id);
+                  },
+                );
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(child: Text('Erreur: $error')),
+        );
+      },
+    );
   }
 
   @override
@@ -1087,18 +967,28 @@ class _MarketplaceSearchDelegate extends SearchDelegate<String> {
             showResults(context);
           },
         ),
+        ListTile(
+          leading: const Icon(Icons.search),
+          title: const Text('Poulain'),
+          onTap: () {
+            query = 'Poulain';
+            showResults(context);
+          },
+        ),
       ],
     );
   }
 }
 
 class _SaleListingDetailSheet extends StatelessWidget {
-  final HorseSaleListing listing;
+  final MarketplaceListing listing;
   final ScrollController scrollController;
+  final WidgetRef ref;
 
   const _SaleListingDetailSheet({
     required this.listing,
     required this.scrollController,
+    required this.ref,
   });
 
   @override
@@ -1127,7 +1017,18 @@ class _SaleListingDetailSheet extends StatelessWidget {
           Container(
             height: 250,
             color: Colors.grey.shade200,
-            child: const Center(child: Icon(Icons.pets, size: 80)),
+            child: listing.mediaUrls.isNotEmpty
+                ? PageView.builder(
+                    itemCount: listing.mediaUrls.length,
+                    itemBuilder: (context, index) => Image.network(
+                      listing.mediaUrls[index],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stack) => const Center(
+                        child: Icon(Icons.pets, size: 80, color: Colors.grey),
+                      ),
+                    ),
+                  )
+                : const Center(child: Icon(Icons.pets, size: 80, color: Colors.grey)),
           ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -1139,7 +1040,7 @@ class _SaleListingDetailSheet extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        listing.horseName,
+                        listing.title,
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -1155,197 +1056,133 @@ class _SaleListingDetailSheet extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                // Type and status badges
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    Chip(
+                      label: Text(listing.type.displayName),
+                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                    ),
+                    if (listing.isVerified)
+                      Chip(
+                        avatar: const Icon(Icons.verified, size: 16),
+                        label: const Text('Vérifié'),
+                        backgroundColor: AppColors.success.withOpacity(0.1),
+                      ),
+                    if (listing.isPremium)
+                      Chip(
+                        avatar: const Icon(Icons.star, size: 16, color: Colors.amber),
+                        label: const Text('Premium'),
+                        backgroundColor: Colors.amber.withOpacity(0.1),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 16),
-                // Argus section
-                if (listing.argus != null) ...[
-                  _buildSection(
-                    context,
-                    'Argus Horse Vision',
-                    Icons.analytics,
-                    Colors.blue,
-                    Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Estimation'),
-                            Text(
-                              listing.argus!.priceRange,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Confiance'),
-                            Text(
-                              '${listing.argus!.confidenceScore.toInt()}%',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: listing.argus!.confidenceScore > 75
-                                    ? AppColors.success
-                                    : Colors.orange,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Tendance marché'),
-                            Row(
-                              children: [
-                                Icon(
-                                  listing.argus!.marketTrend == 'up'
-                                      ? Icons.trending_up
-                                      : listing.argus!.marketTrend == 'down'
-                                          ? Icons.trending_down
-                                          : Icons.trending_flat,
-                                  color: listing.argus!.marketTrend == 'up'
-                                      ? AppColors.success
-                                      : listing.argus!.marketTrend == 'down'
-                                          ? Colors.red
-                                          : Colors.grey,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  listing.argus!.marketTrend == 'up'
-                                      ? 'En hausse'
-                                      : listing.argus!.marketTrend == 'down'
-                                          ? 'En baisse'
-                                          : 'Stable',
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                // Histovec section
-                if (listing.histovec != null) ...[
-                  _buildSection(
-                    context,
-                    'Histovec',
-                    listing.histovec!.isClean ? Icons.verified_user : Icons.warning,
-                    listing.histovec!.isClean ? AppColors.success : Colors.orange,
-                    Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('UELN'),
-                            Text(listing.histovec!.ueln),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Propriétaires'),
-                            Text('${listing.histovec!.ownerCount}'),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Statut'),
-                            Row(
-                              children: [
-                                Icon(
-                                  listing.histovec!.isClean
-                                      ? Icons.check_circle
-                                      : Icons.warning,
-                                  color: listing.histovec!.isClean
-                                      ? AppColors.success
-                                      : Colors.orange,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  listing.histovec!.isClean ? 'Aucune alerte' : 'Alertes présentes',
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                // AI Profile section
-                if (listing.aiProfile != null) ...[
-                  _buildSection(
-                    context,
-                    'Profil IA',
-                    Icons.auto_awesome,
-                    Colors.purple,
-                    Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Score global'),
-                            Text(
-                              '${listing.aiProfile!.overallScore.toStringAsFixed(1)}/10',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Analyses'),
-                            Text('${listing.aiProfile!.analysisCount}'),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Confiance'),
-                            Text('${listing.aiProfile!.confidenceLevel.toInt()}%'),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        if (listing.aiProfile!.character.traits.isNotEmpty)
-                          Wrap(
-                            spacing: 4,
-                            children: listing.aiProfile!.character.traits
-                                .map((t) => Chip(
-                                      label: Text(t, style: const TextStyle(fontSize: 12)),
-                                      padding: EdgeInsets.zero,
-                                    ))
-                                .toList(),
+                // Description
+                Text(
+                  'Description',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  listing.description.isNotEmpty ? listing.description : 'Aucune description',
+                  style: TextStyle(color: Colors.grey.shade700),
+                ),
+                const SizedBox(height: 16),
+                // Seller info
+                _buildSection(
+                  context,
+                  'Vendeur',
+                  Icons.person,
+                  AppColors.primary,
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: listing.sellerPhotoUrl != null
+                                ? NetworkImage(listing.sellerPhotoUrl!)
+                                : null,
+                            child: listing.sellerPhotoUrl == null
+                                ? const Icon(Icons.person)
+                                : null,
                           ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  listing.sellerName,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                if (listing.sellerLocation != null)
+                                  Text(
+                                    listing.sellerLocation!,
+                                    style: TextStyle(color: Colors.grey.shade600),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Stats
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStat(Icons.visibility, '${listing.viewCount}', 'vues'),
+                    _buildStat(Icons.favorite, '${listing.favoriteCount}', 'favoris'),
+                    _buildStat(Icons.message, '${listing.contactCount}', 'contacts'),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                // Contact buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _toggleFavorite(context),
+                        icon: Icon(
+                          listing.isFavorited ? Icons.favorite : Icons.favorite_border,
+                          color: listing.isFavorited ? Colors.red : null,
+                        ),
+                        label: Text(listing.isFavorited ? 'Favori' : 'Ajouter aux favoris'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                // Contact button
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.message),
-                    label: const Text('Contacter le vendeur'),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => _contactSeller(context),
+                        icon: const Icon(Icons.message),
+                        label: const Text('Contacter'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStat(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.grey),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+      ],
     );
   }
 
@@ -1384,5 +1221,362 @@ class _SaleListingDetailSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _toggleFavorite(BuildContext context) async {
+    await ref.read(marketplaceNotifierProvider.notifier).toggleFavorite(listing.id);
+    if (context.mounted) {
+      ref.invalidate(recentListingsProvider);
+    }
+  }
+
+  void _contactSeller(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => _ContactSellerDialog(
+        listingId: listing.id,
+        sellerName: listing.sellerName,
+        ref: ref,
+      ),
+    );
+  }
+}
+
+class _BreedingListingDetailSheet extends StatelessWidget {
+  final BreedingListing listing;
+  final ScrollController scrollController;
+  final WidgetRef ref;
+
+  const _BreedingListingDetailSheet({
+    required this.listing,
+    required this.scrollController,
+    required this.ref,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isMare = listing.type == ListingType.mareForBreeding;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: ListView(
+        controller: scrollController,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Image
+          Container(
+            height: 200,
+            color: Colors.grey.shade200,
+            child: listing.mediaUrls.isNotEmpty
+                ? Image.network(
+                    listing.mediaUrls.first,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    errorBuilder: (context, error, stack) => Center(
+                      child: Icon(
+                        isMare ? Icons.female : Icons.male,
+                        size: 80,
+                        color: isMare ? Colors.pink : Colors.blue,
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Icon(
+                      isMare ? Icons.female : Icons.male,
+                      size: 80,
+                      color: isMare ? Colors.pink : Colors.blue,
+                    ),
+                  ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name and price
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            listing.horseName,
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          if (listing.studbook != null)
+                            Text(
+                              listing.studbook!,
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      listing.priceDisplay,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Horse info
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (listing.breed != null)
+                      Chip(label: Text(listing.breed!)),
+                    if (listing.birthYear != null)
+                      Chip(label: Text('Né en ${listing.birthYear}')),
+                    if (listing.color != null)
+                      Chip(label: Text(listing.color!)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Stallion specific info
+                if (!isMare) ...[
+                  // Indices
+                  if (listing.indices != null && listing.indices!.isNotEmpty) ...[
+                    Text(
+                      'Indices',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 16,
+                      children: listing.indices!.entries.map((e) => Column(
+                            children: [
+                              Text(
+                                '${e.value.toInt()}',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(e.key),
+                            ],
+                          )).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Availability
+                  Text(
+                    'Disponibilité',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      if (listing.freshSemen)
+                        const Chip(
+                          avatar: Icon(Icons.check, size: 16, color: Colors.green),
+                          label: Text('Semence fraîche'),
+                        ),
+                      if (listing.frozenSemen)
+                        const Chip(
+                          avatar: Icon(Icons.check, size: 16, color: Colors.blue),
+                          label: Text('Semence congelée'),
+                        ),
+                      if (listing.naturalService)
+                        const Chip(
+                          avatar: Icon(Icons.check, size: 16, color: Colors.orange),
+                          label: Text('Monte naturelle'),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Offspring
+                  if (listing.offspringCount != null) ...[
+                    Text(
+                      'Production',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('${listing.offspringCount} produits'),
+                  ],
+                ],
+                // Mare specific info
+                if (isMare) ...[
+                  if (listing.previousFoals != null) ...[
+                    Text(
+                      'Historique',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('${listing.previousFoals} poulains précédents'),
+                  ],
+                  if (listing.embryoTransfer) ...[
+                    const SizedBox(height: 8),
+                    const Chip(
+                      avatar: Icon(Icons.check, size: 16, color: Colors.green),
+                      label: Text('Transfert d\'embryon possible'),
+                    ),
+                  ],
+                ],
+                const SizedBox(height: 16),
+                // Origins
+                if (listing.sireName != null || listing.damSireName != null) ...[
+                  Text(
+                    'Origines',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (listing.sireName != null)
+                    Text('Père: ${listing.sireName}'),
+                  if (listing.damSireName != null)
+                    Text('Père de mère: ${listing.damSireName}'),
+                  const SizedBox(height: 16),
+                ],
+                // Description
+                if (listing.description.isNotEmpty) ...[
+                  Text(
+                    'Description',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(listing.description),
+                  const SizedBox(height: 16),
+                ],
+                // Contact button
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => _contactSeller(context),
+                    icon: const Icon(Icons.message),
+                    label: const Text('Contacter le vendeur'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _contactSeller(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => _ContactSellerDialog(
+        listingId: listing.id,
+        sellerName: listing.sellerName,
+        ref: ref,
+      ),
+    );
+  }
+}
+
+class _ContactSellerDialog extends StatefulWidget {
+  final String listingId;
+  final String sellerName;
+  final WidgetRef ref;
+
+  const _ContactSellerDialog({
+    required this.listingId,
+    required this.sellerName,
+    required this.ref,
+  });
+
+  @override
+  State<_ContactSellerDialog> createState() => _ContactSellerDialogState();
+}
+
+class _ContactSellerDialogState extends State<_ContactSellerDialog> {
+  final _messageController = TextEditingController();
+  bool _isSending = false;
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Contacter ${widget.sellerName}'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _messageController,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              hintText: 'Votre message...',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _isSending ? null : _sendMessage,
+          child: _isSending
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Envoyer'),
+        ),
+      ],
+    );
+  }
+
+  void _sendMessage() async {
+    if (_messageController.text.isEmpty) return;
+
+    setState(() => _isSending = true);
+
+    final success = await widget.ref
+        .read(marketplaceNotifierProvider.notifier)
+        .contactSeller(widget.listingId, _messageController.text);
+
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'Message envoyé !' : 'Erreur lors de l\'envoi'),
+          backgroundColor: success ? AppColors.success : Colors.red,
+        ),
+      );
+    }
   }
 }

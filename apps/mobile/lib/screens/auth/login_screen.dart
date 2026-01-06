@@ -27,22 +27,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-    print('LOGIN_SCREEN: Button pressed');
-    print('LOGIN_SCREEN: Email: ${_emailController.text.trim()}');
-    print('LOGIN_SCREEN: Password length: ${_passwordController.text.length}');
     if (_formKey.currentState!.validate()) {
-      print('LOGIN_SCREEN: Form validated, calling login...');
       final success = await ref.read(authProvider.notifier).login(
             _emailController.text.trim(),
             _passwordController.text,
           );
-      print('LOGIN_SCREEN: Login result: $success');
 
       if (success && mounted) {
         context.go('/dashboard');
       }
-    } else {
-      print('LOGIN_SCREEN: Form validation failed');
     }
   }
 

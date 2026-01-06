@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/models.dart';
+import '../../models/leaderboard.dart';
+import '../../providers/leaderboard_provider.dart';
 import '../../theme/app_theme.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
@@ -95,8 +97,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   }
 
   Widget _buildRiderLeaderboard() {
-    // Mock data - will be replaced with API call
-    final mockRiders = _getMockRiderData();
+    final ridersAsync = ref.watch(riderLeaderboardProvider((
+      period: _selectedPeriod,
+      galopLevel: _selectedGalopLevel > 0 ? _selectedGalopLevel : null,
+    )));
 
     return Column(
       children: [
@@ -113,19 +117,86 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
           ),
         ),
         const Divider(height: 1),
+        // My ranking (if available)
+        _buildMyRiderRanking(),
         // Leaderboard list
         Expanded(
-          child: mockRiders.isEmpty
-              ? _buildEmptyState('Aucun cavalier dans ce classement')
-              : ListView.builder(
-                  itemCount: mockRiders.length,
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(riderLeaderboardProvider((
+                period: _selectedPeriod,
+                galopLevel: _selectedGalopLevel > 0 ? _selectedGalopLevel : null,
+              )));
+            },
+            child: ridersAsync.when(
+              data: (riders) {
+                if (riders.isEmpty) {
+                  return _buildEmptyState('Aucun cavalier dans ce classement');
+                }
+                return ListView.builder(
+                  itemCount: riders.length,
                   itemBuilder: (context, index) {
-                    final entry = mockRiders[index];
+                    final entry = riders[index];
                     return _buildRiderEntry(entry, index);
                   },
-                ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => _buildErrorWidget(error, () {
+                ref.invalidate(riderLeaderboardProvider((
+                  period: _selectedPeriod,
+                  galopLevel: _selectedGalopLevel > 0 ? _selectedGalopLevel : null,
+                )));
+              }),
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMyRiderRanking() {
+    final myRankingAsync = ref.watch(myRiderRankingProvider);
+
+    return myRankingAsync.when(
+      data: (entry) {
+        if (entry == null) return const SizedBox.shrink();
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary.withOpacity(0.1), AppColors.secondary.withOpacity(0.1)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.emoji_events, color: Colors.amber),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Mon classement',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    Text(
+                      '#${entry.rank} - ${entry.score} pts',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+              _buildRankChange(entry.rankChange),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
@@ -250,8 +321,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   }
 
   Widget _buildHorseLeaderboard() {
-    // Mock data - will be replaced with API call
-    final mockHorses = _getMockHorseData();
+    final horsesAsync = ref.watch(horseLeaderboardProvider((
+      period: _selectedPeriod,
+      discipline: _selectedDiscipline,
+      category: _selectedCategory,
+    )));
 
     return Column(
       children: [
@@ -284,15 +358,37 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
         const Divider(height: 1),
         // Leaderboard list
         Expanded(
-          child: mockHorses.isEmpty
-              ? _buildEmptyState('Aucun cheval dans ce classement')
-              : ListView.builder(
-                  itemCount: mockHorses.length,
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(horseLeaderboardProvider((
+                period: _selectedPeriod,
+                discipline: _selectedDiscipline,
+                category: _selectedCategory,
+              )));
+            },
+            child: horsesAsync.when(
+              data: (horses) {
+                if (horses.isEmpty) {
+                  return _buildEmptyState('Aucun cheval dans ce classement');
+                }
+                return ListView.builder(
+                  itemCount: horses.length,
                   itemBuilder: (context, index) {
-                    final entry = mockHorses[index];
+                    final entry = horses[index];
                     return _buildHorseEntry(entry, index);
                   },
-                ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => _buildErrorWidget(error, () {
+                ref.invalidate(horseLeaderboardProvider((
+                  period: _selectedPeriod,
+                  discipline: _selectedDiscipline,
+                  category: _selectedCategory,
+                )));
+              }),
+            ),
+          ),
         ),
       ],
     );
@@ -486,6 +582,41 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     );
   }
 
+  Widget _buildErrorWidget(Object error, VoidCallback onRetry) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'Erreur de chargement',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Color _getRankColor(int rank) {
     switch (rank) {
       case 1:
@@ -594,6 +725,13 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                   children: entry.badges.map((badge) => Chip(label: Text(badge))).toList(),
                 ),
               ],
+              const SizedBox(height: 16),
+              // Challenge button
+              FilledButton.icon(
+                onPressed: () => _challengeRider(entry),
+                icon: const Icon(Icons.sports_score),
+                label: const Text('Défier ce cavalier'),
+              ),
             ],
           ),
         ),
@@ -674,154 +812,18 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     );
   }
 
-  // Mock data for demonstration
-  List<RiderLeaderboardEntry> _getMockRiderData() {
-    return [
-      RiderLeaderboardEntry(
-        id: '1',
-        riderId: 'r1',
-        riderName: 'Marie Dupont',
-        galopLevel: 7,
-        rank: 1,
-        previousRank: 2,
-        score: 2450,
-        analysisCount: 48,
-        horseCount: 3,
-        streakDays: 15,
-        progressRate: 12.5,
-        badges: ['Expert', 'Assidu'],
-        lastActivityAt: DateTime.now(),
-      ),
-      RiderLeaderboardEntry(
-        id: '2',
-        riderId: 'r2',
-        riderName: 'Thomas Martin',
-        galopLevel: 6,
-        rank: 2,
-        previousRank: 1,
-        score: 2380,
-        analysisCount: 42,
-        horseCount: 2,
-        streakDays: 8,
-        progressRate: 8.2,
-        badges: ['Passionné'],
-        lastActivityAt: DateTime.now(),
-      ),
-      RiderLeaderboardEntry(
-        id: '3',
-        riderId: 'r3',
-        riderName: 'Sophie Leroux',
-        galopLevel: 5,
-        rank: 3,
-        previousRank: 4,
-        score: 2150,
-        analysisCount: 35,
-        horseCount: 2,
-        streakDays: 22,
-        progressRate: 15.8,
-        badges: ['Régulier', 'Motivé'],
-        lastActivityAt: DateTime.now(),
-      ),
-      for (int i = 4; i <= 10; i++)
-        RiderLeaderboardEntry(
-          id: '$i',
-          riderId: 'r$i',
-          riderName: 'Cavalier $i',
-          galopLevel: 7 - (i % 5),
-          rank: i,
-          previousRank: i + (i % 2 == 0 ? 1 : -1),
-          score: 2000 - (i * 100),
-          analysisCount: 30 - i,
-          horseCount: 1,
-          streakDays: i % 10,
-          progressRate: 5.0,
-          badges: [],
-          lastActivityAt: DateTime.now(),
+  void _challengeRider(RiderLeaderboardEntry entry) async {
+    final success = await ref.read(leaderboardNotifierProvider.notifier).challengeRider(entry.riderId);
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success
+              ? 'Défi envoyé à ${entry.riderName}!'
+              : 'Erreur lors de l\'envoi du défi'),
+          backgroundColor: success ? AppColors.success : Colors.red,
         ),
-    ];
-  }
-
-  List<HorseLeaderboardEntry> _getMockHorseData() {
-    return [
-      HorseLeaderboardEntry(
-        id: '1',
-        horseId: 'h1',
-        horseName: 'Étoile du Matin',
-        breed: 'Selle Français',
-        category: HorseCategory.amateur,
-        discipline: HorseDiscipline.cso,
-        rank: 1,
-        previousRank: 1,
-        score: 3200,
-        analysisCount: 28,
-        averageScore: 8.5,
-        progressRate: 18.2,
-        achievements: ['Champion régional', 'Sans faute'],
-        lastAnalysisAt: DateTime.now(),
-      ),
-      HorseLeaderboardEntry(
-        id: '2',
-        horseId: 'h2',
-        horseName: 'Spirit',
-        breed: 'KWPN',
-        category: HorseCategory.pro,
-        discipline: HorseDiscipline.dressage,
-        rank: 2,
-        previousRank: 3,
-        score: 3050,
-        analysisCount: 32,
-        averageScore: 8.2,
-        progressRate: 12.5,
-        achievements: ['Étoile montante'],
-        lastAnalysisAt: DateTime.now(),
-      ),
-      HorseLeaderboardEntry(
-        id: '3',
-        horseId: 'h3',
-        horseName: 'Tornado',
-        breed: 'Pur-sang',
-        category: HorseCategory.club,
-        discipline: HorseDiscipline.cce,
-        rank: 3,
-        previousRank: 2,
-        score: 2900,
-        analysisCount: 25,
-        averageScore: 7.8,
-        progressRate: 8.0,
-        achievements: ['Polyvalent'],
-        lastAnalysisAt: DateTime.now(),
-      ),
-      HorseLeaderboardEntry(
-        id: '4',
-        horseId: 'h4',
-        horseName: 'Buttons',
-        category: HorseCategory.club,
-        discipline: HorseDiscipline.hobbyHorse,
-        rank: 4,
-        previousRank: 5,
-        score: 2750,
-        analysisCount: 20,
-        averageScore: 9.2,
-        progressRate: 25.0,
-        achievements: ['Hobby Horse Star'],
-        lastAnalysisAt: DateTime.now(),
-      ),
-      for (int i = 5; i <= 10; i++)
-        HorseLeaderboardEntry(
-          id: '$i',
-          horseId: 'h$i',
-          horseName: 'Cheval $i',
-          category: HorseCategory.values[i % HorseCategory.values.length],
-          discipline: HorseDiscipline.values[i % (HorseDiscipline.values.length - 1)],
-          rank: i,
-          previousRank: i,
-          score: 2500 - (i * 100),
-          analysisCount: 15,
-          averageScore: 7.0,
-          progressRate: 5.0,
-          achievements: [],
-          lastAnalysisAt: DateTime.now(),
-        ),
-    ];
+      );
+    }
   }
 }
