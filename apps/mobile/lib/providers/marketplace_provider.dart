@@ -15,8 +15,8 @@ class MarketplaceFilters {
   final double? maxDistance;
   final HorseDiscipline? discipline;
   final String? sortBy;
-  final bool? hasArgus;
-  final bool? hasHistovec;
+  final bool? hasEquiCote;
+  final bool? hasEquiTrace;
   final bool? hasVideo;
 
   MarketplaceFilters({
@@ -30,8 +30,8 @@ class MarketplaceFilters {
     this.maxDistance,
     this.discipline,
     this.sortBy,
-    this.hasArgus,
-    this.hasHistovec,
+    this.hasEquiCote,
+    this.hasEquiTrace,
     this.hasVideo,
   });
 
@@ -47,8 +47,8 @@ class MarketplaceFilters {
     if (maxDistance != null) params['maxDistance'] = maxDistance.toString();
     if (discipline != null) params['discipline'] = discipline!.name;
     if (sortBy != null) params['sortBy'] = sortBy!;
-    if (hasArgus == true) params['hasArgus'] = 'true';
-    if (hasHistovec == true) params['hasHistovec'] = 'true';
+    if (hasEquiCote == true) params['hasEquiCote'] = 'true';
+    if (hasEquiTrace == true) params['hasEquiTrace'] = 'true';
     if (hasVideo == true) params['hasVideo'] = 'true';
     return params;
   }
@@ -83,7 +83,7 @@ final listingDetailProvider =
   return MarketplaceListing.fromJson(response);
 });
 
-/// Horse sale listing with Argus/Histovec
+/// Horse sale listing with EquiCote/EquiTrace
 final horseSaleListingProvider =
     FutureProvider.family<HorseSaleListing, String>((ref, listingId) async {
   final api = ref.watch(apiServiceProvider);
@@ -109,26 +109,28 @@ final horseSaleListingProvider =
             .toList() ??
         [],
     level: response['level'],
-    argus: response['argus'] != null ? HorseArgus.fromJson(response['argus']) : null,
-    histovec: response['histovec'] != null ? HorseHistovec.fromJson(response['histovec']) : null,
+    equiCote: response['equiCote'] != null ? HorseEquiCote.fromJson(response['equiCote']) : null,
+    equiTrace: response['equiTrace'] != null ? HorseEquiTrace.fromJson(response['equiTrace']) : null,
     aiProfile: response['aiProfile'] != null ? HorseAIProfile.fromJson(response['aiProfile']) : null,
   );
 });
 
-/// Get Argus valuation for a horse
-final horseArgusProvider =
-    FutureProvider.family<HorseArgus, String>((ref, horseId) async {
+/// Get EquiCote valuation for a horse
+final horseEquiCoteProvider =
+    FutureProvider.family<HorseEquiCote, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/marketplace/argus/$horseId');
-  return HorseArgus.fromJson(response);
+  final response = await api.get('/equicote/horse/$horseId/valuations');
+  final valuations = response as List;
+  if (valuations.isEmpty) throw Exception('No valuation found');
+  return HorseEquiCote.fromJson(valuations.first);
 });
 
-/// Get Histovec history for a horse
-final horseHistovecProvider =
-    FutureProvider.family<HorseHistovec, String>((ref, horseId) async {
+/// Get EquiTrace history for a horse
+final horseEquiTraceProvider =
+    FutureProvider.family<HorseEquiTrace, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/marketplace/histovec/$horseId');
-  return HorseHistovec.fromJson(response);
+  final response = await api.get('/equitrace/timeline/$horseId');
+  return HorseEquiTrace.fromJson(response);
 });
 
 /// Get AI profile for a horse
@@ -216,7 +218,7 @@ final breedingMatchesProvider =
 final comparableHorsesProvider =
     FutureProvider.family<List<ComparableHorse>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/marketplace/comparables/$horseId');
+  final response = await api.get('/equicote/comparables/$horseId');
   return (response as List).map((e) => ComparableHorse.fromJson(e)).toList();
 });
 
@@ -382,28 +384,28 @@ class MarketplaceNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Request Argus valuation
-  Future<HorseArgus?> requestArgusValuation(String horseId) async {
+  /// Request EquiCote valuation
+  Future<HorseEquiCote?> requestEquiCoteValuation(String horseId) async {
     state = const AsyncValue.loading();
     try {
-      final response = await _api.post('/marketplace/argus/request', {'horseId': horseId});
-      _ref.invalidate(horseArgusProvider(horseId));
+      final response = await _api.post('/equicote/valuate/$horseId', {});
+      _ref.invalidate(horseEquiCoteProvider(horseId));
       state = const AsyncValue.data(null);
-      return HorseArgus.fromJson(response);
+      return HorseEquiCote.fromJson(response);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       return null;
     }
   }
 
-  /// Request Histovec report
-  Future<HorseHistovec?> requestHistovecReport(String horseId) async {
+  /// Request EquiTrace report
+  Future<HorseEquiTrace?> requestEquiTraceReport(String horseId) async {
     state = const AsyncValue.loading();
     try {
-      final response = await _api.post('/marketplace/histovec/request', {'horseId': horseId});
-      _ref.invalidate(horseHistovecProvider(horseId));
+      final response = await _api.post('/equitrace/report/$horseId', {});
+      _ref.invalidate(horseEquiTraceProvider(horseId));
       state = const AsyncValue.data(null);
-      return HorseHistovec.fromJson(response);
+      return HorseEquiTrace.fromJson(response);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       return null;
@@ -465,10 +467,10 @@ final marketplaceNotifierProvider =
   return MarketplaceNotifier(api, ref);
 });
 
-/// Argus calculator - Local estimation algorithm
-class ArgusCalculator {
+/// EquiCote calculator - Local estimation algorithm
+class EquiCoteCalculator {
   /// Calculate estimated price based on horse characteristics
-  static ArgusEstimation calculate({
+  static EquiCoteEstimation calculate({
     required String breed,
     required int age,
     required String level,
@@ -575,7 +577,7 @@ class ArgusCalculator {
     if (isHealthy) confidence += 5;
     if (discipline != null) confidence += 5;
 
-    return ArgusEstimation(
+    return EquiCoteEstimation(
       minPrice: minPrice,
       maxPrice: maxPrice,
       confidence: confidence.clamp(0, 100),
@@ -590,14 +592,14 @@ class ArgusCalculator {
   }
 }
 
-/// Argus estimation result
-class ArgusEstimation {
+/// EquiCote estimation result
+class EquiCoteEstimation {
   final int minPrice;
   final int maxPrice;
   final double confidence;
   final Map<String, double> factors;
 
-  ArgusEstimation({
+  EquiCoteEstimation({
     required this.minPrice,
     required this.maxPrice,
     required this.confidence,
@@ -606,4 +608,195 @@ class ArgusEstimation {
 
   int get averagePrice => (minPrice + maxPrice) ~/ 2;
   String get priceRange => '$minPrice € - $maxPrice €';
+}
+
+/// HorseEquiCote model for API responses
+class HorseEquiCote {
+  final String id;
+  final int minPrice;
+  final int maxPrice;
+  final int averagePrice;
+  final double confidence;
+  final Map<String, double> factors;
+  final String? marketTrend;
+  final double? demandIndex;
+  final String? aiAnalysis;
+  final List<String> aiRecommendations;
+  final List<String> dataSources;
+  final DateTime validUntil;
+  final DateTime createdAt;
+
+  HorseEquiCote({
+    required this.id,
+    required this.minPrice,
+    required this.maxPrice,
+    required this.averagePrice,
+    required this.confidence,
+    required this.factors,
+    this.marketTrend,
+    this.demandIndex,
+    this.aiAnalysis,
+    required this.aiRecommendations,
+    required this.dataSources,
+    required this.validUntil,
+    required this.createdAt,
+  });
+
+  factory HorseEquiCote.fromJson(Map<String, dynamic> json) {
+    return HorseEquiCote(
+      id: json['id'] as String,
+      minPrice: json['minPrice'] as int,
+      maxPrice: json['maxPrice'] as int,
+      averagePrice: json['averagePrice'] as int,
+      confidence: (json['confidence'] as num).toDouble(),
+      factors: (json['factors'] as Map<String, dynamic>?)
+              ?.map((k, v) => MapEntry(k, (v as num).toDouble())) ??
+          {},
+      marketTrend: json['marketTrend'] as String?,
+      demandIndex: (json['demandIndex'] as num?)?.toDouble(),
+      aiAnalysis: json['aiAnalysis'] as String?,
+      aiRecommendations: (json['aiRecommendations'] as List?)?.cast<String>() ?? [],
+      dataSources: (json['dataSources'] as List?)?.cast<String>() ?? [],
+      validUntil: DateTime.parse(json['validUntil'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+
+  String get priceRange => '$minPrice € - $maxPrice €';
+  bool get isExpired => DateTime.now().isAfter(validUntil);
+}
+
+/// HorseEquiTrace model for API responses
+class HorseEquiTrace {
+  final String horseId;
+  final List<EquiTraceEntry> entries;
+  final EquiTraceStats stats;
+  final List<String> dataSources;
+  final DateTime lastUpdated;
+
+  HorseEquiTrace({
+    required this.horseId,
+    required this.entries,
+    required this.stats,
+    required this.dataSources,
+    required this.lastUpdated,
+  });
+
+  factory HorseEquiTrace.fromJson(Map<String, dynamic> json) {
+    return HorseEquiTrace(
+      horseId: json['horseId'] as String,
+      entries: (json['entries'] as List?)
+              ?.map((e) => EquiTraceEntry.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      stats: json['stats'] != null
+          ? EquiTraceStats.fromJson(json['stats'] as Map<String, dynamic>)
+          : EquiTraceStats.empty(),
+      dataSources: (json['dataSources'] as List?)?.cast<String>() ?? [],
+      lastUpdated: json['lastUpdated'] != null
+          ? DateTime.parse(json['lastUpdated'] as String)
+          : DateTime.now(),
+    );
+  }
+}
+
+/// EquiTrace entry model
+class EquiTraceEntry {
+  final String id;
+  final String type;
+  final DateTime date;
+  final String title;
+  final String? description;
+  final String source;
+  final String? sourceUrl;
+  final bool verified;
+  final Map<String, dynamic>? metadata;
+
+  EquiTraceEntry({
+    required this.id,
+    required this.type,
+    required this.date,
+    required this.title,
+    this.description,
+    required this.source,
+    this.sourceUrl,
+    required this.verified,
+    this.metadata,
+  });
+
+  factory EquiTraceEntry.fromJson(Map<String, dynamic> json) {
+    return EquiTraceEntry(
+      id: json['id'] as String,
+      type: json['type'] as String,
+      date: DateTime.parse(json['date'] as String),
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      source: json['source'] as String,
+      sourceUrl: json['sourceUrl'] as String?,
+      verified: json['verified'] as bool? ?? false,
+      metadata: json['metadata'] as Map<String, dynamic>?,
+    );
+  }
+}
+
+/// EquiTrace statistics
+class EquiTraceStats {
+  final int totalCompetitions;
+  final int wins;
+  final int podiums;
+  final int ownershipChanges;
+  final int healthEvents;
+  final DateTime? firstCompetition;
+  final DateTime? lastCompetition;
+  final List<String> disciplines;
+  final String? highestLevel;
+  final int verifiedEntries;
+  final int totalEntries;
+
+  EquiTraceStats({
+    required this.totalCompetitions,
+    required this.wins,
+    required this.podiums,
+    required this.ownershipChanges,
+    required this.healthEvents,
+    this.firstCompetition,
+    this.lastCompetition,
+    required this.disciplines,
+    this.highestLevel,
+    required this.verifiedEntries,
+    required this.totalEntries,
+  });
+
+  factory EquiTraceStats.fromJson(Map<String, dynamic> json) {
+    return EquiTraceStats(
+      totalCompetitions: json['totalCompetitions'] as int? ?? 0,
+      wins: json['wins'] as int? ?? 0,
+      podiums: json['podiums'] as int? ?? 0,
+      ownershipChanges: json['ownershipChanges'] as int? ?? 0,
+      healthEvents: json['healthEvents'] as int? ?? 0,
+      firstCompetition: json['firstCompetition'] != null
+          ? DateTime.parse(json['firstCompetition'] as String)
+          : null,
+      lastCompetition: json['lastCompetition'] != null
+          ? DateTime.parse(json['lastCompetition'] as String)
+          : null,
+      disciplines: (json['disciplines'] as List?)?.cast<String>() ?? [],
+      highestLevel: json['highestLevel'] as String?,
+      verifiedEntries: json['verifiedEntries'] as int? ?? 0,
+      totalEntries: json['totalEntries'] as int? ?? 0,
+    );
+  }
+
+  factory EquiTraceStats.empty() {
+    return EquiTraceStats(
+      totalCompetitions: 0,
+      wins: 0,
+      podiums: 0,
+      ownershipChanges: 0,
+      healthEvents: 0,
+      disciplines: [],
+      verifiedEntries: 0,
+      totalEntries: 0,
+    );
+  }
 }
