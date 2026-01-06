@@ -30,7 +30,11 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
   void _initVideoPlayer(String url) {
     _videoController = VideoPlayerController.networkUrl(Uri.parse(url))
       ..initialize().then((_) {
-        setState(() {});
+        if (mounted) {
+          setState(() {});
+        }
+      }).catchError((e) {
+        // Video initialization failed silently
       });
   }
 

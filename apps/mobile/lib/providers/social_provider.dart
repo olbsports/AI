@@ -21,28 +21,28 @@ final socialFeedProvider =
     'type': params.type.name,
     'page': params.page.toString(),
   });
-  return (response as List).map((e) => PublicNote.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
 });
 
 /// For You feed
 final forYouFeedProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/feed/for-you');
-  return (response as List).map((e) => PublicNote.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
 });
 
 /// Following feed
 final followingFeedProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/feed/following');
-  return (response as List).map((e) => PublicNote.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
 });
 
 /// Trending posts
 final trendingPostsProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/feed/trending');
-  return (response as List).map((e) => PublicNote.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
 });
 
 /// Note by ID
@@ -58,21 +58,21 @@ final noteCommentsProvider =
     FutureProvider.family<List<NoteComment>, String>((ref, noteId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/notes/$noteId/comments');
-  return (response as List).map((e) => NoteComment.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => NoteComment.fromJson(e)).toList();
 });
 
 /// User's own notes
 final myNotesProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/notes/my');
-  return (response as List).map((e) => PublicNote.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
 });
 
 /// User's saved notes
 final savedNotesProvider = FutureProvider<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/notes/saved');
-  return (response as List).map((e) => PublicNote.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
 });
 
 /// Notes by horse
@@ -80,7 +80,7 @@ final horseNotesProvider =
     FutureProvider.family<List<PublicNote>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/notes');
-  return (response as List).map((e) => PublicNote.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
 });
 
 /// User profile
@@ -144,7 +144,7 @@ final userNotesProvider =
     FutureProvider.family<List<PublicNote>, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/users/$userId/notes');
-  return (response as List).map((e) => PublicNote.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
 });
 
 /// User followers
@@ -152,7 +152,7 @@ final userFollowersProvider =
     FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/users/$userId/followers');
-  return (response as List).map((e) => FollowUser.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
 });
 
 /// User following
@@ -160,7 +160,7 @@ final userFollowingProvider =
     FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/users/$userId/following');
-  return (response as List).map((e) => FollowUser.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
 });
 
 /// Follow user model
@@ -192,21 +192,21 @@ final searchUsersProvider =
     FutureProvider.family<List<FollowUser>, String>((ref, query) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/users/search', queryParams: {'q': query});
-  return (response as List).map((e) => FollowUser.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
 });
 
 /// Suggested users to follow
 final suggestedUsersProvider = FutureProvider<List<FollowUser>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/users/suggested');
-  return (response as List).map((e) => FollowUser.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => FollowUser.fromJson(e)).toList();
 });
 
 /// Notifications
 final notificationsProvider = FutureProvider<List<SocialNotification>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/notifications');
-  return (response as List).map((e) => SocialNotification.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => SocialNotification.fromJson(e)).toList();
 });
 
 /// Unread notification count
@@ -298,7 +298,7 @@ enum NotificationType {
 final trendingTagsProvider = FutureProvider<List<TrendingTag>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/feed/trending-tags');
-  return (response as List).map((e) => TrendingTag.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => TrendingTag.fromJson(e)).toList();
 });
 
 /// Trending tag model
@@ -327,7 +327,7 @@ final postsByTagProvider =
     FutureProvider.family<List<PublicNote>, String>((ref, tag) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/feed/tags/$tag');
-  return (response as List).map((e) => PublicNote.fromJson(e)).toList();
+  return ((response as List?) ?? []).map((e) => PublicNote.fromJson(e)).toList();
 });
 
 /// Social notifier for CRUD operations
