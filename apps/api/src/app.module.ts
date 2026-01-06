@@ -30,6 +30,12 @@ import { ClubsModule } from './modules/clubs/clubs.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
 
+// Calendar, Dashboard, Gamification, Services
+import { CalendarModule } from './modules/calendar/calendar.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { GamificationModule } from './modules/gamification/gamification.module';
+import { ServicesModule } from './modules/services/services.module';
+
 @Module({
   imports: [
     // Configuration
@@ -82,6 +88,12 @@ import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
     ClubsModule,
     MarketplaceModule,
     LeaderboardModule,
+
+    // Calendar, Dashboard, Gamification, Services
+    CalendarModule,
+    DashboardModule,
+    GamificationModule,
+    ServicesModule,
   ],
 })
 export class AppModule {}

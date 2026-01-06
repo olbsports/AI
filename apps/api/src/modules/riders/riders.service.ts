@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { UploadService } from '../upload/upload.service';
 import { CreateRiderDto } from './dto/create-rider.dto';
 import { UpdateRiderDto } from './dto/update-rider.dto';
 import { calculatePagination, calculateOffset } from '@horse-vision/types';
 
 @Injectable()
 export class RidersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   async findAll(
     organizationId: string,
@@ -204,5 +208,52 @@ export class RidersService {
       analysisByType: analysisStats,
       recentPerformance,
     };
+  }
+
+  async uploadPhoto(id: string, organizationId: string, file: Express.Multer.File) {
+    const rider = await this.findById(id, organizationId);
+
+    // Delete old photo if exists
+    if (rider.photoUrl) {
+      try {
+        const urlParts = rider.photoUrl.split('/');
+        const key = urlParts.slice(3).join('/');
+        await this.uploadService.deleteFile(key);
+      } catch {
+        // Ignore delete errors
+      }
+    }
+
+    // Upload new photo
+    const { url } = await this.uploadService.uploadFile(
+      organizationId,
+      'avatars',
+      file,
+    );
+
+    // Update rider with new photo URL
+    return this.prisma.rider.update({
+      where: { id },
+      data: { photoUrl: url },
+    });
+  }
+
+  async deletePhoto(id: string, organizationId: string) {
+    const rider = await this.findById(id, organizationId);
+
+    if (rider.photoUrl) {
+      try {
+        const urlParts = rider.photoUrl.split('/');
+        const key = urlParts.slice(3).join('/');
+        await this.uploadService.deleteFile(key);
+      } catch {
+        // Ignore delete errors
+      }
+    }
+
+    return this.prisma.rider.update({
+      where: { id },
+      data: { photoUrl: null },
+    });
   }
 }

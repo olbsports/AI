@@ -12,6 +12,7 @@ import { randomBytes } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
+import { UploadService } from '../upload/upload.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -26,6 +27,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
+    private readonly uploadService: UploadService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -294,5 +296,83 @@ export class AuthService {
     ]);
 
     return { message: 'Email verified successfully' };
+  }
+
+  // ========== PROFILE ==========
+
+  async updateProfile(
+    userId: string,
+    data: { firstName?: string; lastName?: string; bio?: string; isPublic?: boolean },
+  ) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(data.firstName && { firstName: data.firstName }),
+        ...(data.lastName && { lastName: data.lastName }),
+        ...(data.bio !== undefined && { bio: data.bio }),
+        ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        isPublic: true,
+        xp: true,
+        level: true,
+        badges: true,
+        followersCount: true,
+        followingCount: true,
+      },
+    });
+
+    return user;
+  }
+
+  async uploadProfilePhoto(userId: string, organizationId: string, file: Express.Multer.File) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Delete old photo if exists
+    if (user.avatarUrl) {
+      try {
+        const urlParts = user.avatarUrl.split('/');
+        const key = urlParts.slice(3).join('/');
+        await this.uploadService.deleteFile(key);
+      } catch {
+        // Ignore delete errors
+      }
+    }
+
+    // Upload new photo
+    const { url } = await this.uploadService.uploadFile(
+      organizationId,
+      'avatars',
+      file,
+    );
+
+    // Update user with new photo URL
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: url },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        isPublic: true,
+      },
+    });
+
+    return { url, user: updatedUser };
   }
 }

@@ -155,4 +155,218 @@ export class HorsesService {
       data: { photoUrl: null },
     });
   }
+
+  // ========== HEALTH RECORDS ==========
+
+  async getHealthRecords(horseId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    return this.prisma.healthRecord.findMany({
+      where: { horseId },
+      orderBy: { date: 'desc' },
+    });
+  }
+
+  async getHealthSummary(horseId: string, organizationId: string) {
+    const horse = await this.findById(horseId, organizationId);
+
+    const records = await this.prisma.healthRecord.findMany({
+      where: { horseId },
+      orderBy: { date: 'desc' },
+      take: 5,
+    });
+
+    const upcomingReminders = await this.prisma.healthRecord.findMany({
+      where: {
+        horseId,
+        nextDueDate: { gte: new Date() },
+      },
+      orderBy: { nextDueDate: 'asc' },
+      take: 3,
+    });
+
+    return {
+      healthStatus: horse.healthStatus,
+      lastVetCheck: horse.lastVetCheck,
+      vaccinations: horse.vaccinations,
+      recentRecords: records,
+      upcomingReminders,
+    };
+  }
+
+  async addHealthRecord(horseId: string, organizationId: string, data: any) {
+    await this.findById(horseId, organizationId);
+
+    return this.prisma.healthRecord.create({
+      data: {
+        horseId,
+        type: data.type,
+        date: new Date(data.date),
+        title: data.title,
+        description: data.description,
+        vetName: data.vetName,
+        cost: data.cost,
+        nextDueDate: data.nextDueDate ? new Date(data.nextDueDate) : null,
+      },
+    });
+  }
+
+  async updateHealthRecord(horseId: string, recordId: string, organizationId: string, data: any) {
+    await this.findById(horseId, organizationId);
+
+    return this.prisma.healthRecord.update({
+      where: { id: recordId },
+      data: {
+        ...data,
+        date: data.date ? new Date(data.date) : undefined,
+        nextDueDate: data.nextDueDate ? new Date(data.nextDueDate) : undefined,
+      },
+    });
+  }
+
+  async deleteHealthRecord(horseId: string, recordId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    return this.prisma.healthRecord.delete({
+      where: { id: recordId },
+    });
+  }
+
+  // ========== WEIGHT & BODY CONDITION ==========
+
+  async getWeightRecords(horseId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    // Return mock data - in production you'd have a weight_records table
+    return [
+      { id: 'w1', weight: 550, date: new Date(), notes: null },
+      { id: 'w2', weight: 545, date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), notes: 'Après entraînement intensif' },
+      { id: 'w3', weight: 540, date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), notes: null },
+    ];
+  }
+
+  async addWeightRecord(horseId: string, organizationId: string, data: any) {
+    await this.findById(horseId, organizationId);
+
+    // Update horse weight
+    await this.prisma.horse.update({
+      where: { id: horseId },
+      data: { weightKg: data.weight },
+    });
+
+    return {
+      id: `weight-${Date.now()}`,
+      horseId,
+      ...data,
+      date: new Date(data.date),
+    };
+  }
+
+  async getBodyConditionRecords(horseId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    return [
+      { id: 'bc1', score: 5, date: new Date(), notes: 'Condition optimale' },
+      { id: 'bc2', score: 4.5, date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), notes: null },
+    ];
+  }
+
+  async addBodyConditionRecord(horseId: string, organizationId: string, data: any) {
+    await this.findById(horseId, organizationId);
+
+    return {
+      id: `bc-${Date.now()}`,
+      horseId,
+      ...data,
+      date: new Date(data.date),
+    };
+  }
+
+  // ========== NUTRITION ==========
+
+  async getNutritionPlans(horseId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    return [
+      {
+        id: 'np1',
+        name: 'Plan standard',
+        isActive: true,
+        dailyRation: {
+          hay: '10 kg',
+          concentrate: '3 kg',
+          supplements: ['Vitamines', 'Minéraux'],
+        },
+        createdAt: new Date(),
+      },
+    ];
+  }
+
+  async getActiveNutritionPlan(horseId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    return {
+      id: 'np1',
+      name: 'Plan standard',
+      isActive: true,
+      dailyRation: {
+        hay: '10 kg',
+        concentrate: '3 kg',
+        supplements: ['Vitamines', 'Minéraux'],
+      },
+      schedule: [
+        { time: '07:00', meal: 'Foin + Concentré' },
+        { time: '12:00', meal: 'Foin' },
+        { time: '18:00', meal: 'Foin + Concentré' },
+      ],
+      createdAt: new Date(),
+    };
+  }
+
+  async createNutritionPlan(horseId: string, organizationId: string, data: any) {
+    await this.findById(horseId, organizationId);
+
+    return {
+      id: `np-${Date.now()}`,
+      horseId,
+      ...data,
+      isActive: true,
+      createdAt: new Date(),
+    };
+  }
+
+  // ========== GESTATIONS ==========
+
+  async getGestations(horseId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    return this.prisma.gestation.findMany({
+      where: { horseId },
+      orderBy: { breedingDate: 'desc' },
+    });
+  }
+
+  // ========== EVENTS ==========
+
+  async getHorseEvents(horseId: string, organizationId: string) {
+    const horse = await this.findById(horseId, organizationId);
+
+    // Return mock events for this horse
+    return [
+      {
+        id: 'e1',
+        title: `Entraînement - ${horse.name}`,
+        type: 'training',
+        date: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        horseId,
+      },
+      {
+        id: 'e2',
+        title: `Visite vétérinaire - ${horse.name}`,
+        type: 'vet',
+        date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        horseId,
+      },
+    ];
+  }
 }
