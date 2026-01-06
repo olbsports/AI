@@ -281,7 +281,8 @@ export class MarketDataService {
         horse: {
           studbook: params.studbook,
           level: params.level,
-          disciplines: params.discipline ? { has: params.discipline } : undefined,
+          // MySQL doesn't support JSON array 'has' - use string_contains workaround
+          disciplines: params.discipline ? { string_contains: params.discipline } : undefined,
         },
       },
       select: {

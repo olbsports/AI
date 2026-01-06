@@ -5,7 +5,7 @@ import { SireWebService } from '../external-data/sireweb.service';
 import { IFCEService } from '../external-data/ifce.service';
 import { MarketDataService } from '../external-data/market-data.service';
 import { AnthropicService } from '../ai/anthropic.service';
-import { CreateValuationDto, ValuationResponse, ValuationFactors } from './dto/equicote.dto';
+import { CreateValuationDto, QuickEstimateDto, ValuationResponse, ValuationFactors } from './dto/equicote.dto';
 
 @Injectable()
 export class EquiCoteService {
@@ -442,7 +442,7 @@ Fournis:
       maxPrice: valuation.maxPrice,
       averagePrice: valuation.averagePrice,
       confidence: valuation.confidence,
-      factors: valuation.factors as ValuationFactors,
+      factors: valuation.factors as unknown as ValuationFactors,
       marketTrend: valuation.marketTrend,
       demandIndex: valuation.demandIndex,
       aiAnalysis: valuation.aiAnalysis,
@@ -471,7 +471,7 @@ Fournis:
       maxPrice: v.maxPrice,
       averagePrice: v.averagePrice,
       confidence: v.confidence,
-      factors: v.factors as ValuationFactors,
+      factors: v.factors as unknown as ValuationFactors,
       marketTrend: v.marketTrend,
       demandIndex: v.demandIndex,
       aiAnalysis: v.aiAnalysis,
@@ -485,7 +485,7 @@ Fournis:
   /**
    * Quick estimate without external data (for previews)
    */
-  async quickEstimate(data: CreateValuationDto): Promise<{
+  async quickEstimate(data: QuickEstimateDto): Promise<{
     minPrice: number;
     maxPrice: number;
     confidence: number;

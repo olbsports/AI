@@ -337,7 +337,7 @@ export class ScrapingService {
     return `${base}?${queryParams.toString()}`;
   }
 
-  private parseEquirodiListing($: cheerio.CheerioAPI, $el: cheerio.Cheerio<cheerio.Element>): ScrapedListing | null {
+  private parseEquirodiListing($: cheerio.CheerioAPI, $el: cheerio.Cheerio<any>): ScrapedListing | null {
     const id = $el.attr('data-id') || $el.find('a').attr('href')?.split('/').pop() || '';
     const title = $el.find('.title').text().trim();
     const priceText = $el.find('.price').text().trim();
@@ -360,7 +360,7 @@ export class ScrapingService {
     };
   }
 
-  private parseChevalAnnonceListing($: cheerio.CheerioAPI, $el: cheerio.Cheerio<cheerio.Element>): ScrapedListing | null {
+  private parseChevalAnnonceListing($: cheerio.CheerioAPI, $el: cheerio.Cheerio<any>): ScrapedListing | null {
     const id = $el.attr('data-id') || $el.find('a').attr('href')?.split('/').pop() || '';
     const title = $el.find('.ad-title').text().trim();
     const priceText = $el.find('.ad-price').text().trim();
