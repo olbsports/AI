@@ -7,7 +7,7 @@ import '../models/models.dart';
 import 'storage_service.dart';
 
 // API Base URL - Change this to your backend URL
-const String apiBaseUrl = 'http://87.106.3.194/api';
+const String apiBaseUrl = 'https://api.horsetempo.app/api';
 
 // Shared secure storage instance for token access
 const _secureStorage = FlutterSecureStorage();
