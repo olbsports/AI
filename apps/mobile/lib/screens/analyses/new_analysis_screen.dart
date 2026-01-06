@@ -54,12 +54,24 @@ class _NewAnalysisScreenState extends ConsumerState<NewAnalysisScreen> {
     if (video != null) {
       _videoController?.dispose();
       final file = File(video.path);
-      _videoController = VideoPlayerController.file(file)
-        ..initialize().then((_) {
+      _videoController = VideoPlayerController.file(file);
+      try {
+        await _videoController!.initialize();
+        if (mounted) {
           setState(() {
             _selectedVideo = file;
           });
-        });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erreur lors du chargement de la vidéo'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -73,12 +85,24 @@ class _NewAnalysisScreenState extends ConsumerState<NewAnalysisScreen> {
     if (video != null) {
       _videoController?.dispose();
       final file = File(video.path);
-      _videoController = VideoPlayerController.file(file)
-        ..initialize().then((_) {
+      _videoController = VideoPlayerController.file(file);
+      try {
+        await _videoController!.initialize();
+        if (mounted) {
           setState(() {
             _selectedVideo = file;
           });
-        });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erreur lors du chargement de la vidéo'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 

@@ -90,7 +90,10 @@ final horseSaleListingProvider =
   final response = await api.get('/marketplace/horses/$listingId');
   return HorseSaleListing(
     id: response['id'],
-    type: ListingType.values.firstWhere((e) => e.name == response['type']),
+    type: ListingType.values.firstWhere(
+      (e) => e.name == response['type'],
+      orElse: () => ListingType.horseForSale,
+    ),
     sellerId: response['sellerId'],
     sellerName: response['sellerName'],
     title: response['title'],
@@ -105,7 +108,7 @@ final horseSaleListingProvider =
     heightCm: response['heightCm'],
     color: response['color'],
     disciplines: (response['disciplines'] as List?)
-            ?.map((d) => HorseDiscipline.values.firstWhere((e) => e.name == d))
+            ?.map((d) => HorseDiscipline.fromString(d as String))
             .toList() ??
         [],
     level: response['level'],
@@ -152,7 +155,10 @@ final breedingListingsProvider =
     final json = e as Map<String, dynamic>;
     return BreedingListing(
       id: json['id'],
-      type: ListingType.values.firstWhere((t) => t.name == json['type']),
+      type: ListingType.values.firstWhere(
+        (t) => t.name == json['type'],
+        orElse: () => ListingType.mareForBreeding,
+      ),
       sellerId: json['sellerId'],
       sellerName: json['sellerName'],
       title: json['title'],
