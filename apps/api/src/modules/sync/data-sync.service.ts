@@ -357,20 +357,26 @@ export class DataSyncService {
     // Get horses that need sync
     const horsesToSync = await this.prisma.horse.findMany({
       where: {
-        OR: [
-          { syncStatus: 'pending' },
-          { lastSyncAt: null },
+        AND: [
           {
-            lastSyncAt: {
-              lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Older than 7 days
-            },
+            OR: [
+              { syncStatus: 'pending' },
+              { lastSyncAt: null },
+              {
+                lastSyncAt: {
+                  lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Older than 7 days
+                },
+              },
+            ],
           },
-        ],
-        // Must have at least one external ID
-        OR: [
-          { ffeNumber: { not: null } },
-          { sireId: { not: null } },
-          { ueln: { not: null } },
+          // Must have at least one external ID
+          {
+            OR: [
+              { ffeNumber: { not: null } },
+              { sireId: { not: null } },
+              { ueln: { not: null } },
+            ],
+          },
         ],
       },
       select: { id: true },
