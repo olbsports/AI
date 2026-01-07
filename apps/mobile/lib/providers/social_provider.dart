@@ -25,7 +25,7 @@ final feedTypeProvider = StateProvider<FeedType>((ref) => FeedType.forYou);
 
 /// Social feed (paginated)
 final socialFeedProvider =
-    FutureProvider.family<List<PublicNote>, ({FeedType type, int page})>((ref, params) async {
+    FutureProvider.autoDispose.family<List<PublicNote>, ({FeedType type, int page})>((ref, params) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/feed', queryParams: {
     'type': params.type.name,
@@ -35,7 +35,7 @@ final socialFeedProvider =
 });
 
 /// For You feed
-final forYouFeedProvider = FutureProvider<List<PublicNote>>((ref) async {
+final forYouFeedProvider = FutureProvider.autoDispose<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/feed/for-you');
@@ -47,7 +47,7 @@ final forYouFeedProvider = FutureProvider<List<PublicNote>>((ref) async {
 });
 
 /// Following feed
-final followingFeedProvider = FutureProvider<List<PublicNote>>((ref) async {
+final followingFeedProvider = FutureProvider.autoDispose<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/feed/following');
@@ -59,7 +59,7 @@ final followingFeedProvider = FutureProvider<List<PublicNote>>((ref) async {
 });
 
 /// Trending posts
-final trendingPostsProvider = FutureProvider<List<PublicNote>>((ref) async {
+final trendingPostsProvider = FutureProvider.autoDispose<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/feed/trending');
@@ -72,7 +72,7 @@ final trendingPostsProvider = FutureProvider<List<PublicNote>>((ref) async {
 
 /// Note by ID
 final noteProvider =
-    FutureProvider.family<PublicNote, String>((ref, noteId) async {
+    FutureProvider.autoDispose.family<PublicNote, String>((ref, noteId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/notes/$noteId');
   return PublicNote.fromJson(response);
@@ -80,7 +80,7 @@ final noteProvider =
 
 /// Comments for a note
 final noteCommentsProvider =
-    FutureProvider.family<List<NoteComment>, String>((ref, noteId) async {
+    FutureProvider.autoDispose.family<List<NoteComment>, String>((ref, noteId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/notes/$noteId/comments');
@@ -92,7 +92,7 @@ final noteCommentsProvider =
 });
 
 /// User's own notes
-final myNotesProvider = FutureProvider<List<PublicNote>>((ref) async {
+final myNotesProvider = FutureProvider.autoDispose<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/notes/my');
@@ -104,7 +104,7 @@ final myNotesProvider = FutureProvider<List<PublicNote>>((ref) async {
 });
 
 /// User's saved notes
-final savedNotesProvider = FutureProvider<List<PublicNote>>((ref) async {
+final savedNotesProvider = FutureProvider.autoDispose<List<PublicNote>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/notes/saved');
@@ -117,7 +117,7 @@ final savedNotesProvider = FutureProvider<List<PublicNote>>((ref) async {
 
 /// Notes by horse
 final horseNotesProvider =
-    FutureProvider.family<List<PublicNote>, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<List<PublicNote>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/horses/$horseId/notes');
@@ -130,7 +130,7 @@ final horseNotesProvider =
 
 /// User profile
 final userProfileProvider =
-    FutureProvider.family<UserProfile, String>((ref, userId) async {
+    FutureProvider.autoDispose.family<UserProfile, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/users/$userId/profile');
   return UserProfile.fromJson(response);
@@ -186,7 +186,7 @@ class UserProfile {
 
 /// User notes
 final userNotesProvider =
-    FutureProvider.family<List<PublicNote>, String>((ref, userId) async {
+    FutureProvider.autoDispose.family<List<PublicNote>, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/users/$userId/notes');
@@ -199,7 +199,7 @@ final userNotesProvider =
 
 /// User followers
 final userFollowersProvider =
-    FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
+    FutureProvider.autoDispose.family<List<FollowUser>, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/users/$userId/followers');
@@ -212,7 +212,7 @@ final userFollowersProvider =
 
 /// User following
 final userFollowingProvider =
-    FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
+    FutureProvider.autoDispose.family<List<FollowUser>, String>((ref, userId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/users/$userId/following');
@@ -249,7 +249,7 @@ class FollowUser {
 
 /// Search users
 final searchUsersProvider =
-    FutureProvider.family<List<FollowUser>, String>((ref, query) async {
+    FutureProvider.autoDispose.family<List<FollowUser>, String>((ref, query) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/users/search', queryParams: {'q': query});
@@ -261,7 +261,7 @@ final searchUsersProvider =
 });
 
 /// Suggested users to follow
-final suggestedUsersProvider = FutureProvider<List<FollowUser>>((ref) async {
+final suggestedUsersProvider = FutureProvider.autoDispose<List<FollowUser>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/users/suggested');
@@ -273,7 +273,7 @@ final suggestedUsersProvider = FutureProvider<List<FollowUser>>((ref) async {
 });
 
 /// Notifications
-final notificationsProvider = FutureProvider<List<SocialNotification>>((ref) async {
+final notificationsProvider = FutureProvider.autoDispose<List<SocialNotification>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/notifications');
@@ -285,7 +285,7 @@ final notificationsProvider = FutureProvider<List<SocialNotification>>((ref) asy
 });
 
 /// Unread notification count
-final unreadNotificationCountProvider = FutureProvider<int>((ref) async {
+final unreadNotificationCountProvider = FutureProvider.autoDispose<int>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/notifications/unread-count');
@@ -375,7 +375,7 @@ enum NotificationType {
 }
 
 /// Trending tags
-final trendingTagsProvider = FutureProvider<List<TrendingTag>>((ref) async {
+final trendingTagsProvider = FutureProvider.autoDispose<List<TrendingTag>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/feed/trending-tags');
@@ -409,7 +409,7 @@ class TrendingTag {
 
 /// Posts by tag
 final postsByTagProvider =
-    FutureProvider.family<List<PublicNote>, String>((ref, tag) async {
+    FutureProvider.autoDispose.family<List<PublicNote>, String>((ref, tag) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/feed/tags/$tag');
@@ -786,7 +786,7 @@ final socialNotifierProvider =
 });
 
 /// Feed engagement stats
-final feedStatsProvider = FutureProvider<FeedStats>((ref) async {
+final feedStatsProvider = FutureProvider.autoDispose<FeedStats>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/feed/stats');
   return FeedStats.fromJson(response);

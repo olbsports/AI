@@ -104,7 +104,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildFeedTab(FutureProvider<List<PublicNote>> feedProvider) {
+  Widget _buildFeedTab(AutoDisposeFutureProvider<List<PublicNote>> feedProvider) {
     final feedAsync = ref.watch(feedProvider);
 
     return RefreshIndicator(
@@ -167,7 +167,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildErrorWidget(Object error, FutureProvider<List<PublicNote>> provider) {
+  Widget _buildErrorWidget(Object error, AutoDisposeFutureProvider<List<PublicNote>> provider) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

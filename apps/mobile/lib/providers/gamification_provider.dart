@@ -3,14 +3,14 @@ import '../models/gamification.dart';
 import '../services/api_service.dart';
 
 /// User level provider
-final userLevelProvider = FutureProvider<UserLevel>((ref) async {
+final userLevelProvider = FutureProvider.autoDispose<UserLevel>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/level');
   return UserLevel.fromJson(response);
 });
 
 /// User XP transactions provider
-final xpTransactionsProvider = FutureProvider<List<XpTransaction>>((ref) async {
+final xpTransactionsProvider = FutureProvider.autoDispose<List<XpTransaction>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/xp/history');
   if (response == null) return [];
@@ -19,7 +19,7 @@ final xpTransactionsProvider = FutureProvider<List<XpTransaction>>((ref) async {
 });
 
 /// All badges provider
-final allBadgesProvider = FutureProvider<List<Badge>>((ref) async {
+final allBadgesProvider = FutureProvider.autoDispose<List<Badge>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/badges');
   if (response == null) return [];
@@ -28,7 +28,7 @@ final allBadgesProvider = FutureProvider<List<Badge>>((ref) async {
 });
 
 /// Earned badges provider
-final earnedBadgesProvider = FutureProvider<List<Badge>>((ref) async {
+final earnedBadgesProvider = FutureProvider.autoDispose<List<Badge>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/badges/earned');
   if (response == null) return [];
@@ -37,7 +37,7 @@ final earnedBadgesProvider = FutureProvider<List<Badge>>((ref) async {
 });
 
 /// Active challenges provider
-final activeChallengesProvider = FutureProvider<List<Challenge>>((ref) async {
+final activeChallengesProvider = FutureProvider.autoDispose<List<Challenge>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/challenges/active');
   if (response == null) return [];
@@ -46,14 +46,14 @@ final activeChallengesProvider = FutureProvider<List<Challenge>>((ref) async {
 });
 
 /// User streak provider
-final userStreakProvider = FutureProvider<UserStreak>((ref) async {
+final userStreakProvider = FutureProvider.autoDispose<UserStreak>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/streak');
   return UserStreak.fromJson(response);
 });
 
 /// Available rewards provider
-final availableRewardsProvider = FutureProvider<List<Reward>>((ref) async {
+final availableRewardsProvider = FutureProvider.autoDispose<List<Reward>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/rewards');
   if (response == null) return [];
@@ -62,7 +62,7 @@ final availableRewardsProvider = FutureProvider<List<Reward>>((ref) async {
 });
 
 /// Referral stats provider
-final referralStatsProvider = FutureProvider<ReferralStats>((ref) async {
+final referralStatsProvider = FutureProvider.autoDispose<ReferralStats>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/referrals/stats');
   return ReferralStats.fromJson(response);
@@ -153,20 +153,20 @@ final gamificationNotifierProvider =
 
 /// Badges by category
 final badgesByCategoryProvider =
-    FutureProvider.family<List<Badge>, BadgeCategory>((ref, category) async {
+    FutureProvider.autoDispose.family<List<Badge>, BadgeCategory>((ref, category) async {
   final allBadges = await ref.watch(allBadgesProvider.future);
   return allBadges.where((b) => b.category == category).toList();
 });
 
 /// Challenges by type
 final challengesByTypeProvider =
-    FutureProvider.family<List<Challenge>, ChallengeType>((ref, type) async {
+    FutureProvider.autoDispose.family<List<Challenge>, ChallengeType>((ref, type) async {
   final challenges = await ref.watch(activeChallengesProvider.future);
   return challenges.where((c) => c.type == type).toList();
 });
 
 /// Leaderboard provider
-final xpLeaderboardProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final xpLeaderboardProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/leaderboard');
   return (response as List).cast<Map<String, dynamic>>();

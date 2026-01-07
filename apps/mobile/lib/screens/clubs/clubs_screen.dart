@@ -578,7 +578,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
   void _showCreateClubDialog(BuildContext context) {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
-    ClubType selectedType = ClubType.ecurie;
+    ClubType selectedType = ClubType.stable;
     bool isPrivate = false;
 
     showModalBottomSheet(
@@ -606,6 +606,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                 const SizedBox(height: 16),
                 TextField(
                   controller: nameController,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Nom du club *',
                     border: OutlineInputBorder(),
@@ -629,6 +630,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                 const SizedBox(height: 12),
                 TextField(
                   controller: descriptionController,
+                  textInputAction: TextInputAction.done,
                   maxLines: 3,
                   decoration: const InputDecoration(
                     labelText: 'Description',
@@ -664,8 +666,8 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(success ? 'Club créé !' : 'Erreur lors de la création'),
-                          backgroundColor: success ? AppColors.success : Colors.red,
+                          content: Text(success != null ? 'Club créé !' : 'Erreur lors de la création'),
+                          backgroundColor: success != null ? AppColors.success : Colors.red,
                         ),
                       );
                     }
@@ -677,7 +679,10 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
           ),
         ),
       ),
-    );
+    ).then((_) {
+      nameController.dispose();
+      descriptionController.dispose();
+    });
   }
 
   void _openClubDetails(Club club) {

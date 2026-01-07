@@ -668,6 +668,7 @@ void _showFeedbackDialog(BuildContext context) {
       content: TextField(
         controller: controller,
         maxLines: 4,
+        textInputAction: TextInputAction.done,
         decoration: const InputDecoration(
           hintText: 'Partagez vos suggestions ou problèmes...',
           border: OutlineInputBorder(),
@@ -689,7 +690,9 @@ void _showFeedbackDialog(BuildContext context) {
         ),
       ],
     ),
-  );
+  ).then((_) {
+    controller.dispose();
+  });
 }
 
 void _showLegalDocument(BuildContext context, String type) {

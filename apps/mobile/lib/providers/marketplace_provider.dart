@@ -70,7 +70,7 @@ final marketplaceFiltersProvider = StateProvider<MarketplaceFilters>((ref) {
 
 /// Search marketplace listings
 final marketplaceSearchProvider =
-    FutureProvider.family<List<MarketplaceListing>, MarketplaceFilters>((ref, filters) async {
+    FutureProvider.autoDispose.family<List<MarketplaceListing>, MarketplaceFilters>((ref, filters) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/marketplace/search', queryParams: filters.toQueryParams());
@@ -83,7 +83,7 @@ final marketplaceSearchProvider =
 
 /// Listings by type
 final listingsByTypeProvider =
-    FutureProvider.family<List<MarketplaceListing>, ListingType>((ref, type) async {
+    FutureProvider.autoDispose.family<List<MarketplaceListing>, ListingType>((ref, type) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/marketplace', queryParams: {'type': type.name});
@@ -96,7 +96,7 @@ final listingsByTypeProvider =
 
 /// Listing detail by ID
 final listingDetailProvider =
-    FutureProvider.family<MarketplaceListing, String>((ref, listingId) async {
+    FutureProvider.autoDispose.family<MarketplaceListing, String>((ref, listingId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/marketplace/$listingId');
   return MarketplaceListing.fromJson(response);
@@ -104,7 +104,7 @@ final listingDetailProvider =
 
 /// Horse sale listing with EquiCote/EquiTrace
 final horseSaleListingProvider =
-    FutureProvider.family<HorseSaleListing, String>((ref, listingId) async {
+    FutureProvider.autoDispose.family<HorseSaleListing, String>((ref, listingId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/marketplace/horses/$listingId');
   return HorseSaleListing(
@@ -139,7 +139,7 @@ final horseSaleListingProvider =
 
 /// Get EquiCote valuation for a horse
 final horseEquiCoteProvider =
-    FutureProvider.family<HorseEquiCote, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<HorseEquiCote, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/equicote/horse/$horseId/valuations');
   final valuations = response as List;
@@ -149,7 +149,7 @@ final horseEquiCoteProvider =
 
 /// Get EquiTrace history for a horse
 final horseEquiTraceProvider =
-    FutureProvider.family<HorseEquiTrace, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<HorseEquiTrace, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/equitrace/timeline/$horseId');
   return HorseEquiTrace.fromJson(response);
@@ -157,7 +157,7 @@ final horseEquiTraceProvider =
 
 /// Get AI profile for a horse
 final horseAIProfileProvider =
-    FutureProvider.family<HorseAIProfile, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<HorseAIProfile, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/marketplace/ai-profile/$horseId');
   return HorseAIProfile.fromJson(response);
@@ -165,7 +165,7 @@ final horseAIProfileProvider =
 
 /// Breeding listings (mares and stallions)
 final breedingListingsProvider =
-    FutureProvider.family<List<BreedingListing>, ({ListingType type, String? breed})>((ref, params) async {
+    FutureProvider.autoDispose.family<List<BreedingListing>, ({ListingType type, String? breed})>((ref, params) async {
   final api = ref.watch(apiServiceProvider);
   final queryParams = <String, String>{'type': params.type.name};
   if (params.breed != null) queryParams['breed'] = params.breed!;
@@ -204,7 +204,7 @@ final breedingListingsProvider =
 });
 
 /// User's own listings
-final myListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) async {
+final myListingsProvider = FutureProvider.autoDispose<List<MarketplaceListing>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/marketplace/my-listings');
@@ -216,7 +216,7 @@ final myListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) async 
 });
 
 /// User's favorite listings
-final favoriteListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) async {
+final favoriteListingsProvider = FutureProvider.autoDispose<List<MarketplaceListing>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/marketplace/favorites');
@@ -228,7 +228,7 @@ final favoriteListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) 
 });
 
 /// Featured listings
-final featuredListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) async {
+final featuredListingsProvider = FutureProvider.autoDispose<List<MarketplaceListing>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/marketplace/featured');
@@ -240,7 +240,7 @@ final featuredListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) 
 });
 
 /// Recent listings
-final recentListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) async {
+final recentListingsProvider = FutureProvider.autoDispose<List<MarketplaceListing>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/marketplace/recent');
@@ -253,7 +253,7 @@ final recentListingsProvider = FutureProvider<List<MarketplaceListing>>((ref) as
 
 /// Breeding matches for a mare
 final breedingMatchesProvider =
-    FutureProvider.family<List<BreedingMatch>, String>((ref, mareId) async {
+    FutureProvider.autoDispose.family<List<BreedingMatch>, String>((ref, mareId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/marketplace/breeding-matches/$mareId');
   return (response as List).map((e) => BreedingMatch.fromJson(e)).toList();
@@ -261,14 +261,14 @@ final breedingMatchesProvider =
 
 /// Comparable horses for pricing
 final comparableHorsesProvider =
-    FutureProvider.family<List<ComparableHorse>, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<List<ComparableHorse>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/equicote/comparables/$horseId');
   return (response as List).map((e) => ComparableHorse.fromJson(e)).toList();
 });
 
 /// Marketplace statistics
-final marketplaceStatsProvider = FutureProvider<MarketplaceStats>((ref) async {
+final marketplaceStatsProvider = FutureProvider.autoDispose<MarketplaceStats>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/marketplace/stats');
   return MarketplaceStats.fromJson(response);

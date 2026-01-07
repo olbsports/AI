@@ -27,7 +27,7 @@ final leaderboardCategoryFilterProvider = StateProvider<HorseCategory?>((ref) =>
 
 /// Rider leaderboard
 final riderLeaderboardProvider =
-    FutureProvider.family<List<RiderLeaderboardEntry>, ({LeaderboardPeriod period, int? galopLevel})>(
+    FutureProvider.autoDispose.family<List<RiderLeaderboardEntry>, ({LeaderboardPeriod period, int? galopLevel})>(
         (ref, params) async {
   final api = ref.watch(apiServiceProvider);
   final queryParams = <String, String>{
@@ -47,7 +47,7 @@ final riderLeaderboardProvider =
 
 /// Horse leaderboard
 final horseLeaderboardProvider =
-    FutureProvider.family<List<HorseLeaderboardEntry>, ({
+    FutureProvider.autoDispose.family<List<HorseLeaderboardEntry>, ({
       LeaderboardPeriod period,
       HorseDiscipline? discipline,
       HorseCategory? category,
@@ -72,7 +72,7 @@ final horseLeaderboardProvider =
 });
 
 /// Current user's rider ranking
-final myRiderRankingProvider = FutureProvider<RiderLeaderboardEntry?>((ref) async {
+final myRiderRankingProvider = FutureProvider.autoDispose<RiderLeaderboardEntry?>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/leaderboard/riders/me');
@@ -83,7 +83,7 @@ final myRiderRankingProvider = FutureProvider<RiderLeaderboardEntry?>((ref) asyn
 });
 
 /// Current user's horse rankings
-final myHorseRankingsProvider = FutureProvider<List<HorseLeaderboardEntry>>((ref) async {
+final myHorseRankingsProvider = FutureProvider.autoDispose<List<HorseLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/leaderboard/horses/mine');
@@ -95,7 +95,7 @@ final myHorseRankingsProvider = FutureProvider<List<HorseLeaderboardEntry>>((ref
 });
 
 /// Top riders overall
-final topRidersProvider = FutureProvider<List<RiderLeaderboardEntry>>((ref) async {
+final topRidersProvider = FutureProvider.autoDispose<List<RiderLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/leaderboard/riders/top');
@@ -107,7 +107,7 @@ final topRidersProvider = FutureProvider<List<RiderLeaderboardEntry>>((ref) asyn
 });
 
 /// Top horses overall
-final topHorsesProvider = FutureProvider<List<HorseLeaderboardEntry>>((ref) async {
+final topHorsesProvider = FutureProvider.autoDispose<List<HorseLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/leaderboard/horses/top');
@@ -120,7 +120,7 @@ final topHorsesProvider = FutureProvider<List<HorseLeaderboardEntry>>((ref) asyn
 
 /// Riders by galop level
 final ridersByGalopProvider =
-    FutureProvider.family<List<RiderLeaderboardEntry>, int>((ref, galopLevel) async {
+    FutureProvider.autoDispose.family<List<RiderLeaderboardEntry>, int>((ref, galopLevel) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/leaderboard/riders', queryParams: {
@@ -135,7 +135,7 @@ final ridersByGalopProvider =
 
 /// Horses by discipline
 final horsesByDisciplineProvider =
-    FutureProvider.family<List<HorseLeaderboardEntry>, HorseDiscipline>((ref, discipline) async {
+    FutureProvider.autoDispose.family<List<HorseLeaderboardEntry>, HorseDiscipline>((ref, discipline) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/leaderboard/horses', queryParams: {
@@ -149,7 +149,7 @@ final horsesByDisciplineProvider =
 });
 
 /// Rising riders (most improved)
-final risingRidersProvider = FutureProvider<List<RiderLeaderboardEntry>>((ref) async {
+final risingRidersProvider = FutureProvider.autoDispose<List<RiderLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/leaderboard/riders/rising');
@@ -161,7 +161,7 @@ final risingRidersProvider = FutureProvider<List<RiderLeaderboardEntry>>((ref) a
 });
 
 /// Rising horses (most improved)
-final risingHorsesProvider = FutureProvider<List<HorseLeaderboardEntry>>((ref) async {
+final risingHorsesProvider = FutureProvider.autoDispose<List<HorseLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/leaderboard/horses/rising');
@@ -173,7 +173,7 @@ final risingHorsesProvider = FutureProvider<List<HorseLeaderboardEntry>>((ref) a
 });
 
 /// Leaderboard statistics
-final leaderboardStatsProvider = FutureProvider<LeaderboardStats>((ref) async {
+final leaderboardStatsProvider = FutureProvider.autoDispose<LeaderboardStats>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/leaderboard/stats');
   return LeaderboardStats.fromJson(response);
@@ -218,7 +218,7 @@ class LeaderboardStats {
 
 /// Regional leaderboard (by location)
 final regionalLeaderboardProvider =
-    FutureProvider.family<RegionalLeaderboard, String>((ref, region) async {
+    FutureProvider.autoDispose.family<RegionalLeaderboard, String>((ref, region) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/leaderboard/regional/$region');
   return RegionalLeaderboard.fromJson(response);
@@ -255,7 +255,7 @@ class RegionalLeaderboard {
 }
 
 /// Club leaderboard
-final clubLeaderboardProvider = FutureProvider<List<ClubLeaderboardEntry>>((ref) async {
+final clubLeaderboardProvider = FutureProvider.autoDispose<List<ClubLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/leaderboard/clubs');
   return (response as List).map((e) => ClubLeaderboardEntry.fromJson(e)).toList();
@@ -517,7 +517,7 @@ final leaderboardNotifierProvider =
 });
 
 /// Weekly rewards
-final weeklyRewardsProvider = FutureProvider<WeeklyRewards>((ref) async {
+final weeklyRewardsProvider = FutureProvider.autoDispose<WeeklyRewards>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/leaderboard/weekly-rewards');
   return WeeklyRewards.fromJson(response);
