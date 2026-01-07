@@ -99,6 +99,7 @@ class CalendarEvent {
 
   Map<String, dynamic> toJson() {
     return {
+      if (id != null) 'id': id,
       'userId': userId,
       'title': title,
       'description': description,
@@ -345,8 +346,10 @@ class EventReminder {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'minutesBefore': minutesBefore,
       'method': method.name,
+      'isSent': isSent,
     };
   }
 
@@ -453,6 +456,7 @@ class Goal {
 
   Map<String, dynamic> toJson() {
     return {
+      if (id != null) 'id': id,
       'userId': userId,
       'title': title,
       'description': description,
@@ -659,6 +663,27 @@ class TrainingPlan {
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'title': title,
+      'description': description,
+      'horseId': horseId,
+      'horseName': horseName,
+      'discipline': discipline.name,
+      'level': level.name,
+      'startDate': startDate.toIso8601String(),
+      'endDate': endDate.toIso8601String(),
+      'weeksTotal': weeksTotal,
+      'currentWeek': currentWeek,
+      'weeks': weeks.map((w) => w.toJson()).toList(),
+      'status': status.name,
+      'aiRecommendations': aiRecommendations,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
 }
 
 /// Training week
@@ -690,6 +715,17 @@ class TrainingWeek {
       tips: (json['tips'] as List?)?.cast<String>() ?? [],
       isCompleted: json['isCompleted'] as bool? ?? false,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'weekNumber': weekNumber,
+      'theme': theme,
+      'focus': focus,
+      'sessions': sessions.map((s) => s.toJson()).toList(),
+      'tips': tips,
+      'isCompleted': isCompleted,
+    };
   }
 }
 
@@ -742,6 +778,23 @@ class TrainingSession {
       notes: json['notes'] as String?,
       rating: json['rating'] as int?,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'dayOfWeek': dayOfWeek,
+      'title': title,
+      'description': description,
+      'type': type.name,
+      'durationMinutes': durationMinutes,
+      'intensity': intensity.name,
+      'exercises': exercises.map((e) => e.toJson()).toList(),
+      'isCompleted': isCompleted,
+      'completedAt': completedAt?.toIso8601String(),
+      'notes': notes,
+      'rating': rating,
+    };
   }
 }
 
@@ -845,6 +898,18 @@ class Exercise {
       videoUrl: json['videoUrl'] as String?,
       imageUrl: json['imageUrl'] as String?,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'durationMinutes': durationMinutes,
+      'repetitions': repetitions,
+      'videoUrl': videoUrl,
+      'imageUrl': imageUrl,
+    };
   }
 }
 
