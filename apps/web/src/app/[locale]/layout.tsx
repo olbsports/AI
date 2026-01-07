@@ -11,7 +11,7 @@ import { SUPPORTED_LOCALES } from '@horse-vision/config';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Horse Vision AI',
+  title: 'Horse Tempo',
   description: 'Plateforme d\'analyse équestre et vétérinaire par intelligence artificielle',
 };
 

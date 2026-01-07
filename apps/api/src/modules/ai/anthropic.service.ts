@@ -214,7 +214,7 @@ export class AnthropicService {
     conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
     context?: string,
   ): Promise<string> {
-    const systemPrompt = `Tu es un assistant expert en équitation et en chevaux pour l'application Horse Vision AI.
+    const systemPrompt = `Tu es un assistant expert en équitation et en chevaux pour l'application Horse Tempo.
 Tu aides les utilisateurs avec:
 - Questions sur leurs chevaux
 - Conseils d'entraînement

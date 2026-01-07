@@ -52,7 +52,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'Horse Vision Admin',
+                  'Horse Tempo Admin',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

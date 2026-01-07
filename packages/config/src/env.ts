@@ -31,7 +31,7 @@ export const serverEnvSchema = sharedEnvSchema.extend({
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  EMAIL_FROM: z.string().email().default('noreply@horsevision.ai'),
+  EMAIL_FROM: z.string().email().default('noreply@horsetempo.app'),
 
   // OpenAI / Claude
   OPENAI_API_KEY: z.string().optional(),

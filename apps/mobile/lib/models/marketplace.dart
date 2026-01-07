@@ -689,7 +689,7 @@ class TrainingRecord {
   }
 }
 
-/// AI Analysis record from Horse Vision
+/// AI Analysis record from Horse Tempo
 class AnalysisRecord {
   final String id;
   final String type; // locomotion, conformation, video

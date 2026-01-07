@@ -1,4 +1,4 @@
-package com.horsevision.ai
+package com.horsetempo.app
 
 import io.flutter.embedding.android.FlutterActivity
 

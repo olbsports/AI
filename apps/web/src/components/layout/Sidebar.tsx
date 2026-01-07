@@ -63,7 +63,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <span className="text-white text-lg">🐴</span>
             </div>
             {!collapsed && (
-              <span className="font-bold text-lg">Horse Vision</span>
+              <span className="font-bold text-lg">Horse Tempo</span>
             )}
           </Link>
           <button

@@ -51,7 +51,7 @@ export function Footer() {
                 <span className="text-white font-bold text-xl">HV</span>
               </div>
               <span className="text-white font-bold text-xl">
-                Horse Vision AI
+                Horse Tempo
               </span>
             </Link>
             <p className="text-gray-400 text-sm mb-4">
@@ -99,7 +99,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-400 text-sm">
-            © 2024 Horse Vision AI. Tous droits réservés.
+            © 2024 Horse Tempo. Tous droits réservés.
           </p>
           <div className="flex items-center gap-4 text-sm text-gray-400">
             <span>Made with love in France</span>

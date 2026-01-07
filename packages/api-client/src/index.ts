@@ -32,4 +32,4 @@ export function createApiClient(config: ApiClientConfig) {
   };
 }
 
-export type HorseVisionApi = ReturnType<typeof createApiClient>;
+export type HorseTempoApi = ReturnType<typeof createApiClient>;

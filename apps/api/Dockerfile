@@ -1,4 +1,4 @@
-# Horse Vision AI - API Dockerfile
+# Horse Tempo - API Dockerfile
 # Multi-stage build for optimized production image
 
 # ============================================

@@ -285,7 +285,7 @@ export class ScrapingService {
     const response = await firstValueFrom(
       this.http.get(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; HorseVisionBot/1.0; +https://horsevision.ai)',
+          'User-Agent': 'Mozilla/5.0 (compatible; HorseTempoBot/1.0; +https://horsetempo.app)',
           'Accept': 'text/html,application/xhtml+xml',
           'Accept-Language': 'fr-FR,fr;q=0.9',
         },
