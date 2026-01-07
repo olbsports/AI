@@ -67,43 +67,25 @@ class Analysis {
     this.notes,
   });
 
-  String get typeLabel {
-    switch (type) {
-      case AnalysisType.videoPerformance:
-        return 'Performance vidéo';
-      case AnalysisType.videoCourse:
-        return 'Parcours CSO';
-      case AnalysisType.radiological:
-        return 'Radiologique';
-      case AnalysisType.locomotion:
-        return 'Locomotion';
-      case AnalysisType.jump:
-        return 'Saut';
-      case AnalysisType.posture:
-        return 'Posture';
-      case AnalysisType.conformation:
-        return 'Conformation';
-      case AnalysisType.course:
-        return 'Parcours';
-      case AnalysisType.video:
-        return 'Vidéo';
-    }
-  }
+  String get typeLabel => switch (type) {
+    AnalysisType.videoPerformance => 'Performance vidéo',
+    AnalysisType.videoCourse => 'Parcours CSO',
+    AnalysisType.radiological => 'Radiologique',
+    AnalysisType.locomotion => 'Locomotion',
+    AnalysisType.jump => 'Saut',
+    AnalysisType.posture => 'Posture',
+    AnalysisType.conformation => 'Conformation',
+    AnalysisType.course => 'Parcours',
+    AnalysisType.video => 'Vidéo',
+  };
 
-  String get statusLabel {
-    switch (status) {
-      case AnalysisStatus.pending:
-        return 'En attente';
-      case AnalysisStatus.processing:
-        return 'En cours';
-      case AnalysisStatus.completed:
-        return 'Terminée';
-      case AnalysisStatus.failed:
-        return 'Échouée';
-      case AnalysisStatus.cancelled:
-        return 'Annulée';
-    }
-  }
+  String get statusLabel => switch (status) {
+    AnalysisStatus.pending => 'En attente',
+    AnalysisStatus.processing => 'En cours',
+    AnalysisStatus.completed => 'Terminée',
+    AnalysisStatus.failed => 'Échouée',
+    AnalysisStatus.cancelled => 'Annulée',
+  };
 
   bool get isProcessing =>
       status == AnalysisStatus.pending || status == AnalysisStatus.processing;
@@ -164,26 +146,15 @@ class Analysis {
     }
   }
 
-  String get typeApiValue {
-    switch (type) {
-      case AnalysisType.videoPerformance:
-        return 'video_performance';
-      case AnalysisType.videoCourse:
-        return 'video_course';
-      case AnalysisType.radiological:
-        return 'radiological';
-      case AnalysisType.locomotion:
-        return 'locomotion';
-      case AnalysisType.jump:
-        return 'jump';
-      case AnalysisType.posture:
-        return 'posture';
-      case AnalysisType.conformation:
-        return 'conformation';
-      case AnalysisType.course:
-        return 'course';
-      case AnalysisType.video:
-        return 'video';
-    }
-  }
+  String get typeApiValue => switch (type) {
+    AnalysisType.videoPerformance => 'video_performance',
+    AnalysisType.videoCourse => 'video_course',
+    AnalysisType.radiological => 'radiological',
+    AnalysisType.locomotion => 'locomotion',
+    AnalysisType.jump => 'jump',
+    AnalysisType.posture => 'posture',
+    AnalysisType.conformation => 'conformation',
+    AnalysisType.course => 'course',
+    AnalysisType.video => 'video',
+  };
 }

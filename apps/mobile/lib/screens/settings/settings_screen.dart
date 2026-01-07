@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../theme/app_theme.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -11,6 +13,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final settings = ref.watch(settingsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -70,10 +73,16 @@ class SettingsScreen extends ConsumerWidget {
             context,
             icon: Icons.language_outlined,
             title: 'Langue',
-            subtitle: 'Français',
-            onTap: () => _showLanguageDialog(context),
+            subtitle: settings.languageDisplayName,
+            onTap: () => _showLanguageDialog(context, ref, settings.language),
           ),
-          _buildThemeTile(context, ref),
+          _buildSettingsTile(
+            context,
+            icon: Icons.dark_mode_outlined,
+            title: 'Thème',
+            subtitle: settings.themeDisplayName,
+            onTap: () => _showThemeDialog(context, ref, settings.themeMode),
+          ),
           const SizedBox(height: 24),
 
           // Support section
@@ -84,14 +93,14 @@ class SettingsScreen extends ConsumerWidget {
             icon: Icons.help_outline,
             title: 'Aide',
             subtitle: 'Centre d\'aide et FAQ',
-            onTap: () {},
+            onTap: () => _launchUrl('https://horsevision.ai/help'),
           ),
           _buildSettingsTile(
             context,
             icon: Icons.mail_outline,
             title: 'Nous contacter',
             subtitle: 'support@horsevision.ai',
-            onTap: () {},
+            onTap: () => _launchUrl('mailto:support@horsevision.ai'),
           ),
           _buildSettingsTile(
             context,
@@ -109,15 +118,28 @@ class SettingsScreen extends ConsumerWidget {
             context,
             icon: Icons.privacy_tip_outlined,
             title: 'Politique de confidentialité',
-            onTap: () {},
+            onTap: () => _launchUrl('https://horsevision.ai/privacy'),
           ),
           _buildSettingsTile(
             context,
             icon: Icons.description_outlined,
             title: 'Conditions d\'utilisation',
-            onTap: () {},
+            onTap: () => _launchUrl('https://horsevision.ai/terms'),
           ),
           const SizedBox(height: 24),
+
+          // Danger zone
+          _buildSectionHeader(context, 'Zone de danger'),
+          const SizedBox(height: 8),
+          _buildSettingsTile(
+            context,
+            icon: Icons.delete_forever_outlined,
+            title: 'Supprimer mon compte',
+            subtitle: 'Action irréversible',
+            onTap: () => _showDeleteAccountDialog(context, ref),
+            isDestructive: true,
+          ),
+          const SizedBox(height: 16),
 
           // Logout button
           FilledButton.icon(
@@ -133,6 +155,13 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Widget _buildProfileCard(BuildContext context, AuthState authState) {
@@ -213,12 +242,22 @@ class SettingsScreen extends ConsumerWidget {
     required String title,
     String? subtitle,
     required VoidCallback onTap,
+    bool isDestructive = false,
   }) {
+    final color = isDestructive
+        ? Theme.of(context).colorScheme.error
+        : Theme.of(context).colorScheme.primary;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-        title: Text(title),
+        leading: Icon(icon, color: color),
+        title: Text(
+          title,
+          style: isDestructive
+              ? TextStyle(color: Theme.of(context).colorScheme.error)
+              : null,
+        ),
         subtitle: subtitle != null ? Text(subtitle) : null,
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
@@ -226,41 +265,35 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildThemeTile(BuildContext context, WidgetRef ref) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(
-          Icons.dark_mode_outlined,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        title: const Text('Thème'),
-        subtitle: const Text('Automatique'),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _showThemeDialog(context),
-      ),
-    );
-  }
-
-  void _showLanguageDialog(BuildContext context) {
+  void _showLanguageDialog(BuildContext context, WidgetRef ref, String currentLanguage) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Langue'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             RadioListTile<String>(
               value: 'fr',
-              groupValue: 'fr',
+              groupValue: currentLanguage,
               title: const Text('Français'),
-              onChanged: (_) => Navigator.pop(context),
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(settingsProvider.notifier).setLanguage(value);
+                  Navigator.pop(dialogContext);
+                }
+              },
             ),
             RadioListTile<String>(
               value: 'en',
-              groupValue: 'fr',
+              groupValue: currentLanguage,
               title: const Text('English'),
-              onChanged: (_) => Navigator.pop(context),
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(settingsProvider.notifier).setLanguage(value);
+                  Navigator.pop(dialogContext);
+                }
+              },
             ),
           ],
         ),
@@ -268,31 +301,47 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showThemeDialog(BuildContext context) {
+  void _showThemeDialog(BuildContext context, WidgetRef ref, ThemeMode currentTheme) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Thème'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            RadioListTile<String>(
-              value: 'auto',
-              groupValue: 'auto',
+            RadioListTile<ThemeMode>(
+              value: ThemeMode.system,
+              groupValue: currentTheme,
               title: const Text('Automatique'),
-              onChanged: (_) => Navigator.pop(context),
+              subtitle: const Text('Suit les paramètres système'),
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(settingsProvider.notifier).setThemeMode(value);
+                  Navigator.pop(dialogContext);
+                }
+              },
             ),
-            RadioListTile<String>(
-              value: 'light',
-              groupValue: 'auto',
+            RadioListTile<ThemeMode>(
+              value: ThemeMode.light,
+              groupValue: currentTheme,
               title: const Text('Clair'),
-              onChanged: (_) => Navigator.pop(context),
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(settingsProvider.notifier).setThemeMode(value);
+                  Navigator.pop(dialogContext);
+                }
+              },
             ),
-            RadioListTile<String>(
-              value: 'dark',
-              groupValue: 'auto',
+            RadioListTile<ThemeMode>(
+              value: ThemeMode.dark,
+              groupValue: currentTheme,
               title: const Text('Sombre'),
-              onChanged: (_) => Navigator.pop(context),
+              onChanged: (value) {
+                if (value != null) {
+                  ref.read(settingsProvider.notifier).setThemeMode(value);
+                  Navigator.pop(dialogContext);
+                }
+              },
             ),
           ],
         ),
@@ -318,22 +367,78 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error),
+            const SizedBox(width: 8),
+            const Text('Supprimer le compte'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Cette action est irréversible. Toutes vos données seront définitivement supprimées :',
+            ),
+            SizedBox(height: 12),
+            Text('• Vos chevaux et leur historique'),
+            Text('• Vos analyses et statistiques'),
+            Text('• Vos plannings et événements'),
+            Text('• Votre abonnement'),
+            SizedBox(height: 12),
+            Text(
+              'Êtes-vous sûr de vouloir continuer ?',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              // TODO: Implement account deletion API call
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Pour supprimer votre compte, contactez support@horsevision.ai'),
+                  duration: Duration(seconds: 5),
+                ),
+              );
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Supprimer définitivement'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Se déconnecter'),
         content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Annuler'),
           ),
           FilledButton(
             onPressed: () async {
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
                 context.go('/login');
               }
             },

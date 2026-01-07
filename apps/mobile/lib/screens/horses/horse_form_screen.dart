@@ -190,6 +190,8 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
           'heightCm': int.tryParse(_heightController.text),
         if (_birthDate != null)
           'birthDate': _birthDate!.toIso8601String(),
+        if (_notesController.text.isNotEmpty)
+          'notes': _notesController.text.trim(),
       };
 
       Horse? horse;

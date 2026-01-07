@@ -69,49 +69,28 @@ class Report {
     this.pdfUrl,
   });
 
-  String get typeLabel {
-    switch (type) {
-      case ReportType.radiological:
-        return 'Radiologique';
-      case ReportType.locomotion:
-        return 'Locomotion';
-      case ReportType.courseAnalysis:
-        return 'Analyse de parcours';
-      case ReportType.purchaseExam:
-        return 'Visite d\'achat';
-      case ReportType.progress:
-        return 'Progression';
-      case ReportType.veterinary:
-        return 'Vétérinaire';
-      case ReportType.training:
-        return 'Entraînement';
-      case ReportType.competition:
-        return 'Compétition';
-      case ReportType.health:
-        return 'Santé';
-    }
-  }
+  String get typeLabel => switch (type) {
+    ReportType.radiological => 'Radiologique',
+    ReportType.locomotion => 'Locomotion',
+    ReportType.courseAnalysis => 'Analyse de parcours',
+    ReportType.purchaseExam => 'Visite d\'achat',
+    ReportType.progress => 'Progression',
+    ReportType.veterinary => 'Vétérinaire',
+    ReportType.training => 'Entraînement',
+    ReportType.competition => 'Compétition',
+    ReportType.health => 'Santé',
+  };
 
-  String get statusLabel {
-    switch (status) {
-      case ReportStatus.draft:
-        return 'Brouillon';
-      case ReportStatus.submitted:
-        return 'Soumis';
-      case ReportStatus.approved:
-        return 'Approuvé';
-      case ReportStatus.rejected:
-        return 'Rejeté';
-      case ReportStatus.archived:
-        return 'Archivé';
-      case ReportStatus.generating:
-        return 'Génération en cours';
-      case ReportStatus.ready:
-        return 'Prêt';
-      case ReportStatus.failed:
-        return 'Échoué';
-    }
-  }
+  String get statusLabel => switch (status) {
+    ReportStatus.draft => 'Brouillon',
+    ReportStatus.submitted => 'Soumis',
+    ReportStatus.approved => 'Approuvé',
+    ReportStatus.rejected => 'Rejeté',
+    ReportStatus.archived => 'Archivé',
+    ReportStatus.generating => 'Génération en cours',
+    ReportStatus.ready => 'Prêt',
+    ReportStatus.failed => 'Échoué',
+  };
 
   bool get isShared => shareToken != null && sharedAt != null;
 

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -6,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../models/models.dart';
 import '../../providers/social_provider.dart';
+import '../../providers/horses_provider.dart';
 import '../../theme/app_theme.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -929,25 +931,27 @@ class _CommentsSheetState extends ConsumerState<CommentsSheet> {
   }
 }
 
-class CreateNoteSheet extends StatefulWidget {
+class CreateNoteSheet extends ConsumerStatefulWidget {
   final Function(Map<String, dynamic>) onPost;
 
   const CreateNoteSheet({super.key, required this.onPost});
 
   @override
-  State<CreateNoteSheet> createState() => _CreateNoteSheetState();
+  ConsumerState<CreateNoteSheet> createState() => _CreateNoteSheetState();
 }
 
-class _CreateNoteSheetState extends State<CreateNoteSheet> {
+class _CreateNoteSheetState extends ConsumerState<CreateNoteSheet> {
   final _contentController = TextEditingController();
   final _imagePicker = ImagePicker();
   ContentVisibility _visibility = ContentVisibility.public;
   bool _allowComments = true;
   bool _allowSharing = true;
-  String? _selectedHorseId;
+  Horse? _selectedHorse;
   bool _isLoading = false;
-  List<String> _selectedMediaUrls = [];
+  bool _isUploading = false;
+  List<File> _selectedMediaFiles = [];
   String? _mediaType;
+  String _uploadStatus = '';
 
   @override
   void dispose() {
@@ -956,6 +960,13 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
   }
 
   Future<void> _pickImage() async {
+    if (_selectedMediaFiles.length >= 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Maximum 4 médias par publication')),
+      );
+      return;
+    }
+
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
@@ -965,25 +976,28 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
       );
 
       if (image != null) {
-        // TODO: Upload image to server and get URL
-        // For now, using local path as placeholder
         setState(() {
-          _selectedMediaUrls.add(image.path);
+          _selectedMediaFiles.add(File(image.path));
           _mediaType = 'image';
         });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Image sélectionnée. Upload serveur à implémenter.')),
-        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de la sélection: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors de la sélection: $e')),
+        );
+      }
     }
   }
 
   Future<void> _pickVideo() async {
+    if (_selectedMediaFiles.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Une seule vidéo par publication')),
+      );
+      return;
+    }
+
     try {
       final XFile? video = await _imagePicker.pickVideo(
         source: ImageSource.gallery,
@@ -991,29 +1005,129 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
       );
 
       if (video != null) {
-        // TODO: Upload video to server and get URL
-        // For now, using local path as placeholder
+        final file = File(video.path);
+        final fileSize = await file.length();
+
+        // Check file size (max 100MB)
+        if (fileSize > 100 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('La vidéo ne doit pas dépasser 100MB')),
+            );
+          }
+          return;
+        }
+
         setState(() {
-          _selectedMediaUrls.add(video.path);
+          _selectedMediaFiles.add(file);
           _mediaType = 'video';
         });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Vidéo sélectionnée. Upload serveur à implémenter.')),
-        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de la sélection: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors de la sélection: $e')),
+        );
+      }
     }
   }
 
-  void _showHorsePicker() {
-    // TODO: Implement horse picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sélection de cheval à implémenter')),
+  void _showHorsePicker() async {
+    final horsesAsync = ref.read(horsesNotifierProvider);
+
+    horsesAsync.when(
+      data: (horses) {
+        if (horses.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Aucun cheval disponible')),
+          );
+          return;
+        }
+
+        showModalBottomSheet(
+          context: context,
+          builder: (context) => Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.5,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Sélectionner un cheval',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const Spacer(),
+                      if (_selectedHorse != null)
+                        TextButton(
+                          onPressed: () {
+                            setState(() => _selectedHorse = null);
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Retirer'),
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: horses.length,
+                    itemBuilder: (context, index) {
+                      final horse = horses[index];
+                      final isSelected = _selectedHorse?.id == horse.id;
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: horse.photoUrl != null
+                              ? NetworkImage(horse.photoUrl!)
+                              : null,
+                          child: horse.photoUrl == null
+                              ? const Icon(Icons.pets)
+                              : null,
+                        ),
+                        title: Text(horse.name),
+                        subtitle: Text(horse.breed ?? 'Race inconnue'),
+                        trailing: isSelected
+                            ? Icon(Icons.check, color: AppColors.primary)
+                            : null,
+                        onTap: () {
+                          setState(() => _selectedHorse = horse);
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chargement des chevaux...')),
+        );
+      },
+      error: (e, _) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: ${e.toString()}')),
+        );
+      },
     );
+  }
+
+  void _removeMedia(int index) {
+    setState(() {
+      _selectedMediaFiles.removeAt(index);
+      if (_selectedMediaFiles.isEmpty) {
+        _mediaType = null;
+      }
+    });
   }
 
   @override
@@ -1036,7 +1150,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                 ),
                 const Spacer(),
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
                   child: const Text('Annuler'),
                 ),
               ],
@@ -1045,12 +1159,39 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
             TextField(
               controller: _contentController,
               maxLines: 5,
+              enabled: !_isLoading,
               decoration: const InputDecoration(
                 hintText: 'Partagez votre expérience...',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
+
+            // Selected horse indicator
+            if (_selectedHorse != null) ...[
+              Card(
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: _selectedHorse!.photoUrl != null
+                        ? NetworkImage(_selectedHorse!.photoUrl!)
+                        : null,
+                    child: _selectedHorse!.photoUrl == null
+                        ? const Icon(Icons.pets, size: 20)
+                        : null,
+                  ),
+                  title: Text(_selectedHorse!.name),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _isLoading ? null : () {
+                      setState(() => _selectedHorse = null);
+                    },
+                  ),
+                  dense: true,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+
             Row(
               children: [
                 const Text('Visibilité :'),
@@ -1069,7 +1210,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                       ),
                     );
                   }).toList(),
-                  onChanged: (v) {
+                  onChanged: _isLoading ? null : (v) {
                     if (v != null) setState(() => _visibility = v);
                   },
                 ),
@@ -1082,7 +1223,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                   child: CheckboxListTile(
                     title: const Text('Commentaires', style: TextStyle(fontSize: 14)),
                     value: _allowComments,
-                    onChanged: (v) => setState(() => _allowComments = v ?? true),
+                    onChanged: _isLoading ? null : (v) => setState(() => _allowComments = v ?? true),
                     controlAffinity: ListTileControlAffinity.leading,
                     dense: true,
                   ),
@@ -1091,7 +1232,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                   child: CheckboxListTile(
                     title: const Text('Partage', style: TextStyle(fontSize: 14)),
                     value: _allowSharing,
-                    onChanged: (v) => setState(() => _allowSharing = v ?? true),
+                    onChanged: _isLoading ? null : (v) => setState(() => _allowSharing = v ?? true),
                     controlAffinity: ListTileControlAffinity.leading,
                     dense: true,
                   ),
@@ -1100,12 +1241,12 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
             ),
             const SizedBox(height: 16),
             // Selected media preview
-            if (_selectedMediaUrls.isNotEmpty) ...[
-              Container(
+            if (_selectedMediaFiles.isNotEmpty) ...[
+              SizedBox(
                 height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _selectedMediaUrls.length,
+                  itemCount: _selectedMediaFiles.length,
                   itemBuilder: (context, index) {
                     return Stack(
                       children: [
@@ -1117,34 +1258,38 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                             color: Colors.grey.shade200,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Center(
-                            child: Icon(
-                              _mediaType == 'video' ? Icons.videocam : Icons.image,
-                              size: 40,
-                              color: Colors.grey.shade600,
-                            ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: _mediaType == 'image'
+                                ? Image.file(
+                                    _selectedMediaFiles[index],
+                                    fit: BoxFit.cover,
+                                  )
+                                : Center(
+                                    child: Icon(
+                                      Icons.videocam,
+                                      size: 40,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
                           ),
                         ),
-                        Positioned(
-                          right: 12,
-                          top: 4,
-                          child: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white, size: 20),
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.black54,
-                              padding: EdgeInsets.zero,
-                              minimumSize: const Size(24, 24),
+                        if (!_isLoading)
+                          Positioned(
+                            right: 12,
+                            top: 4,
+                            child: GestureDetector(
+                              onTap: () => _removeMedia(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close, color: Colors.white, size: 16),
+                              ),
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _selectedMediaUrls.removeAt(index);
-                                if (_selectedMediaUrls.isEmpty) {
-                                  _mediaType = null;
-                                }
-                              });
-                            },
                           ),
-                        ),
                       ],
                     );
                   },
@@ -1152,20 +1297,36 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
               ),
               const SizedBox(height: 8),
             ],
+
+            // Upload status
+            if (_isUploading && _uploadStatus.isNotEmpty) ...[
+              LinearProgressIndicator(),
+              const SizedBox(height: 4),
+              Text(
+                _uploadStatus,
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+            ],
+
             Row(
               children: [
                 IconButton(
                   icon: const Icon(Icons.image),
-                  onPressed: _isLoading ? null : _pickImage,
+                  onPressed: _isLoading || _mediaType == 'video' ? null : _pickImage,
                   tooltip: 'Ajouter une photo',
                 ),
                 IconButton(
                   icon: const Icon(Icons.videocam),
-                  onPressed: _isLoading ? null : _pickVideo,
+                  onPressed: _isLoading || _selectedMediaFiles.isNotEmpty ? null : _pickVideo,
                   tooltip: 'Ajouter une vidéo',
                 ),
                 IconButton(
-                  icon: const Icon(Icons.pets),
+                  icon: Icon(
+                    Icons.pets,
+                    color: _selectedHorse != null ? AppColors.primary : null,
+                  ),
                   onPressed: _isLoading ? null : _showHorsePicker,
                   tooltip: 'Associer un cheval',
                 ),
@@ -1178,7 +1339,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('Publier'),
                 ),
@@ -1190,16 +1351,71 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
     );
   }
 
-  void _submitPost() {
-    setState(() => _isLoading = true);
-    widget.onPost({
-      'content': _contentController.text.trim(),
-      'visibility': _visibility.name,
-      'allowComments': _allowComments,
-      'allowSharing': _allowSharing,
-      if (_selectedHorseId != null) 'horseId': _selectedHorseId,
-      if (_selectedMediaUrls.isNotEmpty) 'mediaUrls': _selectedMediaUrls,
-      if (_mediaType != null) 'mediaType': _mediaType,
+  Future<void> _submitPost() async {
+    setState(() {
+      _isLoading = true;
+      _isUploading = _selectedMediaFiles.isNotEmpty;
+      _uploadStatus = 'Préparation...';
     });
+
+    try {
+      List<String> mediaUrls = [];
+
+      // Upload media files if any
+      if (_selectedMediaFiles.isNotEmpty) {
+        final notifier = ref.read(socialNotifierProvider.notifier);
+
+        for (int i = 0; i < _selectedMediaFiles.length; i++) {
+          if (mounted) {
+            setState(() {
+              _uploadStatus = 'Upload ${i + 1}/${_selectedMediaFiles.length}...';
+            });
+          }
+
+          final url = await notifier.uploadMedia(
+            _selectedMediaFiles[i],
+            type: _mediaType ?? 'image',
+          );
+
+          if (url != null) {
+            mediaUrls.add(url);
+          } else {
+            throw Exception('Échec de l\'upload du média ${i + 1}');
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _uploadStatus = 'Publication...';
+        });
+      }
+
+      // Submit the post with uploaded media URLs
+      widget.onPost({
+        'content': _contentController.text.trim(),
+        'visibility': _visibility.name,
+        'allowComments': _allowComments,
+        'allowSharing': _allowSharing,
+        if (_selectedHorse != null) 'horseId': _selectedHorse!.id,
+        if (mediaUrls.isNotEmpty) 'mediaUrls': mediaUrls,
+        if (_mediaType != null) 'mediaType': _mediaType,
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isUploading = false;
+          _uploadStatus = '';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

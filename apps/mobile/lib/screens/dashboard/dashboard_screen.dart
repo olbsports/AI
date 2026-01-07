@@ -32,7 +32,7 @@ class DashboardScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => context.push('/notifications'),
+            onPressed: () => context.push('/settings/notifications'),
           ),
         ],
       ),
@@ -334,7 +334,7 @@ class DashboardScreen extends ConsumerWidget {
           icon: Icons.person_outline,
           label: 'Profil',
           color: AppColors.primary,
-          onTap: () => context.go('/profile'),
+          onTap: () => context.go('/settings/profile'),
         ),
       ],
     );

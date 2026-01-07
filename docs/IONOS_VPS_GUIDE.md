@@ -24,6 +24,7 @@
 15. [Points d'Attention CRITIQUES](#-points-dattention-critiques)
 16. [Problèmes Courants et Solutions](#-problèmes-courants-et-solutions)
 17. [Cheat Sheet - Commandes Rapides](#-cheat-sheet---commandes-rapides)
+18. [PowerShell - Commandes Windows](#-powershell---commandes-windows)
 
 ---
 
@@ -1224,15 +1225,315 @@ npx prisma generate     # Générer client
 
 ---
 
+## 💻 PowerShell - Commandes Windows
+
+Cette section est destinée aux utilisateurs Windows qui gèrent le serveur depuis
+PowerShell.
+
+### Connexion SSH depuis PowerShell
+
+```powershell
+# Connexion basique
+ssh root@<IP_SERVEUR>
+
+# Avec clé SSH
+ssh -i $env:USERPROFILE\.ssh\id_rsa root@<IP_SERVEUR>
+
+# Avec port personnalisé
+ssh -p 2222 root@<IP_SERVEUR>
+```
+
+### Variables d'environnement PowerShell
+
+```powershell
+# Définir les variables du serveur
+$SERVER_IP = "123.456.789.0"
+$SERVER_USER = "root"
+$PROJECT_PATH = "/root/AI"
+
+# Fonction de connexion rapide
+function Connect-VPS {
+    ssh $SERVER_USER@$SERVER_IP
+}
+
+# Ajouter au profil PowerShell pour usage permanent
+# notepad $PROFILE
+```
+
+### Script de Déploiement PowerShell
+
+Créer `deploy.ps1` sur votre machine Windows :
+
+```powershell
+# ============================================
+# 🐴 Script de Déploiement Horse Vision
+# Pour Windows PowerShell
+# ============================================
+
+param(
+    [string]$ServerIP = "VOTRE_IP_SERVEUR",
+    [string]$User = "root",
+    [string]$Branch = "main"
+)
+
+$ErrorActionPreference = "Stop"
+
+Write-Host "========================================" -ForegroundColor Blue
+Write-Host "🐴 Déploiement Horse Vision API" -ForegroundColor Blue
+Write-Host "========================================" -ForegroundColor Blue
+Write-Host ""
+
+# Commandes à exécuter sur le serveur
+$DeployCommands = @"
+cd /root/AI
+echo '📥 Git pull...'
+git fetch origin
+git checkout $Branch
+git pull origin $Branch
+
+echo '📦 Installation dépendances...'
+pnpm install
+
+cd apps/api
+echo '🗄️ Prisma generate...'
+npx prisma generate
+
+echo '🧹 Nettoyage...'
+rm -rf dist
+rm -f *.tsbuildinfo
+
+echo '🔨 Compilation TypeScript...'
+npx tsc --project tsconfig.build.json --outDir dist --noEmit false --incremental false
+
+echo '🔄 Transformation alias...'
+npx tsc-alias -p tsconfig.build.json
+
+echo '🛑 Arrêt API...'
+pm2 stop api || true
+sleep 2
+lsof -ti :4000 | xargs -r kill -9 2>/dev/null || true
+
+echo '🚀 Démarrage API...'
+pm2 start api
+sleep 5
+
+echo '💓 Health check...'
+curl -s http://localhost:4000/api/health
+
+echo ''
+echo '✅ Déploiement terminé !'
+pm2 status
+"@
+
+Write-Host "🔗 Connexion au serveur $User@$ServerIP..." -ForegroundColor Yellow
+Write-Host ""
+
+# Exécuter via SSH
+ssh "$User@$ServerIP" $DeployCommands
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Green
+    Write-Host "🎉 Déploiement réussi !" -ForegroundColor Green
+    Write-Host "========================================" -ForegroundColor Green
+} else {
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "❌ Erreur lors du déploiement" -ForegroundColor Red
+    Write-Host "========================================" -ForegroundColor Red
+    exit 1
+}
+```
+
+### Utilisation du script
+
+```powershell
+# Déploiement par défaut (branche main)
+.\deploy.ps1
+
+# Déploiement avec paramètres
+.\deploy.ps1 -ServerIP "123.456.789.0" -Branch "develop"
+
+# Déploiement sur une feature branch
+.\deploy.ps1 -Branch "feature/new-feature"
+```
+
+### Commandes SSH Rapides depuis PowerShell
+
+```powershell
+# ===== DÉFINIR L'IP DU SERVEUR =====
+$VPS = "root@VOTRE_IP"
+
+# ===== STATUS =====
+ssh $VPS "pm2 status"
+
+# ===== LOGS =====
+ssh $VPS "pm2 logs api --lines 50"
+
+# ===== RESTART =====
+ssh $VPS "pm2 restart api"
+
+# ===== HEALTH CHECK =====
+ssh $VPS "curl -s http://localhost:4000/api/health"
+
+# ===== ESPACE DISQUE =====
+ssh $VPS "df -h"
+
+# ===== MÉMOIRE =====
+ssh $VPS "free -h"
+```
+
+### Fonctions PowerShell Utiles
+
+Ajouter à votre profil PowerShell (`notepad $PROFILE`) :
+
+```powershell
+# ============================================
+# 🐴 Horse Vision VPS Functions
+# ============================================
+
+$Global:VPS_IP = "VOTRE_IP_SERVEUR"
+$Global:VPS_USER = "root"
+$Global:VPS = "$VPS_USER@$VPS_IP"
+
+# Connexion rapide
+function vps { ssh $Global:VPS }
+
+# Status PM2
+function vps-status { ssh $Global:VPS "pm2 status" }
+
+# Logs API
+function vps-logs {
+    param([int]$Lines = 50)
+    ssh $Global:VPS "pm2 logs api --lines $Lines"
+}
+
+# Logs en temps réel
+function vps-logs-live { ssh $Global:VPS "pm2 logs api" }
+
+# Restart API
+function vps-restart { ssh $Global:VPS "pm2 restart api" }
+
+# Health check
+function vps-health {
+    ssh $Global:VPS "curl -s http://localhost:4000/api/health" | ConvertFrom-Json | Format-List
+}
+
+# Déploiement
+function vps-deploy {
+    param([string]$Branch = "main")
+    & "$PSScriptRoot\deploy.ps1" -Branch $Branch
+}
+
+# Espace disque
+function vps-disk { ssh $Global:VPS "df -h" }
+
+# Mémoire
+function vps-memory { ssh $Global:VPS "free -h" }
+
+# Backup manuel
+function vps-backup {
+    ssh $Global:VPS "/root/AI/scripts/backup-full.sh"
+}
+
+# Ouvrir Prisma Studio (avec tunnel SSH)
+function vps-prisma {
+    Write-Host "🔗 Ouverture tunnel SSH pour Prisma Studio..." -ForegroundColor Yellow
+    Write-Host "📂 Prisma Studio sera accessible sur http://localhost:5555" -ForegroundColor Cyan
+    ssh -L 5555:localhost:5555 $Global:VPS "cd /root/AI/apps/api && npx prisma studio"
+}
+
+# Ouvrir les docs Swagger (avec tunnel SSH)
+function vps-swagger {
+    Write-Host "🔗 Ouverture tunnel SSH pour Swagger..." -ForegroundColor Yellow
+    Write-Host "📚 Swagger sera accessible sur http://localhost:4000/api/docs" -ForegroundColor Cyan
+    Start-Process "http://localhost:4000/api/docs"
+    ssh -L 4000:localhost:4000 $Global:VPS "echo 'Tunnel actif. Ctrl+C pour fermer.' && sleep infinity"
+}
+
+Write-Host "🐴 Horse Vision VPS functions loaded!" -ForegroundColor Green
+Write-Host "   Commandes: vps, vps-status, vps-logs, vps-restart, vps-health, vps-deploy" -ForegroundColor Gray
+```
+
+### Tunnels SSH pour accès local
+
+```powershell
+# Tunnel pour accéder à l'API localement
+ssh -L 4000:localhost:4000 root@$VPS_IP
+# Puis ouvrir http://localhost:4000/api/docs
+
+# Tunnel pour Prisma Studio
+ssh -L 5555:localhost:5555 root@$VPS_IP "cd /root/AI/apps/api && npx prisma studio"
+# Puis ouvrir http://localhost:5555
+
+# Tunnel pour la base de données PostgreSQL
+ssh -L 5432:DB_HOST:5432 root@$VPS_IP
+# Puis connecter avec pgAdmin sur localhost:5432
+```
+
+### Copier des fichiers (SCP)
+
+```powershell
+# Copier un fichier vers le serveur
+scp .\fichier-local.txt root@${VPS_IP}:/root/AI/
+
+# Copier un dossier vers le serveur
+scp -r .\dossier-local\ root@${VPS_IP}:/root/AI/
+
+# Télécharger un fichier depuis le serveur
+scp root@${VPS_IP}:/root/AI/apps/api/.env .\backup\.env
+
+# Télécharger les logs
+scp root@${VPS_IP}:/root/.pm2/logs/api-error.log .\logs\
+```
+
+### Surveillance Continue
+
+```powershell
+# Script de monitoring (à exécuter en boucle)
+while ($true) {
+    Clear-Host
+    Write-Host "🐴 Horse Vision Monitor - $(Get-Date)" -ForegroundColor Cyan
+    Write-Host "================================" -ForegroundColor Cyan
+
+    $health = ssh $VPS "curl -s http://localhost:4000/api/health 2>/dev/null"
+    if ($health -match '"status":"ok"') {
+        Write-Host "✅ API: OK" -ForegroundColor Green
+    } else {
+        Write-Host "❌ API: DOWN" -ForegroundColor Red
+    }
+
+    ssh $VPS "pm2 jlist" | ConvertFrom-Json | ForEach-Object {
+        Write-Host "📊 $($_.name): $($_.pm2_env.status) | CPU: $($_.monit.cpu)% | MEM: $([math]::Round($_.monit.memory/1MB))MB"
+    }
+
+    Start-Sleep -Seconds 30
+}
+```
+
+### Alias PowerShell Rapides
+
+```powershell
+# Ajouter au profil PowerShell
+Set-Alias -Name vps -Value Connect-VPS
+Set-Alias -Name deploy -Value vps-deploy
+Set-Alias -Name logs -Value vps-logs
+```
+
+---
+
 ## 📅 Historique des Mises à Jour
 
 | Date       | Version | Changements                                |
 | ---------- | ------- | ------------------------------------------ |
+| 07/01/2026 | 1.1     | Ajout section PowerShell pour Windows      |
+|            |         | Script deploy.ps1 + fonctions utilitaires  |
+|            |         | Tunnels SSH, SCP, monitoring PowerShell    |
 | 07/01/2026 | 1.0     | Création du guide complet                  |
 |            |         | Fix TypeScript 5.9.3 incremental build     |
 |            |         | Ajout ts-loader et webpack aux dépendances |
 
 ---
 
-_Guide créé le 07/01/2026 - Maintenu par l'équipe Horse Vision_ _Version: 1.0 |
-TypeScript 5.9.3 | NestJS 10.4 | Node.js 20.x_
+_Guide créé le 07/01/2026 - Maintenu par l'équipe Horse Vision_ _Version: 1.1 |
+TypeScript 5.9.3 | NestJS 10.4 | Node.js 20.x | PowerShell 7.x_

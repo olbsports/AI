@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:state_notifier/state_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Theme mode provider for light/dark theme switching
@@ -49,14 +50,14 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
     }
   }
 
-  void toggleTheme() {
+  Future<void> toggleTheme() async {
     if (state == ThemeMode.light) {
-      setThemeMode(ThemeMode.dark);
+      await setThemeMode(ThemeMode.dark);
     } else if (state == ThemeMode.dark) {
-      setThemeMode(ThemeMode.light);
+      await setThemeMode(ThemeMode.light);
     } else {
       // If system, determine current and toggle opposite
-      setThemeMode(ThemeMode.dark);
+      await setThemeMode(ThemeMode.dark);
     }
   }
 }

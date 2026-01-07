@@ -23,6 +23,9 @@ import 'screens/reports/report_detail_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/profile_screen.dart';
 import 'screens/settings/billing_screen.dart';
+import 'screens/settings/organization_screen.dart';
+import 'screens/settings/notifications_screen.dart';
+import 'screens/marketplace/create_listing_screen.dart';
 import 'screens/leaderboard/leaderboard_screen.dart';
 import 'screens/breeding/breeding_screen.dart';
 import 'screens/social/feed_screen.dart';
@@ -218,6 +221,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'billing',
                 builder: (context, state) => const BillingScreen(),
               ),
+              GoRoute(
+                path: 'organization',
+                builder: (context, state) => const OrganizationScreen(),
+              ),
+              GoRoute(
+                path: 'notifications',
+                builder: (context, state) => const NotificationsScreen(),
+              ),
             ],
           ),
           // Leaderboard route
@@ -239,6 +250,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/marketplace',
             builder: (context, state) => const MarketplaceScreen(),
+            routes: [
+              GoRoute(
+                path: 'create/sale',
+                builder: (context, state) => const CreateListingScreen(type: CreateListingType.sale),
+              ),
+              GoRoute(
+                path: 'create/mare',
+                builder: (context, state) => const CreateListingScreen(type: CreateListingType.mare),
+              ),
+              GoRoute(
+                path: 'create/stallion',
+                builder: (context, state) => const CreateListingScreen(type: CreateListingType.stallion),
+              ),
+            ],
           ),
           // Gamification route
           GoRoute(
@@ -254,6 +279,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/planning',
             builder: (context, state) => const PlanningScreen(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (context, state) => const PlanningScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => const PlanningScreen(),
+              ),
+            ],
           ),
           // Clubs route
           GoRoute(

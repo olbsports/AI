@@ -686,7 +686,6 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
         builder: (context, scrollController) => _StallionDetailSheet(
           recommendation: rec,
           scrollController: scrollController,
-          ref: ref,
         ),
       ),
     );
@@ -698,7 +697,6 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
       builder: (context) => _ContactStationDialog(
         stallionName: rec.stallionName,
         stallionId: rec.stallionId,
-        ref: ref,
       ),
     );
   }
@@ -826,19 +824,17 @@ class _MareSelectionSheet extends ConsumerWidget {
   }
 }
 
-class _StallionDetailSheet extends StatelessWidget {
+class _StallionDetailSheet extends ConsumerWidget {
   final BreedingRecommendation recommendation;
   final ScrollController scrollController;
-  final WidgetRef ref;
 
   const _StallionDetailSheet({
     required this.recommendation,
     required this.scrollController,
-    required this.ref,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Get stallion details if stallionId is available
     final stallionAsync = recommendation.stallionId != null
         ? ref.watch(stallionProvider(recommendation.stallionId!))
@@ -1032,22 +1028,20 @@ class _StallionDetailSheet extends StatelessWidget {
   }
 }
 
-class _ContactStationDialog extends StatefulWidget {
+class _ContactStationDialog extends ConsumerStatefulWidget {
   final String stallionName;
   final String? stallionId;
-  final WidgetRef ref;
 
   const _ContactStationDialog({
     required this.stallionName,
     this.stallionId,
-    required this.ref,
   });
 
   @override
-  State<_ContactStationDialog> createState() => _ContactStationDialogState();
+  ConsumerState<_ContactStationDialog> createState() => _ContactStationDialogState();
 }
 
-class _ContactStationDialogState extends State<_ContactStationDialog> {
+class _ContactStationDialogState extends ConsumerState<_ContactStationDialog> {
   final _messageController = TextEditingController();
   bool _isSending = false;
 
@@ -1110,7 +1104,7 @@ class _ContactStationDialogState extends State<_ContactStationDialog> {
 
     // Use the breeding notifier to contact station
     final success = widget.stallionId != null
-        ? await widget.ref.read(breedingNotifierProvider.notifier).saveStallion(widget.stallionId!)
+        ? await ref.read(breedingNotifierProvider.notifier).saveStallion(widget.stallionId!)
         : false;
 
     if (mounted) {

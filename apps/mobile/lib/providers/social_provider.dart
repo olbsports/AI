@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:state_notifier/state_notifier.dart';
 import 'package:dio/dio.dart';
 import '../models/social.dart';
 import '../services/api_service.dart';
@@ -426,6 +428,70 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
 
   SocialNotifier(this._api, this._ref) : super(const AsyncValue.data(null));
 
+  /// Upload media file and return URL
+  Future<String?> uploadMedia(File file, {String type = 'image'}) async {
+    try {
+      final url = await _api.uploadMedia(file, type: type);
+      return url;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Upload multiple media files and return URLs
+  Future<List<String>> uploadMultipleMedia(List<File> files, {String type = 'image'}) async {
+    final urls = <String>[];
+    for (final file in files) {
+      final url = await uploadMedia(file, type: type);
+      if (url != null) {
+        urls.add(url);
+      }
+    }
+    return urls;
+  }
+
+  /// Create note/post with optional media
+  Future<PublicNote?> createNoteWithMedia({
+    required String content,
+    List<File>? mediaFiles,
+    String? mediaType,
+    String? horseId,
+    List<String>? tags,
+    String visibility = 'public',
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      // Upload media files first if provided
+      List<String> mediaUrls = [];
+      if (mediaFiles != null && mediaFiles.isNotEmpty) {
+        mediaUrls = await uploadMultipleMedia(
+          mediaFiles,
+          type: mediaType ?? 'image',
+        );
+      }
+
+      // Create the note with media URLs
+      final data = {
+        'content': content,
+        if (mediaUrls.isNotEmpty) 'mediaUrls': mediaUrls,
+        if (mediaType != null) 'mediaType': mediaType,
+        if (horseId != null) 'horseId': horseId,
+        if (tags != null && tags.isNotEmpty) 'tags': tags,
+        'visibility': visibility,
+      };
+
+      final response = await _api.post('/notes', data);
+      _ref.invalidate(myNotesProvider);
+      _ref.invalidate(forYouFeedProvider);
+      _ref.invalidate(followingFeedProvider);
+      state = const AsyncValue.data(null);
+      return PublicNote.fromJson(response);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return null;
+    }
+  }
+
   /// Create note/post
   Future<PublicNote?> createNote(Map<String, dynamic> data) async {
     state = const AsyncValue.loading();
@@ -462,8 +528,11 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _api.delete('/notes/$noteId');
+      _ref.invalidate(noteProvider(noteId));
       _ref.invalidate(myNotesProvider);
       _ref.invalidate(forYouFeedProvider);
+      _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(trendingPostsProvider);
       state = const AsyncValue.data(null);
       return true;
     } catch (e, st) {
@@ -477,6 +546,10 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.post('/notes/$noteId/like', {});
       _ref.invalidate(noteProvider(noteId));
+      // Invalidate feeds to update like counts
+      _ref.invalidate(forYouFeedProvider);
+      _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(myNotesProvider);
       return true;
     } catch (e) {
       return false;
@@ -488,6 +561,10 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.delete('/notes/$noteId/like');
       _ref.invalidate(noteProvider(noteId));
+      // Invalidate feeds to update like counts
+      _ref.invalidate(forYouFeedProvider);
+      _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(myNotesProvider);
       return true;
     } catch (e) {
       return false;
@@ -498,6 +575,7 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
   Future<bool> saveNote(String noteId) async {
     try {
       await _api.post('/notes/$noteId/save', {});
+      _ref.invalidate(noteProvider(noteId));
       _ref.invalidate(savedNotesProvider);
       return true;
     } catch (e) {
@@ -509,6 +587,7 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
   Future<bool> unsaveNote(String noteId) async {
     try {
       await _api.delete('/notes/$noteId/save');
+      _ref.invalidate(noteProvider(noteId));
       _ref.invalidate(savedNotesProvider);
       return true;
     } catch (e) {
@@ -587,6 +666,8 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.post('/users/$userId/follow', {});
       _ref.invalidate(userProfileProvider(userId));
+      _ref.invalidate(userFollowersProvider(userId));
+      _ref.invalidate(userFollowingProvider(userId));
       _ref.invalidate(followingFeedProvider);
       _ref.invalidate(suggestedUsersProvider);
       return true;
@@ -600,7 +681,10 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.delete('/users/$userId/follow');
       _ref.invalidate(userProfileProvider(userId));
+      _ref.invalidate(userFollowersProvider(userId));
+      _ref.invalidate(userFollowingProvider(userId));
       _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(suggestedUsersProvider);
       return true;
     } catch (e) {
       return false;
@@ -612,6 +696,12 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _api.post('/users/$userId/block', {});
+      // Invalidate all feeds and user data to remove blocked user's content
+      _ref.invalidate(userProfileProvider(userId));
+      _ref.invalidate(forYouFeedProvider);
+      _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(trendingPostsProvider);
+      _ref.invalidate(suggestedUsersProvider);
       state = const AsyncValue.data(null);
       return true;
     } catch (e, st) {

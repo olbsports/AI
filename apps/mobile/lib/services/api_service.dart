@@ -537,4 +537,54 @@ class ApiService {
   Future<void> delete(String path) async {
     await _dio.delete(path);
   }
+
+  // ==================== MEDIA UPLOAD ====================
+
+  /// Upload media file (image or video) for social posts
+  /// Returns the URL of the uploaded media
+  Future<String> uploadMedia(File file, {String type = 'image'}) async {
+    // Validate file size
+    final fileSize = file.lengthSync();
+    final maxSize = type == 'video' ? 100 * 1024 * 1024 : 10 * 1024 * 1024; // 100MB for video, 10MB for image
+
+    if (fileSize > maxSize) {
+      final maxMB = maxSize / 1024 / 1024;
+      throw Exception('La taille du fichier ne doit pas dépasser ${maxMB.toInt()}MB');
+    }
+
+    // Validate mime type
+    final mimeType = lookupMimeType(file.path);
+    final allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    final allowedVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-m4v'];
+
+    if (type == 'image' && (mimeType == null || !allowedImageTypes.contains(mimeType))) {
+      throw Exception('Format d\'image non supporté. Formats acceptés: JPEG, PNG, WebP, GIF');
+    }
+
+    if (type == 'video' && (mimeType == null || !allowedVideoTypes.contains(mimeType))) {
+      throw Exception('Format vidéo non supporté. Formats acceptés: MP4, MOV, M4V');
+    }
+
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(
+        file.path,
+        contentType: mimeType != null ? DioMediaType.parse(mimeType) : null,
+      ),
+      'type': type,
+    });
+
+    final response = await _dio.post('/media/upload', data: formData);
+    return response.data['url'] as String;
+  }
+
+  /// Upload multiple media files
+  /// Returns list of URLs
+  Future<List<String>> uploadMultipleMedia(List<File> files, {String type = 'image'}) async {
+    final urls = <String>[];
+    for (final file in files) {
+      final url = await uploadMedia(file, type: type);
+      urls.add(url);
+    }
+    return urls;
+  }
 }
