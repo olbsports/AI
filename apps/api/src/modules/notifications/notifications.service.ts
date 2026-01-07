@@ -38,6 +38,17 @@ export class NotificationsService {
     });
   }
 
+  async markManyAsRead(notificationIds: string[], userId: string) {
+    await this.prisma.notification.updateMany({
+      where: {
+        id: { in: notificationIds },
+        userId,
+      },
+      data: { isRead: true, readAt: new Date() },
+    });
+    return { success: true };
+  }
+
   async markAllAsRead(userId: string) {
     await this.prisma.notification.updateMany({
       where: { userId, isRead: false },
@@ -69,7 +80,7 @@ export class NotificationsService {
       body: string;
       data?: any;
       actionUrl?: string;
-    },
+    }
   ) {
     return this.prisma.notification.create({
       data: {

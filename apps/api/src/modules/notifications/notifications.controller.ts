@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { NotificationsService } from './notifications.service';
@@ -25,12 +17,12 @@ export class NotificationsController {
   async getNotifications(
     @CurrentUser() user: any,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.notificationsService.getNotifications(
       user.id,
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
@@ -41,12 +33,9 @@ export class NotificationsController {
   }
 
   @Post('mark-read')
-  @ApiOperation({ summary: 'Mark notification as read' })
-  async markAsRead(
-    @CurrentUser() user: any,
-    @Query('id') id: string,
-  ) {
-    return this.notificationsService.markAsRead(id, user.id);
+  @ApiOperation({ summary: 'Mark notifications as read' })
+  async markAsRead(@CurrentUser() user: any, @Body() body: { ids: string[] }) {
+    return this.notificationsService.markManyAsRead(body.ids, user.id);
   }
 
   @Post('mark-all-read')
@@ -57,10 +46,7 @@ export class NotificationsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a notification' })
-  async deleteNotification(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-  ) {
+  async deleteNotification(@CurrentUser() user: any, @Param('id') id: string) {
     return this.notificationsService.deleteNotification(id, user.id);
   }
 }

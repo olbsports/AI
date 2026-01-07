@@ -87,10 +87,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change current user password' })
-  async changePassword(
-    @CurrentUser() user: any,
-    @Body() dto: ChangePasswordDto,
-  ) {
+  async changePassword(@CurrentUser() user: any, @Body() dto: ChangePasswordDto) {
     return this.authService.changePassword(user.id, dto);
   }
 
@@ -119,7 +116,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Update user profile' })
   async updateProfile(
     @CurrentUser() user: any,
-    @Body() data: { firstName?: string; lastName?: string; bio?: string; isPublic?: boolean },
+    @Body()
+    data: {
+      firstName?: string;
+      lastName?: string;
+      bio?: string;
+      isPublic?: boolean;
+      phone?: string;
+    }
   ) {
     return this.authService.updateProfile(user.id, data);
   }
@@ -129,10 +133,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Upload profile photo' })
   @UseInterceptors(FileInterceptor('file'))
-  async uploadProfilePhoto(
-    @CurrentUser() user: any,
-    @UploadedFile() file: any,
-  ) {
+  async uploadProfilePhoto(@CurrentUser() user: any, @UploadedFile() file: any) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }

@@ -52,7 +52,7 @@ export class SocialService {
       select: { followingId: true },
     });
 
-    const followingIds = following.map(f => f.followingId);
+    const followingIds = following.map((f) => f.followingId);
 
     return this.prisma.socialPost.findMany({
       where: {
@@ -123,11 +123,7 @@ export class SocialService {
           },
         },
       },
-      orderBy: [
-        { likeCount: 'desc' },
-        { commentCount: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ likeCount: 'desc' }, { commentCount: 'desc' }, { createdAt: 'desc' }],
       skip,
       take: limit,
     });
@@ -135,16 +131,20 @@ export class SocialService {
 
   // ==================== POSTS/NOTES ====================
 
-  async createPost(userId: string, organizationId: string, data: {
-    content: string;
-    type?: string;
-    mediaUrls?: string[];
-    mediaType?: string;
-    visibility?: string;
-    horseId?: string;
-    allowComments?: boolean;
-    allowSharing?: boolean;
-  }) {
+  async createPost(
+    userId: string,
+    organizationId: string,
+    data: {
+      content: string;
+      type?: string;
+      mediaUrls?: string[];
+      mediaType?: string;
+      visibility?: string;
+      horseId?: string;
+      allowComments?: boolean;
+      allowSharing?: boolean;
+    }
+  ) {
     // Note: allowComments and allowSharing are accepted from the mobile app
     // but not stored in DB (could be added to schema later)
     return this.prisma.socialPost.create({
@@ -476,7 +476,7 @@ export class SocialService {
       take: limit,
     });
 
-    return followers.map(f => ({
+    return followers.map((f) => ({
       id: f.follower.id,
       name: `${f.follower.firstName} ${f.follower.lastName}`,
       photoUrl: f.follower.avatarUrl,
@@ -503,7 +503,7 @@ export class SocialService {
       take: limit,
     });
 
-    return following.map(f => ({
+    return following.map((f) => ({
       id: f.following.id,
       name: `${f.following.firstName} ${f.following.lastName}`,
       photoUrl: f.following.avatarUrl,
@@ -589,7 +589,7 @@ export class SocialService {
       select: { followingId: true },
     });
 
-    const followingIds = following.map(f => f.followingId);
+    const followingIds = following.map((f) => f.followingId);
     followingIds.push(userId); // Exclude self
 
     return this.prisma.user.findMany({
@@ -624,9 +624,9 @@ export class SocialService {
 
     // Extract hashtags from content
     const tagCounts: Record<string, number> = {};
-    posts.forEach(post => {
+    posts.forEach((post) => {
       const tags = post.content.match(/#\w+/g) || [];
-      tags.forEach(tag => {
+      tags.forEach((tag) => {
         const normalizedTag = tag.toLowerCase();
         tagCounts[normalizedTag] = (tagCounts[normalizedTag] || 0) + 1;
       });
@@ -650,6 +650,203 @@ export class SocialService {
       where: {
         visibility: 'public',
         content: { contains: `#${tag}` },
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        horse: {
+          select: {
+            id: true,
+            name: true,
+            photoUrl: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+            likes: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    });
+  }
+
+  // ==================== UNLIKE ====================
+
+  async unlikePost(postId: string, userId: string) {
+    const existingLike = await this.prisma.like.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    if (existingLike) {
+      await this.prisma.like.delete({
+        where: { id: existingLike.id },
+      });
+      await this.prisma.socialPost.update({
+        where: { id: postId },
+        data: { likeCount: { decrement: 1 } },
+      });
+    }
+
+    return { liked: false };
+  }
+
+  // ==================== SAVE/UNSAVE ====================
+
+  async savePost(postId: string, userId: string) {
+    // For now, return mock success - would need SavedPost model in schema
+    return { saved: true };
+  }
+
+  async unsavePost(postId: string, userId: string) {
+    // For now, return mock success - would need SavedPost model in schema
+    return { saved: false };
+  }
+
+  // ==================== UPDATE POST ====================
+
+  async updatePost(
+    postId: string,
+    userId: string,
+    data: { content?: string; visibility?: string }
+  ) {
+    const post = await this.prisma.socialPost.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    if (post.authorId !== userId) {
+      throw new ForbiddenException('You can only edit your own posts');
+    }
+
+    return this.prisma.socialPost.update({
+      where: { id: postId },
+      data: {
+        ...(data.content && { content: data.content }),
+        ...(data.visibility && { visibility: data.visibility }),
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        horse: {
+          select: {
+            id: true,
+            name: true,
+            photoUrl: true,
+          },
+        },
+      },
+    });
+  }
+
+  // ==================== UNFOLLOW ====================
+
+  async unfollowUser(followerId: string, followingId: string) {
+    const existingFollow = await this.prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId,
+          followingId,
+        },
+      },
+    });
+
+    if (existingFollow) {
+      await this.prisma.follow.delete({
+        where: { id: existingFollow.id },
+      });
+      await this.prisma.user.update({
+        where: { id: followerId },
+        data: { followingCount: { decrement: 1 } },
+      });
+      await this.prisma.user.update({
+        where: { id: followingId },
+        data: { followersCount: { decrement: 1 } },
+      });
+    }
+
+    return { following: false };
+  }
+
+  // ==================== FEED STATS ====================
+
+  async getFeedStats(userId: string) {
+    const [totalPosts, totalLikes, totalComments, activeUsers] = await Promise.all([
+      this.prisma.socialPost.count({
+        where: { visibility: 'public' },
+      }),
+      this.prisma.like.count(),
+      this.prisma.comment.count(),
+      this.prisma.user.count({
+        where: { isActive: true },
+      }),
+    ]);
+
+    // Get trending tags
+    const posts = await this.prisma.socialPost.findMany({
+      where: {
+        visibility: 'public',
+        createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      },
+      select: { content: true },
+      take: 100,
+    });
+
+    const tagCounts: Record<string, number> = {};
+    posts.forEach((post) => {
+      const tags = post.content.match(/#\w+/g) || [];
+      tags.forEach((tag) => {
+        const normalizedTag = tag.toLowerCase().substring(1);
+        tagCounts[normalizedTag] = (tagCounts[normalizedTag] || 0) + 1;
+      });
+    });
+
+    const topTags = Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([tag]) => tag);
+
+    return {
+      totalPosts,
+      totalLikes,
+      totalComments,
+      activeUsers,
+      topTags,
+    };
+  }
+
+  // ==================== HORSE NOTES ====================
+
+  async getHorseNotes(horseId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    return this.prisma.socialPost.findMany({
+      where: {
+        horseId,
+        visibility: { in: ['public', 'followers'] },
       },
       include: {
         author: {

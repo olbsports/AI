@@ -56,6 +56,7 @@ model User {
   passwordHash   String
   firstName      String
   lastName       String
+  phone          String?
   avatarUrl      String?
   role           String   @default("viewer") // owner, admin, veterinarian, analyst, viewer
   isActive       Boolean  @default(true)
