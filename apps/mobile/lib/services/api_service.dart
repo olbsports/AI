@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -9,7 +8,6 @@ import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 
 import '../models/models.dart';
-import 'storage_service.dart';
 
 // API Base URL - Change this to your backend URL
 const String apiBaseUrl = 'https://api.horsetempo.app/api';

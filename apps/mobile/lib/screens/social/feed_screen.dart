@@ -494,12 +494,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => CreateNoteSheet(
+      builder: (sheetContext) => CreateNoteSheet(
         onPost: (noteData) async {
           final notifier = ref.read(socialNotifierProvider.notifier);
           final result = await notifier.createNote(noteData);
-          if (result != null) {
-            Navigator.pop(context);
+          if (result != null && mounted) {
+            Navigator.pop(sheetContext);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Publication créée !')),
             );

@@ -943,7 +943,12 @@ class _MarketplaceSearchDelegate extends SearchDelegate<String> {
                     child: listing.mediaUrls.isNotEmpty
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(listing.mediaUrls.first, fit: BoxFit.cover),
+                            child: Image.network(
+                              listing.mediaUrls.first,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image, color: Colors.grey),
+                            ),
                           )
                         : const Icon(Icons.pets, color: Colors.grey),
                   ),

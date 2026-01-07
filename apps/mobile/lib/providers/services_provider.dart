@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../models/services.dart';
 import '../services/api_service.dart';
 
@@ -7,16 +6,24 @@ import '../services/api_service.dart';
 final searchProvidersProvider =
     FutureProvider.family<List<ServiceProvider>, ServiceSearchFilters>((ref, filters) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/services/search', queryParams: filters.toQueryParams());
-  return (response as List).map((e) => ServiceProvider.fromJson(e)).toList();
+  try {
+    final response = await api.get('/services/search', queryParams: filters.toQueryParams());
+    return ((response as List?) ?? []).map((e) => ServiceProvider.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Providers by type
 final providersByTypeProvider =
     FutureProvider.family<List<ServiceProvider>, ServiceType>((ref, type) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/services', queryParams: {'type': type.name});
-  return (response as List).map((e) => ServiceProvider.fromJson(e)).toList();
+  try {
+    final response = await api.get('/services', queryParams: {'type': type.name});
+    return ((response as List?) ?? []).map((e) => ServiceProvider.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Provider by ID
@@ -31,8 +38,12 @@ final providerProvider =
 final providerReviewsProvider =
     FutureProvider.family<List<ServiceReview>, String>((ref, providerId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/services/$providerId/reviews');
-  return (response as List).map((e) => ServiceReview.fromJson(e)).toList();
+  try {
+    final response = await api.get('/services/$providerId/reviews');
+    return ((response as List?) ?? []).map((e) => ServiceReview.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Nearby providers
@@ -48,22 +59,34 @@ final nearbyProvidersProvider =
   if (params.type != null) {
     queryParams['type'] = params.type!.name;
   }
-  final response = await api.get('/services/nearby', queryParams: queryParams);
-  return (response as List).map((e) => ServiceProvider.fromJson(e)).toList();
+  try {
+    final response = await api.get('/services/nearby', queryParams: queryParams);
+    return ((response as List?) ?? []).map((e) => ServiceProvider.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Saved providers
 final savedProvidersProvider = FutureProvider<List<SavedProvider>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/services/saved');
-  return (response as List).map((e) => SavedProvider.fromJson(e)).toList();
+  try {
+    final response = await api.get('/services/saved');
+    return ((response as List?) ?? []).map((e) => SavedProvider.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// User appointments
 final appointmentsProvider = FutureProvider<List<ServiceAppointment>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/appointments');
-  return (response as List).map((e) => ServiceAppointment.fromJson(e)).toList();
+  try {
+    final response = await api.get('/appointments');
+    return ((response as List?) ?? []).map((e) => ServiceAppointment.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Upcoming appointments
@@ -90,8 +113,12 @@ final pastAppointmentsProvider = FutureProvider<List<ServiceAppointment>>((ref) 
 /// Emergency contacts
 final emergencyContactsProvider = FutureProvider<List<EmergencyContact>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/services/emergency-contacts');
-  return (response as List).map((e) => EmergencyContact.fromJson(e)).toList();
+  try {
+    final response = await api.get('/services/emergency-contacts');
+    return ((response as List?) ?? []).map((e) => EmergencyContact.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Service statistics
@@ -104,8 +131,12 @@ final serviceStatsProvider = FutureProvider<ServiceStats>((ref) async {
 /// Featured providers
 final featuredProvidersProvider = FutureProvider<List<ServiceProvider>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/services/featured');
-  return (response as List).map((e) => ServiceProvider.fromJson(e)).toList();
+  try {
+    final response = await api.get('/services/featured');
+    return ((response as List?) ?? []).map((e) => ServiceProvider.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Services notifier for CRUD operations
@@ -334,12 +365,16 @@ final nearbyEmergencyVetsProvider = FutureProvider<List<ServiceProvider>>((ref) 
   if (location == null) return [];
 
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/services/nearby', queryParams: {
-    'lat': location.lat.toString(),
-    'lng': location.lng.toString(),
-    'radius': '50',
-    'type': ServiceType.veterinarian.name,
-    'emergency': 'true',
-  });
-  return (response as List).map((e) => ServiceProvider.fromJson(e)).toList();
+  try {
+    final response = await api.get('/services/nearby', queryParams: {
+      'lat': location.lat.toString(),
+      'lng': location.lng.toString(),
+      'radius': '50',
+      'type': ServiceType.veterinarian.name,
+      'emergency': 'true',
+    });
+    return ((response as List?) ?? []).map((e) => ServiceProvider.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });

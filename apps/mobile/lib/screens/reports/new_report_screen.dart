@@ -8,7 +8,6 @@ import '../../models/analysis.dart';
 import '../../providers/reports_provider.dart';
 import '../../providers/horses_provider.dart';
 import '../../providers/analyses_provider.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/loading_button.dart';
 
 class NewReportScreen extends ConsumerStatefulWidget {

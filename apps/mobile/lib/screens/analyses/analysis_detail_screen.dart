@@ -159,7 +159,12 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
         color: Colors.black,
         child: Center(
           child: analysis.thumbnailUrl != null
-              ? Image.network(analysis.thumbnailUrl!, fit: BoxFit.cover)
+              ? Image.network(
+                  analysis.thumbnailUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.broken_image, color: Colors.white54, size: 48),
+                )
               : const Icon(Icons.videocam, color: Colors.white54, size: 48),
         ),
       );

@@ -102,9 +102,9 @@ class Horse {
       riderId: json['riderId'] as String?,
       riderName: json['riderName'] as String?,
       sireId: json['sireId'] as String?,
-      organizationId: json['organizationId'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      organizationId: json['organizationId'] as String? ?? '',
+      createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
       analysisCount: json['_count']?['analyses'] as int? ?? 0,
       reportCount: json['_count']?['reports'] as int? ?? 0,
     );
