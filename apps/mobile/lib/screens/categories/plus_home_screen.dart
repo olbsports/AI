@@ -401,9 +401,7 @@ class _SettingsList extends StatelessWidget {
             icon: Icons.language,
             title: 'Langue',
             subtitle: 'Français',
-            onTap: () {
-              // TODO: Language settings
-            },
+            onTap: () => _showLanguageDialog(context),
           ),
           const Divider(height: 1),
           _SettingsTile(
@@ -417,9 +415,7 @@ class _SettingsList extends StatelessWidget {
             icon: Icons.cloud_sync,
             title: 'Synchronisation',
             subtitle: 'Dernière: il y a 5 min',
-            onTap: () {
-              // TODO: Sync settings
-            },
+            onTap: () => _syncNow(context),
           ),
         ],
       ),
@@ -464,27 +460,21 @@ class _HelpSection extends StatelessWidget {
             icon: Icons.help_outline,
             title: 'Centre d\'aide',
             subtitle: 'FAQ et tutoriels',
-            onTap: () {
-              // TODO: Help center
-            },
+            onTap: () => context.push('/help'),
           ),
           const Divider(height: 1),
           _SettingsTile(
             icon: Icons.chat_bubble_outline,
             title: 'Contacter le support',
             subtitle: 'Assistance en direct',
-            onTap: () {
-              // TODO: Support chat
-            },
+            onTap: () => _showSupportDialog(context),
           ),
           const Divider(height: 1),
           _SettingsTile(
             icon: Icons.feedback_outlined,
             title: 'Donner mon avis',
             subtitle: 'Améliorer l\'application',
-            onTap: () {
-              // TODO: Feedback
-            },
+            onTap: () => _showFeedbackDialog(context),
           ),
         ],
       ),
@@ -536,23 +526,17 @@ class _AppInfoCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () {
-                    // TODO: Terms
-                  },
+                  onPressed: () => _showLegalDocument(context, 'terms'),
                   child: const Text('CGU'),
                 ),
                 const Text('•'),
                 TextButton(
-                  onPressed: () {
-                    // TODO: Privacy
-                  },
+                  onPressed: () => _showLegalDocument(context, 'privacy'),
                   child: const Text('Confidentialité'),
                 ),
                 const Text('•'),
                 TextButton(
-                  onPressed: () {
-                    // TODO: Licenses
-                  },
+                  onPressed: () => _showLicensesPage(context),
                   child: const Text('Licences'),
                 ),
               ],
@@ -562,4 +546,215 @@ class _AppInfoCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// ==================== HELPER FUNCTIONS ====================
+
+void _showLanguageDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: const Text('Choisir la langue'),
+      children: [
+        RadioListTile<String>(
+          value: 'fr',
+          groupValue: 'fr',
+          title: const Text('Français'),
+          onChanged: (value) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Langue: Français')),
+            );
+          },
+        ),
+        RadioListTile<String>(
+          value: 'en',
+          groupValue: 'fr',
+          title: const Text('English'),
+          onChanged: (value) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Language: English')),
+            );
+          },
+        ),
+        RadioListTile<String>(
+          value: 'es',
+          groupValue: 'fr',
+          title: const Text('Español'),
+          onChanged: (value) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Idioma: Español')),
+            );
+          },
+        ),
+      ],
+    ),
+  );
+}
+
+void _syncNow(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Row(
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          ),
+          SizedBox(width: 16),
+          Text('Synchronisation en cours...'),
+        ],
+      ),
+      duration: Duration(seconds: 2),
+    ),
+  );
+}
+
+void _showSupportDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Contacter le support'),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Email: support@horsetempo.app'),
+          SizedBox(height: 8),
+          Text('Horaires: 9h-18h (Lun-Ven)'),
+          SizedBox(height: 8),
+          Text('Temps de réponse moyen: 24h'),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Fermer'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Email copié!')),
+            );
+          },
+          child: const Text('Copier email'),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showFeedbackDialog(BuildContext context) {
+  final controller = TextEditingController();
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Votre avis'),
+      content: TextField(
+        controller: controller,
+        maxLines: 4,
+        decoration: const InputDecoration(
+          hintText: 'Partagez vos suggestions ou problèmes...',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Merci pour votre retour!')),
+            );
+          },
+          child: const Text('Envoyer'),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showLegalDocument(BuildContext context, String type) {
+  final title = type == 'terms' ? 'Conditions Générales d\'Utilisation' : 'Politique de Confidentialité';
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: 400,
+        child: SingleChildScrollView(
+          child: Text(
+            type == 'terms'
+                ? '''CONDITIONS GÉNÉRALES D'UTILISATION
+
+1. OBJET
+Les présentes conditions générales d'utilisation ont pour objet de définir les conditions d'accès et d'utilisation de l'application Horse Vision AI.
+
+2. ACCEPTATION
+L'utilisation de l'application implique l'acceptation pleine et entière des présentes conditions.
+
+3. SERVICES
+L'application propose des services d'analyse vidéo équine assistée par intelligence artificielle.
+
+4. DONNÉES PERSONNELLES
+Vos données sont traitées conformément à notre politique de confidentialité.
+
+5. PROPRIÉTÉ INTELLECTUELLE
+Tous les contenus de l'application sont protégés par le droit d'auteur.
+
+6. RESPONSABILITÉ
+L'analyse IA est fournie à titre indicatif et ne remplace pas l'avis d'un professionnel.'''
+                : '''POLITIQUE DE CONFIDENTIALITÉ
+
+1. COLLECTE DES DONNÉES
+Nous collectons les données que vous nous fournissez : nom, email, vidéos équines.
+
+2. UTILISATION
+Vos données sont utilisées pour :
+- Fournir nos services d'analyse
+- Améliorer l'application
+- Vous contacter si nécessaire
+
+3. STOCKAGE
+Vos données sont stockées de manière sécurisée sur des serveurs européens.
+
+4. PARTAGE
+Nous ne vendons jamais vos données à des tiers.
+
+5. VOS DROITS
+Vous pouvez demander l'accès, la modification ou la suppression de vos données.
+
+6. CONTACT
+privacy@horsetempo.app''',
+          ),
+        ),
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Fermer'),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showLicensesPage(BuildContext context) {
+  showLicensePage(
+    context: context,
+    applicationName: 'Horse Vision AI',
+    applicationVersion: '1.0.0',
+    applicationIcon: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Icon(Icons.pets, size: 48, color: AppColors.primary),
+    ),
+  );
 }

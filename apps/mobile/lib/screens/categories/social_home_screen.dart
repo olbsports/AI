@@ -18,15 +18,11 @@ class SocialHomeScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              // TODO: Notifications
-            },
+            onPressed: () => context.push('/notifications'),
           ),
           IconButton(
             icon: const Icon(Icons.message_outlined),
-            onPressed: () {
-              // TODO: Messages
-            },
+            onPressed: () => context.push('/messages'),
           ),
         ],
       ),
@@ -96,9 +92,7 @@ class SocialHomeScreen extends ConsumerWidget {
                     icon: Icons.add_photo_alternate,
                     label: 'Publier',
                     color: AppColors.categorySocial,
-                    onTap: () {
-                      // TODO: New post
-                    },
+                    onTap: () => context.push('/feed?action=create'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -107,9 +101,7 @@ class SocialHomeScreen extends ConsumerWidget {
                     icon: Icons.sell,
                     label: 'Vendre',
                     color: AppColors.secondary,
-                    onTap: () {
-                      // TODO: New listing
-                    },
+                    onTap: () => context.push('/marketplace/create'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -118,9 +110,7 @@ class SocialHomeScreen extends ConsumerWidget {
                     icon: Icons.event,
                     label: 'Événement',
                     color: AppColors.tertiary,
-                    onTap: () {
-                      // TODO: New event
-                    },
+                    onTap: () => context.push('/planning?action=create'),
                   ),
                 ),
               ],
