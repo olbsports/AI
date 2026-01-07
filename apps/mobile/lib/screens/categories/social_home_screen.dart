@@ -18,11 +18,7 @@ class SocialHomeScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => context.push('/notifications'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.message_outlined),
-            onPressed: () => context.push('/messages'),
+            onPressed: () => context.push('/settings/notifications'),
           ),
         ],
       ),
@@ -101,7 +97,7 @@ class SocialHomeScreen extends ConsumerWidget {
                     icon: Icons.sell,
                     label: 'Vendre',
                     color: AppColors.secondary,
-                    onTap: () => context.push('/marketplace/create'),
+                    onTap: () => context.push('/marketplace/create/sale'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -330,7 +326,7 @@ class _FeaturedSection extends StatelessWidget {
               style: theme.textTheme.titleLarge,
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () => context.go('/feed'),
               child: const Text('Voir plus'),
             ),
           ],
@@ -372,50 +368,55 @@ class _FeaturedCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const _FeaturedCard({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return GestureDetector(
+      onTap: onTap ?? () => context.go('/feed'),
+      child: Container(
+        width: 200,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color, color.withOpacity(0.8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
         ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Colors.white, size: 32),
-          const Spacer(),
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: Colors.white, size: 32),
+            const Spacer(),
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.white70,
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.white70,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -467,11 +468,13 @@ class _TrendingItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
+        onTap: () {
+          // Navigate to feed with tag filter
+          context.push('/feed?tag=${title.replaceAll('#', '')}');
+        },
         leading: CircleAvatar(
           backgroundColor: AppColors.categorySocial.withOpacity(0.1),
           child: Text(
