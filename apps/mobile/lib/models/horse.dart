@@ -2,6 +2,18 @@ enum HorseGender { male, female, gelding }
 
 enum HorseStatus { active, retired, sold, deceased }
 
+enum HorseDiscipline {
+  none,
+  dressage,
+  jumping,
+  eventing,
+  endurance,
+  western,
+  polo,
+  racing,
+  leisure,
+}
+
 class Horse {
   final String id;
   final String name;
@@ -20,6 +32,8 @@ class Horse {
   final String? riderId;
   final String? riderName;
   final String? sireId;
+  final HorseDiscipline discipline;
+  final int level; // 0 = non spécifié, 1-7 = niveau
   final String organizationId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -44,6 +58,8 @@ class Horse {
     this.riderId,
     this.riderName,
     this.sireId,
+    this.discipline = HorseDiscipline.none,
+    this.level = 0,
     required this.organizationId,
     required this.createdAt,
     required this.updatedAt,
@@ -75,6 +91,20 @@ class Horse {
     HorseStatus.deceased => 'Décédé',
   };
 
+  String get disciplineLabel => switch (discipline) {
+    HorseDiscipline.none => 'Non spécifié',
+    HorseDiscipline.dressage => 'Dressage',
+    HorseDiscipline.jumping => 'Saut d\'obstacles',
+    HorseDiscipline.eventing => 'Concours complet',
+    HorseDiscipline.endurance => 'Endurance',
+    HorseDiscipline.western => 'Western',
+    HorseDiscipline.polo => 'Polo',
+    HorseDiscipline.racing => 'Courses',
+    HorseDiscipline.leisure => 'Loisir',
+  };
+
+  String get levelLabel => level == 0 ? 'Non spécifié' : 'Niveau $level';
+
   factory Horse.fromJson(Map<String, dynamic> json) {
     return Horse(
       id: json['id'] as String,
@@ -102,6 +132,11 @@ class Horse {
       riderId: json['riderId'] as String?,
       riderName: json['riderName'] as String?,
       sireId: json['sireId'] as String?,
+      discipline: HorseDiscipline.values.firstWhere(
+        (e) => e.name == json['discipline'],
+        orElse: () => HorseDiscipline.none,
+      ),
+      level: json['level'] as int? ?? 0,
       organizationId: json['organizationId'] as String? ?? '',
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
@@ -126,6 +161,8 @@ class Horse {
       'status': status.name,
       'notes': notes,
       'riderId': riderId,
+      'discipline': discipline.name,
+      'level': level,
     };
   }
 }

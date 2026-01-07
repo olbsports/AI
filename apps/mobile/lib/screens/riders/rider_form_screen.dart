@@ -28,6 +28,7 @@ class _RiderFormScreenState extends ConsumerState<RiderFormScreen> {
   File? _selectedPhoto;
   bool _isLoading = false;
   bool _isEditing = false;
+  int _galopLevel = 0; // 0 = non spécifié, 1-7 = galop
 
   @override
   void initState() {
@@ -154,6 +155,8 @@ class _RiderFormScreenState extends ConsumerState<RiderFormScreen> {
           'email': _emailController.text.trim(),
         if (_phoneController.text.isNotEmpty)
           'phone': _phoneController.text.trim(),
+        if (_galopLevel > 0)
+          'galopLevel': _galopLevel,
         if (_notesController.text.isNotEmpty)
           'notes': _notesController.text.trim(),
       };
@@ -324,6 +327,28 @@ class _RiderFormScreenState extends ConsumerState<RiderFormScreen> {
                   labelText: 'Téléphone',
                   prefixIcon: Icon(Icons.phone),
                 ),
+              ),
+              const SizedBox(height: 16),
+
+              // Galop level
+              DropdownButtonFormField<int>(
+                value: _galopLevel,
+                decoration: const InputDecoration(
+                  labelText: 'Niveau Galop',
+                  prefixIcon: Icon(Icons.military_tech),
+                ),
+                items: [
+                  const DropdownMenuItem(value: 0, child: Text('Non spécifié')),
+                  ...List.generate(7, (i) => DropdownMenuItem(
+                    value: i + 1,
+                    child: Text('Galop ${i + 1}'),
+                  )),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _galopLevel = value);
+                  }
+                },
               ),
               const SizedBox(height: 16),
 

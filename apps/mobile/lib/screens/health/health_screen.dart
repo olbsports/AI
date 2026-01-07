@@ -61,7 +61,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
             data: (horses) => Container(
               padding: const EdgeInsets.all(16),
               child: DropdownButtonFormField<String>(
-                initialValue: _selectedHorseId,
+                value: _selectedHorseId,
                 decoration: const InputDecoration(
                   labelText: 'Cheval',
                   border: OutlineInputBorder(),
