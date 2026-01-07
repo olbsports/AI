@@ -1159,7 +1159,7 @@ class _SaleListingDetailSheet extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _toggleFavorite(context),
+                        onPressed: () => _toggleFavorite(context, ref),
                         icon: Icon(
                           listing.isFavorited ? Icons.favorite : Icons.favorite_border,
                           color: listing.isFavorited ? Colors.red : null,
@@ -1233,7 +1233,7 @@ class _SaleListingDetailSheet extends ConsumerWidget {
     );
   }
 
-  void _toggleFavorite(BuildContext context) async {
+  void _toggleFavorite(BuildContext context, WidgetRef ref) async {
     await ref.read(marketplaceNotifierProvider.notifier).toggleFavorite(listing.id);
     if (context.mounted) {
       ref.invalidate(recentListingsProvider);

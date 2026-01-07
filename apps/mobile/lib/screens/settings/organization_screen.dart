@@ -182,7 +182,7 @@ class _OrganizationScreenState extends ConsumerState<OrganizationScreen> {
               LoadingButton(
                 onPressed: _handleSubmit,
                 isLoading: _isLoading,
-                child: const Text('Enregistrer'),
+                text: 'Enregistrer',
               ),
             ],
           ),

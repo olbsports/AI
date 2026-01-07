@@ -82,7 +82,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   Future<void> _selectHorse() async {
-    final horses = await ref.read(horsesNotifierProvider.future);
+    final horses = await ref.read(horsesProvider.future);
 
     if (!mounted) return;
 
@@ -481,7 +481,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
               LoadingButton(
                 onPressed: _handleSubmit,
                 isLoading: _isLoading,
-                child: const Text('Publier l\'annonce'),
+                text: 'Publier l\'annonce',
               ),
 
               const SizedBox(height: 32),
