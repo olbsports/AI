@@ -279,6 +279,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/planning',
             builder: (context, state) => const PlanningScreen(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (context, state) => const PlanningScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => const PlanningScreen(),
+              ),
+            ],
           ),
           // Clubs route
           GoRoute(

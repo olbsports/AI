@@ -50,14 +50,14 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   String get _screenTitle => switch (widget.type) {
     CreateListingType.sale => 'Vendre un cheval',
-    CreateCreateListingType.mare => 'Proposer une jument',
-    CreateCreateListingType.stallion => 'Proposer un étalon',
+    CreateListingType.mare => 'Proposer une jument',
+    CreateListingType.stallion => 'Proposer un étalon',
   };
 
   String get _priceLabel => switch (widget.type) {
     CreateListingType.sale => 'Prix de vente',
-    CreateCreateListingType.mare => 'Prix de la saillie',
-    CreateCreateListingType.stallion => 'Prix de la saillie',
+    CreateListingType.mare => 'Prix de la saillie',
+    CreateListingType.stallion => 'Prix de la saillie',
   };
 
   Future<void> _pickImages() async {
