@@ -29,7 +29,7 @@ export class MarketplaceController {
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('breed') breed?: string,
-    @Query('sortBy') sortBy?: string,
+    @Query('sortBy') sortBy?: string
   ) {
     return this.marketplaceService.search({
       type,
@@ -66,18 +66,42 @@ export class MarketplaceController {
 
   @Get('breeding')
   @ApiOperation({ summary: 'Get breeding listings' })
-  async getBreedingListings(
-    @Query('type') type?: string,
-    @Query('breed') breed?: string,
-  ) {
+  async getBreedingListings(@Query('type') type?: string, @Query('breed') breed?: string) {
     return this.marketplaceService.getBreedingListings(type || 'stallion_service', breed);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Get marketplace statistics' })
+  async getStats() {
+    return this.marketplaceService.getStats();
+  }
+
+  @Get('horses/:id')
+  @ApiOperation({ summary: 'Get horse profile with all listings' })
+  async getHorseProfile(@Param('id') id: string) {
+    return this.marketplaceService.getHorseProfile(id);
+  }
+
+  @Get('ai-profile/:id')
+  @ApiOperation({ summary: 'Get AI-generated horse profile' })
+  async getAIHorseProfile(@Param('id') id: string) {
+    return this.marketplaceService.getAIHorseProfile(id);
+  }
+
+  @Post('ai-profile/analyze')
+  @ApiOperation({ summary: 'Analyze listing with AI' })
+  async analyzeWithAI(
+    @Body() body: { title: string; description: string; price?: number; horseId?: string }
+  ) {
+    return this.marketplaceService.analyzeWithAI(body);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a listing' })
   async create(
     @CurrentUser() user: any,
-    @Body() body: {
+    @Body()
+    body: {
       type: string;
       title: string;
       description: string;
@@ -87,7 +111,7 @@ export class MarketplaceController {
       location?: string;
       photos?: string[];
       videos?: string[];
-    },
+    }
   ) {
     return this.marketplaceService.create(user.id, user.organizationId, body);
   }
@@ -100,11 +124,7 @@ export class MarketplaceController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update listing' })
-  async update(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-    @Body() body: any,
-  ) {
+  async update(@CurrentUser() user: any, @Param('id') id: string, @Body() body: any) {
     return this.marketplaceService.update(id, user.id, body);
   }
 
@@ -125,9 +145,29 @@ export class MarketplaceController {
   async contactSeller(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() body: { message: string },
+    @Body() body: { message: string }
   ) {
     return this.marketplaceService.contactSeller(id, user.id, body.message);
+  }
+
+  @Post(':id/sold')
+  @ApiOperation({ summary: 'Mark listing as sold' })
+  async markAsSold(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { soldPrice?: number; soldDate?: Date }
+  ) {
+    return this.marketplaceService.markAsSold(id, user.id, body.soldPrice, body.soldDate);
+  }
+
+  @Post(':id/promote')
+  @ApiOperation({ summary: 'Promote listing (boost)' })
+  async promoteListing(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { boostLevel: number; duration: number }
+  ) {
+    return this.marketplaceService.promoteListing(id, user.id, body.boostLevel, body.duration);
   }
 
   // Support for query param type filter

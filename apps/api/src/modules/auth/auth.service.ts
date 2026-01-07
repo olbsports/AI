@@ -27,7 +27,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
-    private readonly uploadService: UploadService,
+    private readonly uploadService: UploadService
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -162,11 +162,7 @@ export class AuthService {
     });
 
     // Send email
-    await this.emailService.sendPasswordResetEmail(
-      user.email,
-      token,
-      user.firstName,
-    );
+    await this.emailService.sendPasswordResetEmail(user.email, token, user.firstName);
 
     return { message: 'If the email exists, a reset link will be sent' };
   }
@@ -210,10 +206,7 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      dto.currentPassword,
-      user.passwordHash,
-    );
+    const isPasswordValid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
 
     if (!isPasswordValid) {
       throw new BadRequestException('Current password is incorrect');
@@ -259,11 +252,7 @@ export class AuthService {
       },
     });
 
-    await this.emailService.sendVerificationEmail(
-      user.email,
-      token,
-      user.firstName,
-    );
+    await this.emailService.sendVerificationEmail(user.email, token, user.firstName);
 
     return { message: 'Verification email sent' };
   }
@@ -302,7 +291,13 @@ export class AuthService {
 
   async updateProfile(
     userId: string,
-    data: { firstName?: string; lastName?: string; bio?: string; isPublic?: boolean },
+    data: {
+      firstName?: string;
+      lastName?: string;
+      bio?: string;
+      isPublic?: boolean;
+      phone?: string;
+    }
   ) {
     const user = await this.prisma.user.update({
       where: { id: userId },
@@ -311,12 +306,14 @@ export class AuthService {
         ...(data.lastName && { lastName: data.lastName }),
         ...(data.bio !== undefined && { bio: data.bio }),
         ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
+        ...(data.phone !== undefined && { phone: data.phone }),
       },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
+        phone: true,
         avatarUrl: true,
         bio: true,
         isPublic: true,
@@ -331,7 +328,7 @@ export class AuthService {
     return user;
   }
 
-  async uploadProfilePhoto(userId: string, organizationId: string, file: Express.Multer.File) {
+  async uploadProfilePhoto(userId: string, organizationId: string, file: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -352,11 +349,7 @@ export class AuthService {
     }
 
     // Upload new photo
-    const { url } = await this.uploadService.uploadFile(
-      organizationId,
-      'avatars',
-      file,
-    );
+    const { url } = await this.uploadService.uploadFile(organizationId, 'avatars', file);
 
     // Update user with new photo URL
     const updatedUser = await this.prisma.user.update({

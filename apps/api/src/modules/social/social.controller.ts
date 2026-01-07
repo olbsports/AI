@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { SocialService } from './social.service';
@@ -28,12 +19,12 @@ export class SocialController {
   async getForYouFeed(
     @CurrentUser() user: any,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.socialService.getForYouFeed(
       user.id,
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
@@ -42,24 +33,21 @@ export class SocialController {
   async getFollowingFeed(
     @CurrentUser() user: any,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.socialService.getFollowingFeed(
       user.id,
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
   @Get('feed/trending')
   @ApiOperation({ summary: 'Get trending posts' })
-  async getTrendingPosts(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
+  async getTrendingPosts(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.socialService.getTrendingPosts(
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
@@ -74,12 +62,12 @@ export class SocialController {
   async getPostsByTag(
     @Param('tag') tag: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.socialService.getPostsByTag(
       tag,
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
@@ -89,14 +77,17 @@ export class SocialController {
   @ApiOperation({ summary: 'Create a new post/note' })
   async createPost(
     @CurrentUser() user: any,
-    @Body() body: {
+    @Body()
+    body: {
       content: string;
       type?: string;
       mediaUrls?: string[];
       mediaType?: string;
       visibility?: string;
       horseId?: string;
-    },
+      allowComments?: boolean;
+      allowSharing?: boolean;
+    }
   ) {
     return this.socialService.createPost(user.id, user.organizationId, body);
   }
@@ -106,12 +97,12 @@ export class SocialController {
   async getMyPosts(
     @CurrentUser() user: any,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.socialService.getMyPosts(
       user.id,
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
@@ -139,12 +130,12 @@ export class SocialController {
   async getComments(
     @Param('id') id: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.socialService.getComments(
       id,
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
@@ -153,22 +144,43 @@ export class SocialController {
   async addComment(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() body: { content: string; parentId?: string },
+    @Body() body: { content: string; parentId?: string }
   ) {
     return this.socialService.addComment(id, user.id, body.content, body.parentId);
   }
 
   @Post('notes/:id/like')
-  @ApiOperation({ summary: 'Like/unlike a post' })
+  @ApiOperation({ summary: 'Like a post' })
   async likePost(@CurrentUser() user: any, @Param('id') id: string) {
     return this.socialService.likePost(id, user.id);
   }
 
+  @Delete('notes/:id/like')
+  @ApiOperation({ summary: 'Unlike a post' })
+  async unlikePost(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.socialService.unlikePost(id, user.id);
+  }
+
   @Post('notes/:id/save')
-  @ApiOperation({ summary: 'Save/unsave a post' })
+  @ApiOperation({ summary: 'Save a post' })
   async savePost(@CurrentUser() user: any, @Param('id') id: string) {
-    // TODO: Implement save feature
-    return { saved: true };
+    return this.socialService.savePost(id, user.id);
+  }
+
+  @Delete('notes/:id/save')
+  @ApiOperation({ summary: 'Unsave a post' })
+  async unsavePost(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.socialService.unsavePost(id, user.id);
+  }
+
+  @Put('notes/:id')
+  @ApiOperation({ summary: 'Update a post' })
+  async updatePost(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { content?: string; visibility?: string }
+  ) {
+    return this.socialService.updatePost(id, user.id, body);
   }
 
   // ==================== USER ENDPOINTS ====================
@@ -197,13 +209,13 @@ export class SocialController {
     @CurrentUser() user: any,
     @Param('id') id: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.socialService.getUserPosts(
       id,
       user.id,
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
@@ -212,12 +224,12 @@ export class SocialController {
   async getFollowers(
     @Param('id') id: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.socialService.getFollowers(
       id,
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
@@ -226,19 +238,33 @@ export class SocialController {
   async getFollowing(
     @Param('id') id: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.socialService.getFollowing(
       id,
       page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
+      limit ? parseInt(limit) : 20
     );
   }
 
   @Post('users/:id/follow')
-  @ApiOperation({ summary: 'Follow/unfollow a user' })
+  @ApiOperation({ summary: 'Follow a user' })
   async followUser(@CurrentUser() user: any, @Param('id') id: string) {
     return this.socialService.followUser(user.id, id);
+  }
+
+  @Delete('users/:id/follow')
+  @ApiOperation({ summary: 'Unfollow a user' })
+  async unfollowUser(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.socialService.unfollowUser(user.id, id);
+  }
+
+  // ==================== FEED STATS ====================
+
+  @Get('feed/stats')
+  @ApiOperation({ summary: 'Get feed statistics' })
+  async getFeedStats(@CurrentUser() user: any) {
+    return this.socialService.getFeedStats(user.id);
   }
 
   // ==================== HORSE NOTES ====================
@@ -248,10 +274,54 @@ export class SocialController {
   async getHorseNotes(
     @Param('id') horseId: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
-    const skip = (page ? parseInt(page) - 1 : 0) * (limit ? parseInt(limit) : 20);
-    // This would need to be implemented in the service
-    return [];
+    return this.socialService.getHorseNotes(
+      horseId,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20
+    );
+  }
+
+  // ==================== BLOCK USER ====================
+
+  @Post('users/:id/block')
+  @ApiOperation({ summary: 'Block a user' })
+  async blockUser(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.socialService.blockUser(user.id, id);
+  }
+
+  @Delete('users/:id/block')
+  @ApiOperation({ summary: 'Unblock a user' })
+  async unblockUser(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.socialService.unblockUser(user.id, id);
+  }
+
+  @Get('blocked-users')
+  @ApiOperation({ summary: 'Get blocked users list' })
+  async getBlockedUsers(@CurrentUser() user: any) {
+    return this.socialService.getBlockedUsers(user.id);
+  }
+
+  // ==================== REPORT ====================
+
+  @Post('users/:id/report')
+  @ApiOperation({ summary: 'Report a user' })
+  async reportUser(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { reason: string; details?: string }
+  ) {
+    return this.socialService.reportUser(user.id, id, body);
+  }
+
+  @Post('notes/:id/report')
+  @ApiOperation({ summary: 'Report a post/note' })
+  async reportPost(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { reason: string; details?: string }
+  ) {
+    return this.socialService.reportPost(user.id, id, body);
   }
 }

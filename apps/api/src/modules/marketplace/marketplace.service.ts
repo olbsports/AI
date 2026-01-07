@@ -18,7 +18,9 @@ export class MarketplaceService {
       priceDisplay: listing.price ? `${listing.price.toLocaleString()} €` : 'Prix sur demande',
       mediaUrls: listing.photos || [],
       videoUrls: listing.videos || [],
-      sellerName: listing.seller ? `${listing.seller.firstName} ${listing.seller.lastName}` : 'Vendeur',
+      sellerName: listing.seller
+        ? `${listing.seller.firstName} ${listing.seller.lastName}`
+        : 'Vendeur',
       sellerPhotoUrl: listing.seller?.avatarUrl,
       sellerId: listing.sellerId,
       sellerLocation: listing.location,
@@ -85,7 +87,7 @@ export class MarketplaceService {
       take: 50,
     });
 
-    return listings.map(l => this.formatListing(l));
+    return listings.map((l) => this.formatListing(l));
   }
 
   async getByType(type: string) {
@@ -115,7 +117,7 @@ export class MarketplaceService {
       take: 50,
     });
 
-    return listings.map(l => this.formatListing(l));
+    return listings.map((l) => this.formatListing(l));
   }
 
   async getRecent() {
@@ -142,7 +144,7 @@ export class MarketplaceService {
       take: 20,
     });
 
-    return listings.map(l => this.formatListing(l));
+    return listings.map((l) => this.formatListing(l));
   }
 
   async getFeatured() {
@@ -172,7 +174,7 @@ export class MarketplaceService {
       take: 10,
     });
 
-    return listings.map(l => this.formatListing(l));
+    return listings.map((l) => this.formatListing(l));
   }
 
   async getById(listingId: string, userId?: string) {
@@ -239,7 +241,7 @@ export class MarketplaceService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return listings.map(l => this.formatListing(l));
+    return listings.map((l) => this.formatListing(l));
   }
 
   async getFavorites(userId: string) {
@@ -268,23 +270,27 @@ export class MarketplaceService {
       },
     });
 
-    return favorites.map(f => ({
+    return favorites.map((f) => ({
       ...this.formatListing(f.listing),
       isFavorited: true,
     }));
   }
 
-  async create(userId: string, organizationId: string, data: {
-    type: string;
-    title: string;
-    description: string;
-    price?: number;
-    priceType?: string;
-    horseId?: string;
-    location?: string;
-    photos?: string[];
-    videos?: string[];
-  }) {
+  async create(
+    userId: string,
+    organizationId: string,
+    data: {
+      type: string;
+      title: string;
+      description: string;
+      price?: number;
+      priceType?: string;
+      horseId?: string;
+      location?: string;
+      photos?: string[];
+      videos?: string[];
+    }
+  ) {
     return this.prisma.marketplaceListing.create({
       data: {
         type: data.type,
@@ -422,7 +428,7 @@ export class MarketplaceService {
       take: 50,
     });
 
-    return listings.map(l => ({
+    return listings.map((l) => ({
       id: l.id,
       type: l.type === 'stallion_service' ? 'stallionSemen' : 'mareForBreeding',
       horseName: l.horse?.name || l.title,
@@ -442,5 +448,356 @@ export class MarketplaceService {
       previousFoals: null,
       embryoTransfer: false,
     }));
+  }
+
+  // Get horse profile with all listings
+  async getHorseProfile(horseId: string) {
+    const horse = await this.prisma.horse.findUnique({
+      where: { id: horseId },
+      include: {
+        competitionResults: {
+          orderBy: { competitionDate: 'desc' },
+          take: 10,
+        },
+      },
+    });
+
+    if (!horse) {
+      throw new NotFoundException('Horse not found');
+    }
+
+    const listings = await this.prisma.marketplaceListing.findMany({
+      where: { horseId },
+      include: {
+        seller: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      horse: {
+        id: horse.id,
+        name: horse.name,
+        breed: horse.breed,
+        studbook: horse.studbook,
+        birthDate: horse.birthDate,
+        gender: horse.gender,
+        color: horse.color,
+        heightCm: horse.heightCm,
+        photoUrl: horse.photoUrl,
+        level: horse.level,
+        disciplines: horse.disciplines,
+      },
+      listings: listings.map((l) => this.formatListing(l)),
+      competitionResults: horse.competitionResults,
+      stats: {
+        totalListings: listings.length,
+        activeListings: listings.filter((l) => l.status === 'active').length,
+        soldListings: listings.filter((l) => l.status === 'sold').length,
+        totalViews: listings.reduce((sum, l) => sum + l.viewCount, 0),
+      },
+    };
+  }
+
+  // Get marketplace statistics
+  async getStats() {
+    const [
+      totalListings,
+      activeListings,
+      totalViews,
+      totalFavorites,
+      recentSales,
+      popularCategories,
+    ] = await Promise.all([
+      this.prisma.marketplaceListing.count(),
+      this.prisma.marketplaceListing.count({ where: { status: 'active' } }),
+      this.prisma.marketplaceListing.aggregate({
+        _sum: { viewCount: true },
+      }),
+      this.prisma.favorite.count(),
+      this.prisma.marketplaceListing.count({
+        where: {
+          status: 'sold',
+          updatedAt: {
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+          },
+        },
+      }),
+      this.prisma.marketplaceListing.groupBy({
+        by: ['type'],
+        where: { status: 'active' },
+        _count: true,
+        orderBy: { _count: { type: 'desc' } },
+        take: 5,
+      }),
+    ]);
+
+    return {
+      totalListings,
+      activeListings,
+      soldListings: await this.prisma.marketplaceListing.count({ where: { status: 'sold' } }),
+      draftListings: await this.prisma.marketplaceListing.count({ where: { status: 'draft' } }),
+      totalViews: totalViews._sum.viewCount || 0,
+      totalFavorites,
+      recentSales,
+      popularCategories: popularCategories.map((c) => ({
+        type: c.type,
+        count: c._count,
+      })),
+      averagePrice: await this.getAveragePrice(),
+    };
+  }
+
+  private async getAveragePrice() {
+    const result = await this.prisma.marketplaceListing.aggregate({
+      where: {
+        status: 'active',
+        price: { not: null },
+      },
+      _avg: { price: true },
+    });
+    return Math.round(result._avg.price || 0);
+  }
+
+  // Mark listing as sold
+  async markAsSold(listingId: string, userId: string, soldPrice?: number, soldDate?: Date) {
+    const listing = await this.prisma.marketplaceListing.findUnique({
+      where: { id: listingId },
+    });
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    if (listing.sellerId !== userId) {
+      throw new ForbiddenException('You can only mark your own listings as sold');
+    }
+
+    return this.prisma.marketplaceListing.update({
+      where: { id: listingId },
+      data: {
+        status: 'sold',
+        soldPrice: soldPrice || listing.price,
+        soldDate: soldDate || new Date(),
+      },
+    });
+  }
+
+  // Promote listing (boost)
+  async promoteListing(listingId: string, userId: string, boostLevel: number, duration: number) {
+    const listing = await this.prisma.marketplaceListing.findUnique({
+      where: { id: listingId },
+    });
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    if (listing.sellerId !== userId) {
+      throw new ForbiddenException('You can only promote your own listings');
+    }
+
+    const boostExpiresAt = new Date(Date.now() + duration * 24 * 60 * 60 * 1000);
+
+    return this.prisma.marketplaceListing.update({
+      where: { id: listingId },
+      data: {
+        boostLevel,
+        boostExpiresAt,
+        isFeatured: boostLevel >= 2,
+      },
+    });
+  }
+
+  // Get AI-generated horse profile
+  async getAIHorseProfile(horseId: string) {
+    const horse = await this.prisma.horse.findUnique({
+      where: { id: horseId },
+      include: {
+        competitionResults: {
+          orderBy: { competitionDate: 'desc' },
+          take: 10,
+        },
+        healthRecords: {
+          orderBy: { date: 'desc' },
+          take: 5,
+        },
+      },
+    });
+
+    if (!horse) {
+      throw new NotFoundException('Horse not found');
+    }
+
+    // Check if we have a cached AI profile
+    const existingProfile = await this.prisma.aIAnalysis.findFirst({
+      where: {
+        entityType: 'horse',
+        entityId: horseId,
+        analysisType: 'marketplace_profile',
+        createdAt: {
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (existingProfile) {
+      return {
+        horseId,
+        horseName: horse.name,
+        profile: existingProfile.content,
+        highlights: existingProfile.insights,
+        lastUpdated: existingProfile.createdAt,
+        cached: true,
+      };
+    }
+
+    // Generate new AI profile (would call AI service here)
+    const profile = this.generateBasicProfile(horse);
+
+    // Cache the profile
+    await this.prisma.aIAnalysis.create({
+      data: {
+        entityType: 'horse',
+        entityId: horseId,
+        analysisType: 'marketplace_profile',
+        content: profile.description,
+        insights: profile.highlights,
+      },
+    });
+
+    return {
+      horseId,
+      horseName: horse.name,
+      profile: profile.description,
+      highlights: profile.highlights,
+      lastUpdated: new Date(),
+      cached: false,
+    };
+  }
+
+  private generateBasicProfile(horse: any) {
+    const highlights: string[] = [];
+    let description = `${horse.name} est un`;
+
+    if (horse.gender === 'stallion') description += ' étalon';
+    else if (horse.gender === 'mare') description += 'e jument';
+    else if (horse.gender === 'gelding') description += ' hongre';
+
+    if (horse.studbook) {
+      description += ` ${horse.studbook}`;
+      highlights.push(`Studbook: ${horse.studbook}`);
+    }
+
+    if (horse.birthDate) {
+      const age = Math.floor(
+        (Date.now() - horse.birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+      );
+      description += ` de ${age} ans`;
+      highlights.push(`Âge: ${age} ans`);
+    }
+
+    if (horse.level) {
+      description += `, niveau ${horse.level}`;
+      highlights.push(`Niveau: ${horse.level}`);
+    }
+
+    if (horse.disciplines && (horse.disciplines as string[]).length > 0) {
+      description += `. Pratique: ${(horse.disciplines as string[]).join(', ')}`;
+      highlights.push(`Disciplines: ${(horse.disciplines as string[]).join(', ')}`);
+    }
+
+    if (horse.competitionResults?.length > 0) {
+      const wins = horse.competitionResults.filter((r: any) => r.rank === 1).length;
+      if (wins > 0) {
+        description += `. ${wins} victoire${wins > 1 ? 's' : ''} en compétition`;
+        highlights.push(`${wins} victoire${wins > 1 ? 's' : ''}`);
+      }
+    }
+
+    description += '.';
+
+    return { description, highlights };
+  }
+
+  // Analyze listing with AI
+  async analyzeWithAI(data: {
+    title: string;
+    description: string;
+    price?: number;
+    horseId?: string;
+  }) {
+    // This would call the AI service for analysis
+    // For now, return a basic analysis
+    const analysis = {
+      titleScore: this.scoreTitleQuality(data.title),
+      descriptionScore: this.scoreDescriptionQuality(data.description),
+      priceAnalysis: data.price ? this.analyzePricing(data.price) : null,
+      suggestions: [] as string[],
+      estimatedViews: 0,
+    };
+
+    if (analysis.titleScore < 70) {
+      analysis.suggestions.push('Rendre le titre plus descriptif et accrocheur');
+    }
+
+    if (analysis.descriptionScore < 70) {
+      analysis.suggestions.push('Ajouter plus de détails dans la description');
+    }
+
+    if (data.price && analysis.priceAnalysis?.competitive === false) {
+      analysis.suggestions.push('Le prix semble élevé par rapport au marché');
+    }
+
+    if (!data.horseId) {
+      analysis.suggestions.push('Associer un cheval pour augmenter la visibilité');
+    }
+
+    // Estimate views based on quality scores
+    analysis.estimatedViews = Math.round(
+      ((analysis.titleScore + analysis.descriptionScore) / 2) * 10
+    );
+
+    return analysis;
+  }
+
+  private scoreTitleQuality(title: string): number {
+    let score = 50;
+
+    if (title.length > 20) score += 20;
+    if (title.length > 40) score += 10;
+    if (/[A-Z]/.test(title)) score += 10; // Has capital letters
+    if (title.includes('-')) score += 5;
+    if (title.split(' ').length > 3) score += 5;
+
+    return Math.min(score, 100);
+  }
+
+  private scoreDescriptionQuality(description: string): number {
+    let score = 50;
+
+    if (description.length > 100) score += 15;
+    if (description.length > 200) score += 15;
+    if (description.length > 300) score += 10;
+    if (description.split('\n').length > 2) score += 5; // Multiple paragraphs
+    if (description.match(/\d+/)) score += 5; // Contains numbers
+
+    return Math.min(score, 100);
+  }
+
+  private analyzePricing(price: number): { range: string; competitive: boolean } {
+    // Simple price analysis (would be more sophisticated with real market data)
+    if (price < 5000) return { range: 'low', competitive: true };
+    if (price < 15000) return { range: 'medium', competitive: true };
+    if (price < 50000) return { range: 'high', competitive: false };
+    return { range: 'premium', competitive: false };
   }
 }

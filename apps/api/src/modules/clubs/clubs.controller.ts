@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { ClubsService } from './clubs.service';
@@ -63,12 +53,12 @@ export class ClubsController {
   async getNearbyClubs(
     @Query('lat') lat: string,
     @Query('lng') lng: string,
-    @Query('radius') radius?: string,
+    @Query('radius') radius?: string
   ) {
     return this.clubsService.getNearbyClubs(
       parseFloat(lat),
       parseFloat(lng),
-      radius ? parseFloat(radius) : 50,
+      radius ? parseFloat(radius) : 50
     );
   }
 
@@ -76,13 +66,14 @@ export class ClubsController {
   @ApiOperation({ summary: 'Create a club' })
   async createClub(
     @CurrentUser() user: any,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       description?: string;
       type?: string;
       location?: string;
       isPublic?: boolean;
-    },
+    }
   ) {
     return this.clubsService.createClub(user.id, user.organizationId, body);
   }
@@ -95,11 +86,7 @@ export class ClubsController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update club' })
-  async updateClub(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-    @Body() body: any,
-  ) {
+  async updateClub(@CurrentUser() user: any, @Param('id') id: string, @Body() body: any) {
     return this.clubsService.updateClub(id, user.id, body);
   }
 
@@ -133,7 +120,7 @@ export class ClubsController {
     @CurrentUser() user: any,
     @Param('id') id: string,
     @Param('memberId') memberId: string,
-    @Body() body: { role: string },
+    @Body() body: { role: string }
   ) {
     return this.clubsService.updateMemberRole(id, memberId, user.id, body.role);
   }
@@ -143,7 +130,7 @@ export class ClubsController {
   async removeMember(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Param('memberId') memberId: string,
+    @Param('memberId') memberId: string
   ) {
     return this.clubsService.removeMember(id, memberId, user.id);
   }
@@ -170,5 +157,78 @@ export class ClubsController {
   @ApiOperation({ summary: 'Get club statistics' })
   async getStats(@Param('id') id: string) {
     return this.clubsService.getStats(id);
+  }
+
+  // ==================== INVITATIONS ====================
+
+  @Post(':id/invite')
+  @ApiOperation({ summary: 'Invite user to club' })
+  async inviteToClub(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { email: string; message?: string }
+  ) {
+    return this.clubsService.inviteToClub(id, user.id, body.email, body.message);
+  }
+
+  @Post('invitations/:invitationId/accept')
+  @ApiOperation({ summary: 'Accept club invitation' })
+  async acceptInvitation(@CurrentUser() user: any, @Param('invitationId') invitationId: string) {
+    return this.clubsService.acceptInvitation(invitationId, user.id, user.organizationId);
+  }
+
+  @Post('invitations/:invitationId/decline')
+  @ApiOperation({ summary: 'Decline club invitation' })
+  async declineInvitation(@CurrentUser() user: any, @Param('invitationId') invitationId: string) {
+    return this.clubsService.declineInvitation(invitationId, user.id);
+  }
+
+  // ==================== CLUB CONTENT ====================
+
+  @Post(':id/challenges')
+  @ApiOperation({ summary: 'Create club challenge' })
+  async createChallenge(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body()
+    body: {
+      title: string;
+      description?: string;
+      type?: string;
+      startDate?: string;
+      endDate?: string;
+      targetValue?: number;
+      reward?: string;
+    }
+  ) {
+    return this.clubsService.createChallenge(id, user.id, body);
+  }
+
+  @Post(':id/events')
+  @ApiOperation({ summary: 'Create club event' })
+  async createEvent(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body()
+    body: {
+      title: string;
+      description?: string;
+      date: string;
+      location?: string;
+      type?: string;
+      maxParticipants?: number;
+    }
+  ) {
+    return this.clubsService.createEvent(id, user.id, body);
+  }
+
+  @Post(':id/posts')
+  @ApiOperation({ summary: 'Create club post' })
+  async createPost(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { content: string; mediaUrls?: string[] }
+  ) {
+    return this.clubsService.createPost(id, user.id, body);
   }
 }

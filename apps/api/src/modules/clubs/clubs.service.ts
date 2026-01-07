@@ -12,7 +12,7 @@ export class ClubsService {
         club: true,
       },
     });
-    return memberships.map(m => ({
+    return memberships.map((m) => ({
       ...m.club,
       role: m.role,
       joinedAt: m.joinedAt,
@@ -38,13 +38,17 @@ export class ClubsService {
     return club;
   }
 
-  async createClub(userId: string, organizationId: string, data: {
-    name: string;
-    description?: string;
-    type?: string;
-    location?: string;
-    isPublic?: boolean;
-  }) {
+  async createClub(
+    userId: string,
+    organizationId: string,
+    data: {
+      name: string;
+      description?: string;
+      type?: string;
+      location?: string;
+      isPublic?: boolean;
+    }
+  ) {
     // Create club
     const club = await this.prisma.club.create({
       data: {
@@ -71,14 +75,18 @@ export class ClubsService {
     return club;
   }
 
-  async updateClub(clubId: string, userId: string, data: {
-    name?: string;
-    description?: string;
-    logoUrl?: string;
-    coverUrl?: string;
-    location?: string;
-    isPublic?: boolean;
-  }) {
+  async updateClub(
+    clubId: string,
+    userId: string,
+    data: {
+      name?: string;
+      description?: string;
+      logoUrl?: string;
+      coverUrl?: string;
+      location?: string;
+      isPublic?: boolean;
+    }
+  ) {
     // Check if user is admin/owner
     const membership = await this.prisma.clubMembership.findUnique({
       where: {
@@ -127,7 +135,7 @@ export class ClubsService {
       },
     });
 
-    return memberships.map(m => ({
+    return memberships.map((m) => ({
       id: m.id,
       memberId: m.userId,
       memberName: `${m.user.firstName} ${m.user.lastName}`,
@@ -293,10 +301,7 @@ export class ClubsService {
   async searchClubs(query: string) {
     return this.prisma.club.findMany({
       where: {
-        OR: [
-          { name: { contains: query } },
-          { description: { contains: query } },
-        ],
+        OR: [{ name: { contains: query } }, { description: { contains: query } }],
         isPublic: true,
       },
       take: 20,
@@ -334,5 +339,136 @@ export class ClubsService {
 
   async getInvitations(userId: string) {
     return [];
+  }
+
+  // ==================== INVITATIONS ====================
+
+  async inviteToClub(clubId: string, userId: string, email: string, message?: string) {
+    // Check if user is admin/owner
+    const membership = await this.prisma.clubMembership.findUnique({
+      where: { clubId_userId: { clubId, userId } },
+    });
+
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      throw new ForbiddenException('You do not have permission to invite members');
+    }
+
+    // For now, return success - in production, send email invitation
+    return {
+      success: true,
+      invitationId: `inv_${Date.now()}`,
+      email,
+      clubId,
+      status: 'pending',
+    };
+  }
+
+  async acceptInvitation(invitationId: string, userId: string, organizationId: string) {
+    // For now, return success - in production, validate invitation token
+    return { success: true, message: 'Invitation accepted' };
+  }
+
+  async declineInvitation(invitationId: string, userId: string) {
+    return { success: true, message: 'Invitation declined' };
+  }
+
+  // ==================== CLUB CONTENT ====================
+
+  async createChallenge(
+    clubId: string,
+    userId: string,
+    data: {
+      title: string;
+      description?: string;
+      type?: string;
+      startDate?: string;
+      endDate?: string;
+      targetValue?: number;
+      reward?: string;
+    }
+  ) {
+    // Check if user is admin/owner
+    const membership = await this.prisma.clubMembership.findUnique({
+      where: { clubId_userId: { clubId, userId } },
+    });
+
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      throw new ForbiddenException('You do not have permission to create challenges');
+    }
+
+    // Return mock challenge - in production, save to DB
+    return {
+      id: `challenge_${Date.now()}`,
+      clubId,
+      ...data,
+      createdAt: new Date().toISOString(),
+      status: 'active',
+      participantCount: 0,
+    };
+  }
+
+  async createEvent(
+    clubId: string,
+    userId: string,
+    data: {
+      title: string;
+      description?: string;
+      date: string;
+      location?: string;
+      type?: string;
+      maxParticipants?: number;
+    }
+  ) {
+    // Check if user is admin/owner
+    const membership = await this.prisma.clubMembership.findUnique({
+      where: { clubId_userId: { clubId, userId } },
+    });
+
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      throw new ForbiddenException('You do not have permission to create events');
+    }
+
+    // Return mock event - in production, save to DB
+    return {
+      id: `event_${Date.now()}`,
+      clubId,
+      ...data,
+      createdAt: new Date().toISOString(),
+      participantCount: 0,
+    };
+  }
+
+  async createPost(
+    clubId: string,
+    userId: string,
+    data: { content: string; mediaUrls?: string[] }
+  ) {
+    // Check membership
+    const membership = await this.prisma.clubMembership.findUnique({
+      where: { clubId_userId: { clubId, userId } },
+    });
+
+    if (!membership || membership.status !== 'active') {
+      throw new ForbiddenException('You must be a member to post in this club');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, lastName: true, avatarUrl: true },
+    });
+
+    // Return mock post - in production, save to DB
+    return {
+      id: `clubpost_${Date.now()}`,
+      clubId,
+      authorId: userId,
+      authorName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+      authorPhotoUrl: user?.avatarUrl,
+      content: data.content,
+      mediaUrls: data.mediaUrls || [],
+      createdAt: new Date().toISOString(),
+      likeCount: 0,
+      commentCount: 0,
+    };
   }
 }

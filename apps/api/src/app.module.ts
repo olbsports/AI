@@ -36,6 +36,10 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { ServicesModule } from './modules/services/services.module';
 
+// Gestation/Breeding
+import { GestationModule } from './modules/gestation/gestation.module';
+import { BreedingModule } from './modules/breeding/breeding.module';
+
 @Module({
   imports: [
     // Configuration
@@ -94,6 +98,10 @@ import { ServicesModule } from './modules/services/services.module';
     DashboardModule,
     GamificationModule,
     ServicesModule,
+
+    // Gestation/Breeding
+    GestationModule,
+    BreedingModule,
   ],
 })
 export class AppModule {}

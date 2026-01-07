@@ -76,12 +76,13 @@ export class HorsesController {
   async uploadPhoto(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    return this.horsesService.uploadPhoto(id, user.organizationId, file);
+    const horse = await this.horsesService.uploadPhoto(id, user.organizationId, file);
+    return { url: horse.photoUrl };
   }
 
   @Delete(':id/photo')

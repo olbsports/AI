@@ -9,7 +9,7 @@ import { calculatePagination, calculateOffset } from '@horse-vision/types';
 export class RidersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly uploadService: UploadService,
+    private readonly uploadService: UploadService
   ) {}
 
   async findAll(
@@ -20,7 +20,7 @@ export class RidersService {
       search?: string;
       discipline?: string;
       level?: string;
-    },
+    }
   ) {
     const page = params.page ?? 1;
     const pageSize = params.pageSize ?? 20;
@@ -61,6 +61,7 @@ export class RidersService {
           },
           _count: {
             select: {
+              horses: true,
               analysisSessions: true,
             },
           },
@@ -210,7 +211,7 @@ export class RidersService {
     };
   }
 
-  async uploadPhoto(id: string, organizationId: string, file: Express.Multer.File) {
+  async uploadPhoto(id: string, organizationId: string, file: any) {
     const rider = await this.findById(id, organizationId);
 
     // Delete old photo if exists
@@ -225,11 +226,7 @@ export class RidersService {
     }
 
     // Upload new photo
-    const { url } = await this.uploadService.uploadFile(
-      organizationId,
-      'avatars',
-      file,
-    );
+    const { url } = await this.uploadService.uploadFile(organizationId, 'avatars', file);
 
     // Update rider with new photo URL
     return this.prisma.rider.update({

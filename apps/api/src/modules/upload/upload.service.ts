@@ -10,6 +10,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
+import * as fs from 'fs';
 
 import { GetPresignedUrlDto } from './dto/get-presigned-url.dto';
 
@@ -22,10 +23,13 @@ export interface PresignedUrlResponse {
 
 @Injectable()
 export class UploadService {
-  private readonly s3Client: S3Client;
+  private readonly s3Client: S3Client | null;
   private readonly bucket: string;
   private readonly cdnUrl: string;
   private readonly region: string;
+  private readonly useLocalStorage: boolean;
+  private readonly localStoragePath: string;
+  private readonly publicUrl: string;
 
   // Allowed file types by category
   private readonly allowedTypes: Record<string, string[]> = {
@@ -60,21 +64,47 @@ export class UploadService {
 
   constructor(private readonly configService: ConfigService) {
     this.region = this.configService.get('AWS_REGION', 'eu-west-3');
-    this.bucket = this.configService.get('S3_BUCKET', 'horse-vision-uploads');
+    this.bucket = this.configService.get('S3_BUCKET', '');
     this.cdnUrl = this.configService.get('CDN_URL', '');
 
-    this.s3Client = new S3Client({
-      region: this.region,
-      credentials: {
-        accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID', ''),
-        secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY', ''),
-      },
-      // For local development with MinIO
-      ...(this.configService.get('S3_ENDPOINT') && {
-        endpoint: this.configService.get('S3_ENDPOINT'),
-        forcePathStyle: true,
-      }),
-    });
+    // Local storage configuration
+    this.localStoragePath = this.configService.get('LOCAL_STORAGE_PATH', './uploads');
+    this.publicUrl = this.configService.get('PUBLIC_URL', 'https://api.horsetempo.app');
+
+    // Use local storage if S3 bucket is not configured
+    const awsAccessKey = this.configService.get('AWS_ACCESS_KEY_ID', '');
+    this.useLocalStorage = !this.bucket || !awsAccessKey;
+
+    if (this.useLocalStorage) {
+      // Ensure local storage directory exists
+      this.ensureLocalStorageDir();
+      console.log('📁 Using LOCAL file storage at:', this.localStoragePath);
+      this.s3Client = null;
+    } else {
+      console.log('☁️  Using S3 cloud storage, bucket:', this.bucket);
+      this.s3Client = new S3Client({
+        region: this.region,
+        credentials: {
+          accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID', ''),
+          secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY', ''),
+        },
+        // For local development with MinIO
+        ...(this.configService.get('S3_ENDPOINT') && {
+          endpoint: this.configService.get('S3_ENDPOINT'),
+          forcePathStyle: true,
+        }),
+      });
+    }
+  }
+
+  private ensureLocalStorageDir() {
+    const dirs = ['', 'avatars', 'media', 'reports', 'documents'];
+    for (const dir of dirs) {
+      const fullPath = path.join(this.localStoragePath, dir);
+      if (!fs.existsSync(fullPath)) {
+        fs.mkdirSync(fullPath, { recursive: true });
+      }
+    }
   }
 
   async getPresignedUploadUrl(
@@ -102,7 +132,18 @@ export class UploadService {
     const fileId = uuidv4();
     const key = `${organizationId}/${dto.category}/${fileId}${ext}`;
 
-    // Create presigned URL for upload
+    if (this.useLocalStorage) {
+      // For local storage, return a direct upload URL
+      const fileUrl = `${this.publicUrl}/uploads/${key}`;
+      return {
+        uploadUrl: `${this.publicUrl}/api/upload/direct`, // Direct upload endpoint
+        fileUrl,
+        key,
+        expiresAt: new Date(Date.now() + 3600 * 1000),
+      };
+    }
+
+    // Create presigned URL for S3 upload
     const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
@@ -115,7 +156,7 @@ export class UploadService {
     });
 
     const expiresIn = 3600; // 1 hour
-    const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
+    const uploadUrl = await getSignedUrl(this.s3Client!, command, { expiresIn });
 
     // Generate file URL (CDN or S3)
     const fileUrl = this.cdnUrl
@@ -131,31 +172,48 @@ export class UploadService {
   }
 
   async getPresignedDownloadUrl(key: string): Promise<string> {
+    if (this.useLocalStorage) {
+      return `${this.publicUrl}/uploads/${key}`;
+    }
+
     const command = new GetObjectCommand({
       Bucket: this.bucket,
       Key: key,
     });
 
     const expiresIn = 3600; // 1 hour
-    return getSignedUrl(this.s3Client, command, { expiresIn });
+    return getSignedUrl(this.s3Client!, command, { expiresIn });
   }
 
   async deleteFile(key: string): Promise<void> {
+    if (this.useLocalStorage) {
+      const filePath = path.join(this.localStoragePath, key);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return;
+    }
+
     const command = new DeleteObjectCommand({
       Bucket: this.bucket,
       Key: key,
     });
 
-    await this.s3Client.send(command);
+    await this.s3Client!.send(command);
   }
 
   async fileExists(key: string): Promise<boolean> {
+    if (this.useLocalStorage) {
+      const filePath = path.join(this.localStoragePath, key);
+      return fs.existsSync(filePath);
+    }
+
     try {
       const command = new HeadObjectCommand({
         Bucket: this.bucket,
         Key: key,
       });
-      await this.s3Client.send(command);
+      await this.s3Client!.send(command);
       return true;
     } catch {
       return false;
@@ -175,6 +233,10 @@ export class UploadService {
    * Generate a presigned URL for report PDF/HTML
    */
   async getReportUrl(key: string, expiresIn = 86400): Promise<string> {
+    if (this.useLocalStorage) {
+      return `${this.publicUrl}/uploads/${key}`;
+    }
+
     // For CDN URLs, return directly
     if (this.cdnUrl && !key.includes('private')) {
       return `${this.cdnUrl}/${key}`;
@@ -185,16 +247,16 @@ export class UploadService {
       Key: key,
     });
 
-    return getSignedUrl(this.s3Client, command, { expiresIn });
+    return getSignedUrl(this.s3Client!, command, { expiresIn });
   }
 
   /**
-   * Upload a file directly to S3
+   * Upload a file directly (from multipart form data)
    */
   async uploadFile(
     organizationId: string,
     category: string,
-    file: Express.Multer.File,
+    file: any,
   ): Promise<{ url: string; key: string }> {
     // Validate content type
     const allowedTypes = this.allowedTypes[category];
@@ -217,6 +279,23 @@ export class UploadService {
     const fileId = uuidv4();
     const key = `${organizationId}/${category}/${fileId}${ext}`;
 
+    if (this.useLocalStorage) {
+      // Save file to local storage
+      const filePath = path.join(this.localStoragePath, key);
+      const dirPath = path.dirname(filePath);
+
+      // Ensure directory exists
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+
+      // Write file
+      fs.writeFileSync(filePath, file.buffer);
+
+      const url = `${this.publicUrl}/uploads/${key}`;
+      return { url, key };
+    }
+
     // Upload to S3
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -230,7 +309,7 @@ export class UploadService {
       },
     });
 
-    await this.s3Client.send(command);
+    await this.s3Client!.send(command);
 
     // Generate file URL
     const url = this.cdnUrl

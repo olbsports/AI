@@ -56,6 +56,7 @@ model User {
   passwordHash   String
   firstName      String
   lastName       String
+  phone          String?
   avatarUrl      String?
   role           String   @default("viewer") // owner, admin, veterinarian, analyst, viewer
   isActive       Boolean  @default(true)
@@ -110,6 +111,12 @@ model User {
   following               Follow[]              @relation("Followers")
   achievements            Achievement[]
   clubMemberships         ClubMembership[]
+
+  // Blocks and Reports
+  blockedUsers            UserBlock[]           @relation("Blocker")
+  blockedByUsers          UserBlock[]           @relation("Blocked")
+  reportsMade             UserReport[]          @relation("Reporter")
+  reportsReceived         UserReport[]          @relation("ReportedUser")
 
   @@map("users")
 }
@@ -714,6 +721,7 @@ model SocialPost {
   // Relations
   comments        Comment[]
   likes           Like[]
+  reports         UserReport[]
 
   @@index([authorId, createdAt])
   @@index([visibility])
@@ -1491,4 +1499,50 @@ model ApiKey {
 
   @@unique([service])
   @@map("api_keys")
+}
+
+// ==================== USER BLOCKS ====================
+
+model UserBlock {
+  id        String   @id @default(uuid())
+
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@map("user_blocks")
+}
+
+// ==================== USER REPORTS (Content Moderation) ====================
+
+model UserReport {
+  id              String   @id @default(uuid())
+
+  reporterId      String
+  reporter        User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  reportedUserId  String?
+  reportedUser    User?    @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+
+  reportedPostId  String?
+  reportedPost    SocialPost? @relation(fields: [reportedPostId], references: [id], onDelete: Cascade)
+
+  type            String   // user, post, comment
+  reason          String
+  details         String?
+  status          String   @default("pending") // pending, reviewed, dismissed, action_taken
+
+  reviewedById    String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("user_reports")
 }
