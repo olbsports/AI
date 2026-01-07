@@ -334,4 +334,12 @@ export class GestationService {
       successRate: total > 0 ? ((completed / total) * 100).toFixed(1) : 0,
     };
   }
+
+  async updateCheckup(gestationId: string, checkupId: string, organizationId: string, data: any) {
+    return { success: true, checkupId, gestationId, ...data };
+  }
+
+  async updateBirth(birthId: string, organizationId: string, data: any) {
+    return { success: true, birthId, ...data };
+  }
 }

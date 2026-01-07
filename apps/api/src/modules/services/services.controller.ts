@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { ServicesService } from './services.service';
@@ -30,17 +20,14 @@ export class ServicesController {
     @CurrentUser() user: any,
     @Query('q') query?: string,
     @Query('type') type?: string,
-    @Query('location') location?: string,
+    @Query('location') location?: string
   ) {
     return this.servicesService.searchProviders({ query, type, location });
   }
 
   @Get('services')
   @ApiOperation({ summary: 'Get providers by type' })
-  async getProviders(
-    @CurrentUser() user: any,
-    @Query('type') type?: string,
-  ) {
+  async getProviders(@CurrentUser() user: any, @Query('type') type?: string) {
     return this.servicesService.getProviders(type);
   }
 
@@ -50,12 +37,12 @@ export class ServicesController {
     @CurrentUser() user: any,
     @Query('lat') lat?: string,
     @Query('lng') lng?: string,
-    @Query('emergency') emergency?: string,
+    @Query('emergency') emergency?: string
   ) {
     return this.servicesService.getNearbyProviders(
       lat ? parseFloat(lat) : undefined,
       lng ? parseFloat(lng) : undefined,
-      emergency === 'true',
+      emergency === 'true'
     );
   }
 
@@ -112,16 +99,57 @@ export class ServicesController {
   async addReview(
     @CurrentUser() user: any,
     @Param('id') providerId: string,
-    @Body() data: { rating: number; comment: string },
+    @Body() data: { rating: number; comment: string }
   ) {
     return this.servicesService.addReview(user.id, providerId, data);
+  }
+
+  @Put('services/:id/reviews/:reviewId')
+  @ApiOperation({ summary: 'Update review' })
+  async updateReview(
+    @CurrentUser() user: any,
+    @Param('id') providerId: string,
+    @Param('reviewId') reviewId: string,
+    @Body() data: { rating?: number; comment?: string }
+  ) {
+    return this.servicesService.updateReview(user.id, providerId, reviewId, data);
+  }
+
+  @Delete('services/:id/reviews/:reviewId')
+  @ApiOperation({ summary: 'Delete review' })
+  async deleteReview(
+    @CurrentUser() user: any,
+    @Param('id') providerId: string,
+    @Param('reviewId') reviewId: string
+  ) {
+    return this.servicesService.deleteReview(user.id, providerId, reviewId);
+  }
+
+  @Post('services/:id/reviews/:reviewId/helpful')
+  @ApiOperation({ summary: 'Mark review as helpful' })
+  async markReviewHelpful(
+    @CurrentUser() user: any,
+    @Param('id') providerId: string,
+    @Param('reviewId') reviewId: string
+  ) {
+    return this.servicesService.markReviewHelpful(user.id, reviewId);
+  }
+
+  @Post('services/:id/report')
+  @ApiOperation({ summary: 'Report a service provider' })
+  async reportProvider(
+    @CurrentUser() user: any,
+    @Param('id') providerId: string,
+    @Body() data: { reason: string; details?: string }
+  ) {
+    return this.servicesService.reportProvider(user.id, providerId, data);
   }
 
   @Post('services/emergency-contacts')
   @ApiOperation({ summary: 'Add emergency contact' })
   async addEmergencyContact(
     @CurrentUser() user: any,
-    @Body() data: { name: string; phone: string; type: string; notes?: string },
+    @Body() data: { name: string; phone: string; type: string; notes?: string }
   ) {
     return this.servicesService.addEmergencyContact(user.organizationId, data);
   }
@@ -131,17 +159,14 @@ export class ServicesController {
   async updateEmergencyContact(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() data: { name?: string; phone?: string; type?: string; notes?: string },
+    @Body() data: { name?: string; phone?: string; type?: string; notes?: string }
   ) {
     return this.servicesService.updateEmergencyContact(id, data);
   }
 
   @Delete('services/emergency-contacts/:id')
   @ApiOperation({ summary: 'Delete emergency contact' })
-  async deleteEmergencyContact(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-  ) {
+  async deleteEmergencyContact(@CurrentUser() user: any, @Param('id') id: string) {
     return this.servicesService.deleteEmergencyContact(id);
   }
 
@@ -157,14 +182,15 @@ export class ServicesController {
   @ApiOperation({ summary: 'Create appointment' })
   async createAppointment(
     @CurrentUser() user: any,
-    @Body() data: {
+    @Body()
+    data: {
       providerId: string;
       horseId?: string;
       date: string;
       time: string;
       type: string;
       notes?: string;
-    },
+    }
   ) {
     return this.servicesService.createAppointment(user.organizationId, user.id, data);
   }
@@ -174,7 +200,7 @@ export class ServicesController {
   async updateAppointment(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() data: { date?: string; time?: string; notes?: string },
+    @Body() data: { date?: string; time?: string; notes?: string }
   ) {
     return this.servicesService.updateAppointment(id, data);
   }
@@ -190,7 +216,7 @@ export class ServicesController {
   async rateAppointment(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() data: { rating: number; comment?: string },
+    @Body() data: { rating: number; comment?: string }
   ) {
     return this.servicesService.rateAppointment(id, data);
   }

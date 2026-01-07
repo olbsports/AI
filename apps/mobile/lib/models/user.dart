@@ -62,6 +62,15 @@ class User {
   String get fullName => '${firstName ?? ''} ${lastName ?? ''}'.trim();
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Handle organization name from either organizationName field or organization.name
+    String? orgName;
+    if (json['organizationName'] != null) {
+      orgName = json['organizationName'] as String?;
+    } else if (json['organization'] != null && json['organization'] is Map) {
+      final org = json['organization'] as Map<String, dynamic>;
+      orgName = org['name'] as String?;
+    }
+
     return User(
       id: json['id'] as String,
       email: json['email'] as String,
@@ -71,7 +80,7 @@ class User {
       phone: json['phone'] as String?,
       role: json['role'] as String,
       organizationId: json['organizationId'] as String,
-      organizationName: json['organizationName'] as String?,
+      organizationName: orgName,
       emailVerified: json['emailVerified'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       lastLoginAt: json['lastLoginAt'] != null

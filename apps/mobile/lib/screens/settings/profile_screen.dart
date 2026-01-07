@@ -138,6 +138,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         await api.uploadProfilePhoto(_selectedPhoto!);
       }
 
+      // Refresh user in auth state
+      await ref.read(authProvider.notifier).refreshUser();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profil mis à jour')),

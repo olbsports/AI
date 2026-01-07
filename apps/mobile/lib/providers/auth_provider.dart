@@ -168,6 +168,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState();
   }
 
+  Future<void> refreshUser() async {
+    try {
+      final user = await _api.getProfile();
+      state = state.copyWith(user: user);
+    } catch (e) {
+      print('REFRESH USER ERROR: $e');
+      // Don't update state on error, keep current user
+    }
+  }
+
   void clearError() {
     state = state.copyWith(error: null);
   }

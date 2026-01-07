@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../models/models.dart';
 import '../../providers/social_provider.dart';
@@ -936,16 +937,80 @@ class CreateNoteSheet extends StatefulWidget {
 
 class _CreateNoteSheetState extends State<CreateNoteSheet> {
   final _contentController = TextEditingController();
+  final _imagePicker = ImagePicker();
   ContentVisibility _visibility = ContentVisibility.public;
   bool _allowComments = true;
   bool _allowSharing = true;
   String? _selectedHorseId;
   bool _isLoading = false;
+  List<String> _selectedMediaUrls = [];
+  String? _mediaType;
 
   @override
   void dispose() {
     _contentController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        // TODO: Upload image to server and get URL
+        // For now, using local path as placeholder
+        setState(() {
+          _selectedMediaUrls.add(image.path);
+          _mediaType = 'image';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Image sélectionnée. Upload serveur à implémenter.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la sélection: $e')),
+      );
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    try {
+      final XFile? video = await _imagePicker.pickVideo(
+        source: ImageSource.gallery,
+        maxDuration: const Duration(minutes: 5),
+      );
+
+      if (video != null) {
+        // TODO: Upload video to server and get URL
+        // For now, using local path as placeholder
+        setState(() {
+          _selectedMediaUrls.add(video.path);
+          _mediaType = 'video';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Vidéo sélectionnée. Upload serveur à implémenter.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la sélection: $e')),
+      );
+    }
+  }
+
+  void _showHorsePicker() {
+    // TODO: Implement horse picker
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Sélection de cheval à implémenter')),
+    );
   }
 
   @override
@@ -1031,21 +1096,74 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
               ],
             ),
             const SizedBox(height: 16),
+            // Selected media preview
+            if (_selectedMediaUrls.isNotEmpty) ...[
+              Container(
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _selectedMediaUrls.length,
+                  itemBuilder: (context, index) {
+                    return Stack(
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              _mediaType == 'video' ? Icons.videocam : Icons.image,
+                              size: 40,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: 12,
+                          top: 4,
+                          child: IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.black54,
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(24, 24),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _selectedMediaUrls.removeAt(index);
+                                if (_selectedMediaUrls.isEmpty) {
+                                  _mediaType = null;
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
             Row(
               children: [
                 IconButton(
                   icon: const Icon(Icons.image),
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : _pickImage,
                   tooltip: 'Ajouter une photo',
                 ),
                 IconButton(
                   icon: const Icon(Icons.videocam),
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : _pickVideo,
                   tooltip: 'Ajouter une vidéo',
                 ),
                 IconButton(
                   icon: const Icon(Icons.pets),
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : _showHorsePicker,
                   tooltip: 'Associer un cheval',
                 ),
                 const Spacer(),
@@ -1077,6 +1195,8 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
       'allowComments': _allowComments,
       'allowSharing': _allowSharing,
       if (_selectedHorseId != null) 'horseId': _selectedHorseId,
+      if (_selectedMediaUrls.isNotEmpty) 'mediaUrls': _selectedMediaUrls,
+      if (_mediaType != null) 'mediaType': _mediaType,
     });
   }
 }

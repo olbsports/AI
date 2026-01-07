@@ -126,9 +126,12 @@ export class AuthService {
       };
 
       const accessToken = this.jwtService.sign(newPayload);
+      const newRefreshToken = this.jwtService.sign(newPayload, {
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '7d'),
+      });
       const expiresAt = Date.now() + 15 * 60 * 1000;
 
-      return { accessToken, expiresAt };
+      return { accessToken, refreshToken: newRefreshToken, expiresAt };
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }

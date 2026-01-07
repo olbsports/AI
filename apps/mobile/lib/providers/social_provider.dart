@@ -571,6 +571,17 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
+  /// Unlike comment
+  Future<bool> unlikeComment(String noteId, String commentId) async {
+    try {
+      await _api.delete('/notes/$noteId/comments/$commentId/like');
+      _ref.invalidate(noteCommentsProvider(noteId));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   /// Follow user
   Future<bool> followUser(String userId) async {
     try {

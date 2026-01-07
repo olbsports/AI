@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { EquiCoteService } from './equicote.service';
@@ -21,15 +13,8 @@ export class EquiCoteController {
 
   @Post('valuate/:horseId')
   @ApiOperation({ summary: 'Create full valuation for a horse' })
-  async createValuation(
-    @Param('horseId') horseId: string,
-    @Request() req: any,
-  ) {
-    return this.equiCoteService.createValuation(
-      horseId,
-      req.user.id,
-      req.user.organizationId,
-    );
+  async createValuation(@Param('horseId') horseId: string, @Request() req: any) {
+    return this.equiCoteService.createValuation(horseId, req.user.id, req.user.organizationId);
   }
 
   @Get('valuation/:valuationId')
@@ -48,5 +33,11 @@ export class EquiCoteController {
   @ApiOperation({ summary: 'Get quick estimate without external data' })
   async quickEstimate(@Body() data: QuickEstimateDto) {
     return this.equiCoteService.quickEstimate(data);
+  }
+
+  @Get('comparables/:horseId')
+  @ApiOperation({ summary: 'Get comparable horses for valuation' })
+  async getComparables(@Param('horseId') horseId: string) {
+    return this.equiCoteService.getComparables(horseId);
   }
 }

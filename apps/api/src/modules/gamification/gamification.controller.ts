@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Param, UseGuards, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { GamificationService } from './gamification.service';
@@ -72,6 +66,15 @@ export class GamificationController {
     return this.gamificationService.getReferralCode(user.id);
   }
 
+  @Post('referrals/invite')
+  @ApiOperation({ summary: 'Send referral invitation' })
+  async sendReferralInvite(
+    @CurrentUser() user: any,
+    @Body() body: { email: string; message?: string }
+  ) {
+    return this.gamificationService.sendReferralInvite(user.id, body.email, body.message);
+  }
+
   @Get('leaderboard')
   @ApiOperation({ summary: 'Get XP leaderboard' })
   async getLeaderboard(@CurrentUser() user: any) {
@@ -86,19 +89,13 @@ export class GamificationController {
 
   @Post('challenges/:id/complete')
   @ApiOperation({ summary: 'Complete a challenge' })
-  async completeChallenge(
-    @CurrentUser() user: any,
-    @Param('id') challengeId: string,
-  ) {
+  async completeChallenge(@CurrentUser() user: any, @Param('id') challengeId: string) {
     return this.gamificationService.completeChallenge(user.id, challengeId);
   }
 
   @Post('rewards/:id/claim')
   @ApiOperation({ summary: 'Claim a reward' })
-  async claimReward(
-    @CurrentUser() user: any,
-    @Param('id') rewardId: string,
-  ) {
+  async claimReward(@CurrentUser() user: any, @Param('id') rewardId: string) {
     return this.gamificationService.claimReward(user.id, rewardId);
   }
 }
