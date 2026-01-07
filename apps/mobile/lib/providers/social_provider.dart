@@ -527,8 +527,11 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _api.delete('/notes/$noteId');
+      _ref.invalidate(noteProvider(noteId));
       _ref.invalidate(myNotesProvider);
       _ref.invalidate(forYouFeedProvider);
+      _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(trendingPostsProvider);
       state = const AsyncValue.data(null);
       return true;
     } catch (e, st) {
@@ -542,6 +545,10 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.post('/notes/$noteId/like', {});
       _ref.invalidate(noteProvider(noteId));
+      // Invalidate feeds to update like counts
+      _ref.invalidate(forYouFeedProvider);
+      _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(myNotesProvider);
       return true;
     } catch (e) {
       return false;
@@ -553,6 +560,10 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.delete('/notes/$noteId/like');
       _ref.invalidate(noteProvider(noteId));
+      // Invalidate feeds to update like counts
+      _ref.invalidate(forYouFeedProvider);
+      _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(myNotesProvider);
       return true;
     } catch (e) {
       return false;
@@ -563,6 +574,7 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
   Future<bool> saveNote(String noteId) async {
     try {
       await _api.post('/notes/$noteId/save', {});
+      _ref.invalidate(noteProvider(noteId));
       _ref.invalidate(savedNotesProvider);
       return true;
     } catch (e) {
@@ -574,6 +586,7 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
   Future<bool> unsaveNote(String noteId) async {
     try {
       await _api.delete('/notes/$noteId/save');
+      _ref.invalidate(noteProvider(noteId));
       _ref.invalidate(savedNotesProvider);
       return true;
     } catch (e) {
@@ -652,6 +665,8 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.post('/users/$userId/follow', {});
       _ref.invalidate(userProfileProvider(userId));
+      _ref.invalidate(userFollowersProvider(userId));
+      _ref.invalidate(userFollowingProvider(userId));
       _ref.invalidate(followingFeedProvider);
       _ref.invalidate(suggestedUsersProvider);
       return true;
@@ -665,7 +680,10 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.delete('/users/$userId/follow');
       _ref.invalidate(userProfileProvider(userId));
+      _ref.invalidate(userFollowersProvider(userId));
+      _ref.invalidate(userFollowingProvider(userId));
       _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(suggestedUsersProvider);
       return true;
     } catch (e) {
       return false;
@@ -677,6 +695,12 @@ class SocialNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _api.post('/users/$userId/block', {});
+      // Invalidate all feeds and user data to remove blocked user's content
+      _ref.invalidate(userProfileProvider(userId));
+      _ref.invalidate(forYouFeedProvider);
+      _ref.invalidate(followingFeedProvider);
+      _ref.invalidate(trendingPostsProvider);
+      _ref.invalidate(suggestedUsersProvider);
       state = const AsyncValue.data(null);
       return true;
     } catch (e, st) {
