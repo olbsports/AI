@@ -667,12 +667,641 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  void _showAddEventDialog(BuildContext context) {}
-  void _showAddGoalDialog(BuildContext context) {}
-  void _showCreateTrainingPlanDialog(BuildContext context) {}
-  void _showEventDetails(CalendarEvent event) {}
-  void _completeSession(TrainingSession session) {}
+  void _showAddEventDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: _AddEventForm(
+          onSubmit: (data) async {
+            final notifier = ref.read(planningNotifierProvider.notifier);
+            final result = await notifier.createEvent(data);
+            if (result != null && context.mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Événement créé !')),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showAddGoalDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: _AddGoalForm(
+          onSubmit: (data) async {
+            final notifier = ref.read(planningNotifierProvider.notifier);
+            final result = await notifier.createGoal(data);
+            if (result != null && context.mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Objectif créé !')),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showCreateTrainingPlanDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: _CreateTrainingPlanForm(
+          onSubmit: (data) async {
+            final notifier = ref.read(planningNotifierProvider.notifier);
+            final result = await notifier.createTrainingPlan(data);
+            if (result != null && context.mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Plan d\'entraînement créé !')),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showEventDetails(CalendarEvent event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(event.type.icon, color: Color(event.type.defaultColor)),
+            const SizedBox(width: 8),
+            Expanded(child: Text(event.title)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailRow(Icons.category, event.type.displayName),
+              _buildDetailRow(Icons.calendar_today, _formatEventDate(event)),
+              if (event.location != null)
+                _buildDetailRow(Icons.location_on, event.location!),
+              if (event.horseName != null)
+                _buildDetailRow(Icons.pets, event.horseName!),
+              if (event.description != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Description',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                Text(event.description!),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final notifier = ref.read(planningNotifierProvider.notifier);
+              await notifier.deleteEvent(event.id);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Événement supprimé')),
+                );
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.grey),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
+  }
+
+  String _formatEventDate(CalendarEvent event) {
+    final date = '${event.startDate.day}/${event.startDate.month}/${event.startDate.year}';
+    if (event.isAllDay) return '$date (Journée)';
+    return '$date à ${_formatTime(event.startDate)}';
+  }
+
+  void _completeSession(TrainingSession session) async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => _CompleteSessionDialog(session: session),
+    );
+
+    if (result != null) {
+      final plan = await ref.read(activeTrainingPlanProvider.future);
+      if (plan != null) {
+        final notifier = ref.read(planningNotifierProvider.notifier);
+        await notifier.completeSession(
+          plan.id,
+          session.id,
+          rating: result['rating'],
+          notes: result['notes'],
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Séance terminée !')),
+          );
+        }
+      }
+    }
+  }
+
   void _dismissRecommendation(TrainingRecommendation recommendation) {
     ref.read(planningNotifierProvider.notifier).dismissRecommendation(recommendation.id);
+  }
+}
+
+// ==================== FORMS ====================
+
+class _AddEventForm extends StatefulWidget {
+  final Future<void> Function(Map<String, dynamic>) onSubmit;
+
+  const _AddEventForm({required this.onSubmit});
+
+  @override
+  State<_AddEventForm> createState() => _AddEventFormState();
+}
+
+class _AddEventFormState extends State<_AddEventForm> {
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _locationController = TextEditingController();
+  EventType _type = EventType.training;
+  DateTime _startDate = DateTime.now();
+  TimeOfDay _startTime = TimeOfDay.now();
+  bool _isAllDay = false;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Nouvel événement', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _titleController,
+            decoration: const InputDecoration(
+              labelText: 'Titre *',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<EventType>(
+            value: _type,
+            decoration: const InputDecoration(
+              labelText: 'Type',
+              border: OutlineInputBorder(),
+            ),
+            items: EventType.values.map((t) => DropdownMenuItem(
+              value: t,
+              child: Row(
+                children: [
+                  Icon(t.icon, size: 20),
+                  const SizedBox(width: 8),
+                  Text(t.displayName),
+                ],
+              ),
+            )).toList(),
+            onChanged: (v) => setState(() => _type = v!),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _startDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (date != null) setState(() => _startDate = date);
+                  },
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text('${_startDate.day}/${_startDate.month}/${_startDate.year}'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isAllDay ? null : () async {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: _startTime,
+                    );
+                    if (time != null) setState(() => _startTime = time);
+                  },
+                  icon: const Icon(Icons.access_time),
+                  label: Text('${_startTime.hour}:${_startTime.minute.toString().padLeft(2, '0')}'),
+                ),
+              ),
+            ],
+          ),
+          CheckboxListTile(
+            title: const Text('Journée entière'),
+            value: _isAllDay,
+            onChanged: (v) => setState(() => _isAllDay = v ?? false),
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+          TextField(
+            controller: _locationController,
+            decoration: const InputDecoration(
+              labelText: 'Lieu',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.location_on),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _descriptionController,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              labelText: 'Description',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: _isLoading ? null : _submit,
+            child: _isLoading
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Créer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submit() async {
+    if (_titleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Le titre est requis')),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    final startDateTime = DateTime(
+      _startDate.year, _startDate.month, _startDate.day,
+      _startTime.hour, _startTime.minute,
+    );
+    await widget.onSubmit({
+      'title': _titleController.text,
+      'type': _type.name,
+      'startDate': startDateTime.toIso8601String(),
+      'isAllDay': _isAllDay,
+      'location': _locationController.text.isNotEmpty ? _locationController.text : null,
+      'description': _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
+    });
+    setState(() => _isLoading = false);
+  }
+}
+
+class _AddGoalForm extends StatefulWidget {
+  final Future<void> Function(Map<String, dynamic>) onSubmit;
+
+  const _AddGoalForm({required this.onSubmit});
+
+  @override
+  State<_AddGoalForm> createState() => _AddGoalFormState();
+}
+
+class _AddGoalFormState extends State<_AddGoalForm> {
+  final _titleController = TextEditingController();
+  final _targetController = TextEditingController();
+  GoalCategory _category = GoalCategory.training;
+  DateTime _targetDate = DateTime.now().add(const Duration(days: 30));
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _targetController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Nouvel objectif', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _titleController,
+            decoration: const InputDecoration(
+              labelText: 'Objectif *',
+              hintText: 'Ex: Passer le Galop 5',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<GoalCategory>(
+            value: _category,
+            decoration: const InputDecoration(
+              labelText: 'Catégorie',
+              border: OutlineInputBorder(),
+            ),
+            items: GoalCategory.values.map((c) => DropdownMenuItem(
+              value: c,
+              child: Row(
+                children: [
+                  Icon(c.icon, size: 20),
+                  const SizedBox(width: 8),
+                  Text(c.displayName),
+                ],
+              ),
+            )).toList(),
+            onChanged: (v) => setState(() => _category = v!),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _targetController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Valeur cible',
+              hintText: 'Ex: 10 (séances)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: _targetDate,
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 730)),
+              );
+              if (date != null) setState(() => _targetDate = date);
+            },
+            icon: const Icon(Icons.flag),
+            label: Text('Date cible: ${_targetDate.day}/${_targetDate.month}/${_targetDate.year}'),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: _isLoading ? null : _submit,
+            child: _isLoading
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Créer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submit() async {
+    if (_titleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('L\'objectif est requis')),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    await widget.onSubmit({
+      'title': _titleController.text,
+      'category': _category.name,
+      'type': 'count',
+      'targetValue': double.tryParse(_targetController.text) ?? 1,
+      'startDate': DateTime.now().toIso8601String(),
+      'targetDate': _targetDate.toIso8601String(),
+    });
+    setState(() => _isLoading = false);
+  }
+}
+
+class _CreateTrainingPlanForm extends StatefulWidget {
+  final Future<void> Function(Map<String, dynamic>) onSubmit;
+
+  const _CreateTrainingPlanForm({required this.onSubmit});
+
+  @override
+  State<_CreateTrainingPlanForm> createState() => _CreateTrainingPlanFormState();
+}
+
+class _CreateTrainingPlanFormState extends State<_CreateTrainingPlanForm> {
+  final _titleController = TextEditingController();
+  TrainingDiscipline _discipline = TrainingDiscipline.general;
+  TrainingLevel _level = TrainingLevel.intermediate;
+  int _weeks = 4;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Nouveau plan d\'entraînement', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _titleController,
+            decoration: const InputDecoration(
+              labelText: 'Nom du plan *',
+              hintText: 'Ex: Préparation concours',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<TrainingDiscipline>(
+            value: _discipline,
+            decoration: const InputDecoration(
+              labelText: 'Discipline',
+              border: OutlineInputBorder(),
+            ),
+            items: TrainingDiscipline.values.map((d) => DropdownMenuItem(
+              value: d,
+              child: Text(d.displayName),
+            )).toList(),
+            onChanged: (v) => setState(() => _discipline = v!),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<TrainingLevel>(
+            value: _level,
+            decoration: const InputDecoration(
+              labelText: 'Niveau',
+              border: OutlineInputBorder(),
+            ),
+            items: TrainingLevel.values.map((l) => DropdownMenuItem(
+              value: l,
+              child: Text(l.displayName),
+            )).toList(),
+            onChanged: (v) => setState(() => _level = v!),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Text('Durée: '),
+              Expanded(
+                child: Slider(
+                  value: _weeks.toDouble(),
+                  min: 1,
+                  max: 12,
+                  divisions: 11,
+                  label: '$_weeks semaines',
+                  onChanged: (v) => setState(() => _weeks = v.round()),
+                ),
+              ),
+              Text('$_weeks sem.'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: _isLoading ? null : _submit,
+            child: _isLoading
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Créer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submit() async {
+    if (_titleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Le nom est requis')),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    final now = DateTime.now();
+    await widget.onSubmit({
+      'title': _titleController.text,
+      'discipline': _discipline.name,
+      'level': _level.name,
+      'weeksTotal': _weeks,
+      'startDate': now.toIso8601String(),
+      'endDate': now.add(Duration(days: _weeks * 7)).toIso8601String(),
+    });
+    setState(() => _isLoading = false);
+  }
+}
+
+class _CompleteSessionDialog extends StatefulWidget {
+  final TrainingSession session;
+
+  const _CompleteSessionDialog({required this.session});
+
+  @override
+  State<_CompleteSessionDialog> createState() => _CompleteSessionDialogState();
+}
+
+class _CompleteSessionDialogState extends State<_CompleteSessionDialog> {
+  int _rating = 3;
+  final _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Terminer la séance'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(widget.session.title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 16),
+          const Text('Comment s\'est passée la séance ?'),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) => IconButton(
+              icon: Icon(
+                index < _rating ? Icons.star : Icons.star_border,
+                color: Colors.amber,
+                size: 32,
+              ),
+              onPressed: () => setState(() => _rating = index + 1),
+            )),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _notesController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Notes (optionnel)',
+              hintText: 'Commentaires sur la séance...',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, {
+            'rating': _rating,
+            'notes': _notesController.text.isNotEmpty ? _notesController.text : null,
+          }),
+          child: const Text('Terminer'),
+        ),
+      ],
+    );
   }
 }
