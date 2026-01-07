@@ -33,9 +33,9 @@ export class UsersAdminController {
 
     if (search) {
       where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search } },
+        { firstName: { contains: search } },
+        { lastName: { contains: search } },
       ];
     }
 
@@ -43,8 +43,6 @@ export class UsersAdminController {
       where.isActive = true;
     } else if (status === 'inactive') {
       where.isActive = false;
-    } else if (status === 'banned') {
-      where.isBanned = true;
     }
 
     const orderBy: any = {};
@@ -60,20 +58,7 @@ export class UsersAdminController {
         orderBy,
         skip,
         take: limitNum,
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          avatarUrl: true,
-          phone: true,
-          role: true,
-          isActive: true,
-          emailVerified: true,
-          createdAt: true,
-          lastLoginAt: true,
-          isBanned: true,
-          banReason: true,
+        include: {
           organization: {
             select: {
               id: true,
@@ -99,7 +84,7 @@ export class UsersAdminController {
         name: `${user.firstName} ${user.lastName}`,
         photoUrl: user.avatarUrl,
         phone: user.phone,
-        status: user.isBanned ? 'banned' : user.isActive ? 'active' : 'inactive',
+        status: user.isActive ? 'active' : 'inactive',
         subscriptionPlan: user.organization?.plan,
         horseCount: user._count.ownedHorses,
         analysisCount: user._count.createdAnalyses,
@@ -107,8 +92,6 @@ export class UsersAdminController {
         createdAt: user.createdAt,
         lastActiveAt: user.lastLoginAt,
         isVerified: user.emailVerified,
-        isBanned: user.isBanned || false,
-        banReason: user.banReason,
         flags: [],
       })),
       total,
@@ -149,7 +132,7 @@ export class UsersAdminController {
       name: `${user.firstName} ${user.lastName}`,
       photoUrl: user.avatarUrl,
       phone: user.phone,
-      status: user.isBanned ? 'banned' : user.isActive ? 'active' : 'inactive',
+      status: user.isActive ? 'active' : 'inactive',
       subscriptionPlan: user.organization?.plan,
       horseCount: user._count.ownedHorses,
       analysisCount: user._count.createdAnalyses,
@@ -157,8 +140,6 @@ export class UsersAdminController {
       createdAt: user.createdAt,
       lastActiveAt: user.lastLoginAt,
       isVerified: user.emailVerified,
-      isBanned: user.isBanned || false,
-      banReason: user.banReason,
       flags: [],
     };
   }
@@ -166,8 +147,12 @@ export class UsersAdminController {
   @Get(':id/activity')
   @ApiOperation({ summary: 'Get user activity log' })
   async getUserActivity(@Param('id') id: string) {
-    // Return empty array for now - would need AuditLog model
-    return [];
+    const logs = await this.prisma.auditLog.findMany({
+      where: { actorId: id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    return logs;
   }
 
   @Put(':id/status')
@@ -181,15 +166,9 @@ export class UsersAdminController {
     switch (body.status) {
       case 'active':
         updateData.isActive = true;
-        updateData.isBanned = false;
-        updateData.banReason = null;
         break;
       case 'inactive':
         updateData.isActive = false;
-        break;
-      case 'banned':
-        updateData.isBanned = true;
-        updateData.banReason = body.reason;
         break;
     }
 

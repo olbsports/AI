@@ -182,7 +182,7 @@ export class EquiCoteService {
     await this.prisma.auditLog.create({
       data: {
         organizationId,
-        userId,
+        actorId: userId,
         action: 'equicote_valuation_created',
         details: {
           horseId,

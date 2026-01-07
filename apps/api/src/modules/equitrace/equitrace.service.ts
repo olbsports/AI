@@ -20,7 +20,7 @@ export class EquiTraceService {
     private ffeService: FFEService,
     private sireWebService: SireWebService,
     private ifceService: IFCEService,
-    private scrapingService: ScrapingService,
+    private scrapingService: ScrapingService
   ) {}
 
   /**
@@ -29,7 +29,7 @@ export class EquiTraceService {
   async generateReport(
     horseId: string,
     userId: string,
-    organizationId: string,
+    organizationId: string
   ): Promise<EquiTraceReport> {
     this.logger.log(`Generating EquiTrace report for horse ${horseId}`);
 
@@ -82,7 +82,7 @@ export class EquiTraceService {
           (e) =>
             e.type === 'competition' &&
             e.date.getTime() === new Date(comp.date).getTime() &&
-            e.title === comp.name,
+            e.title === comp.name
         );
 
         if (!exists) {
@@ -184,7 +184,7 @@ export class EquiTraceService {
     await this.prisma.auditLog.create({
       data: {
         organizationId,
-        userId,
+        actorId: userId,
         action: 'equitrace_report_generated',
         details: {
           horseId,
@@ -328,7 +328,7 @@ export class EquiTraceService {
     horseId: string,
     data: CreateEntryDto,
     userId: string,
-    organizationId: string,
+    organizationId: string
   ): Promise<EquiTraceEntry> {
     const entry = await this.prisma.equiTraceEntry.create({
       data: {
@@ -348,7 +348,7 @@ export class EquiTraceService {
     await this.prisma.auditLog.create({
       data: {
         organizationId,
-        userId,
+        actorId: userId,
         action: 'equitrace_entry_added',
         details: { horseId, entryId: entry.id, type: data.type },
       },
@@ -446,7 +446,7 @@ export class EquiTraceService {
     }
 
     let added = 0;
-    let updated = 0;
+    const updated = 0;
     const sources: string[] = [];
 
     // Sync from FFE
