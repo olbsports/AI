@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../models/breeding.dart';
 import '../services/api_service.dart';
 
@@ -57,14 +56,18 @@ final stallionSearchProvider =
     FutureProvider.family<List<Stallion>, BreedingSearchFilters>((ref, filters) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions', queryParams: filters.toQueryParams());
-  return (response as List).map((e) => Stallion.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => Stallion.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// All stallions (paginated)
 final stallionsProvider = FutureProvider<List<Stallion>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions');
-  return (response as List).map((e) => Stallion.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => Stallion.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Stallion by ID
@@ -80,14 +83,18 @@ final stallionsByStudbookProvider =
     FutureProvider.family<List<Stallion>, String>((ref, studbook) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions', queryParams: {'studbook': studbook});
-  return (response as List).map((e) => Stallion.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => Stallion.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Featured stallions
 final featuredStallionsProvider = FutureProvider<List<Stallion>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions/featured');
-  return (response as List).map((e) => Stallion.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => Stallion.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Mare profile by horse ID
@@ -102,7 +109,9 @@ final mareProfileProvider =
 final myMaresProvider = FutureProvider<List<MareProfile>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/my-mares');
-  return (response as List).map((e) => MareProfile.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => MareProfile.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Breeding recommendations for a mare
@@ -110,7 +119,9 @@ final breedingRecommendationsProvider =
     FutureProvider.family<List<BreedingRecommendation>, String>((ref, mareId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/recommendations/$mareId');
-  return (response as List).map((e) => BreedingRecommendation.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => BreedingRecommendation.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Get AI-generated breeding recommendations
@@ -123,7 +134,9 @@ final aiBreedingRecommendationsProvider =
     'goal': params.goal.name,
     'disciplines': params.disciplines,
   });
-  return (response as List).map((e) => BreedingRecommendation.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => BreedingRecommendation.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Stallion offspring
@@ -131,7 +144,9 @@ final stallionOffspringProvider =
     FutureProvider.family<List<StallionOffspring>, String>((ref, stallionId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions/$stallionId/offspring');
-  return (response as List).map((e) => StallionOffspring.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => StallionOffspring.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Stallion offspring model
@@ -174,7 +189,9 @@ class StallionOffspring {
 final breedingStationsProvider = FutureProvider<List<BreedingStation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stations');
-  return (response as List).map((e) => BreedingStation.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => BreedingStation.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Breeding station model
@@ -299,7 +316,9 @@ class BreedingNotifier extends StateNotifier<AsyncValue<void>> {
         'maxPrice': maxPrice,
       });
       state = const AsyncValue.data(null);
-      return (response as List).map((e) => BreedingRecommendation.fromJson(e)).toList();
+      if (response == null) return [];
+      final list = response is List ? response : (response['items'] as List? ?? []);
+      return list.map((e) => BreedingRecommendation.fromJson(e as Map<String, dynamic>)).toList();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       return [];
@@ -414,7 +433,9 @@ final breedingNotifierProvider =
 final myBreedingReservationsProvider = FutureProvider<List<BreedingReservation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/my-reservations');
-  return (response as List).map((e) => BreedingReservation.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => BreedingReservation.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Breeding compatibility calculator

@@ -377,7 +377,7 @@ class AppTheme {
         surface: AppColors.darkSurface,
         surfaceContainerHighest: AppColors.darkSurfaceVariant,
         error: AppColors.errorLight,
-        errorContainer: AppColors.error.withOpacity(0.3),
+        errorContainer: AppColors.error.withValues(alpha: 0.3),
         onPrimary: AppColors.darkTextOnPrimary,
         onSecondary: AppColors.darkTextOnPrimary,
         onSurface: AppColors.darkTextPrimary,

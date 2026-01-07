@@ -318,7 +318,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary : isToday ? AppColors.primary.withOpacity(0.1) : null,
+              color: isSelected ? AppColors.primary : isToday ? AppColors.primary.withValues(alpha: 0.1) : null,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -353,16 +353,22 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(event.type.defaultColor).withOpacity(0.1),
+            color: Color(event.type.defaultColor).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(event.type.icon, color: Color(event.type.defaultColor)),
         ),
-        title: Text(event.title),
+        title: Text(
+          event.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         subtitle: Text(
           event.isAllDay
               ? 'Toute la journée'
               : '${_formatTime(event.startDate)}${event.horseName != null ? ' - ${event.horseName}' : ''}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         trailing: _buildEventStatusChip(event.status),
         onTap: () => _showEventDetails(event),
@@ -399,6 +405,8 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
               Text(
                 goal.description!,
                 style: TextStyle(color: AppColors.textSecondary),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
             const SizedBox(height: 16),
@@ -410,7 +418,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
                     child: LinearProgressIndicator(
                       value: goal.progress,
                       minHeight: 8,
-                      backgroundColor: Colors.grey.withOpacity(0.2),
+                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
                     ),
                   ),
                 ),
@@ -455,7 +463,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Color(session.intensity.color).withOpacity(0.1),
+                    color: Color(session.intensity.color).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -467,16 +475,21 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         session.title,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         '${session.type.displayName} - ${session.durationMinutes} min',
                         style: TextStyle(color: AppColors.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -484,7 +497,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Color(session.intensity.color).withOpacity(0.1),
+                    color: Color(session.intensity.color).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -547,16 +560,21 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         plan.title,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         '${plan.discipline.displayName} - ${plan.level.displayName}',
                         style: TextStyle(color: AppColors.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -573,7 +591,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
               child: LinearProgressIndicator(
                 value: plan.progress,
                 minHeight: 8,
-                backgroundColor: Colors.grey.withOpacity(0.2),
+                backgroundColor: Colors.grey.withValues(alpha: 0.2),
               ),
             ),
           ],
@@ -589,7 +607,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(Icons.lightbulb, color: AppColors.primary),
@@ -627,7 +645,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -894,7 +912,7 @@ class _AddEventFormState extends State<_AddEventForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<EventType>(
-            value: _type,
+            initialValue: _type,
             decoration: const InputDecoration(
               labelText: 'Type',
               border: OutlineInputBorder(),
@@ -1047,7 +1065,7 @@ class _AddGoalFormState extends State<_AddGoalForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<GoalCategory>(
-            value: _category,
+            initialValue: _category,
             decoration: const InputDecoration(
               labelText: 'Catégorie',
               border: OutlineInputBorder(),
@@ -1162,7 +1180,7 @@ class _CreateTrainingPlanFormState extends State<_CreateTrainingPlanForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<TrainingDiscipline>(
-            value: _discipline,
+            initialValue: _discipline,
             decoration: const InputDecoration(
               labelText: 'Discipline',
               border: OutlineInputBorder(),
@@ -1175,7 +1193,7 @@ class _CreateTrainingPlanFormState extends State<_CreateTrainingPlanForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<TrainingLevel>(
-            value: _level,
+            initialValue: _level,
             decoration: const InputDecoration(
               labelText: 'Niveau',
               border: OutlineInputBorder(),

@@ -30,7 +30,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    // Schedule data loading after the first frame to avoid initState ref.read issues
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserData();
+    });
   }
 
   void _loadUserData() {
@@ -325,37 +328,44 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Changer le mot de passe'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Mot de passe actuel',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: currentPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Mot de passe actuel',
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Nouveau mot de passe',
+              const SizedBox(height: 16),
+              TextField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Nouveau mot de passe',
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirmer le nouveau mot de passe',
+              const SizedBox(height: 16),
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirmer le nouveau mot de passe',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              currentPasswordController.dispose();
+              newPasswordController.dispose();
+              confirmPasswordController.dispose();
+              Navigator.pop(context);
+            },
             child: const Text('Annuler'),
           ),
           FilledButton(
@@ -377,6 +387,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   newPasswordController.text,
                 );
                 if (context.mounted) {
+                  currentPasswordController.dispose();
+                  newPasswordController.dispose();
+                  confirmPasswordController.dispose();
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Mot de passe modifié')),
@@ -397,6 +410,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      // Dispose controllers when dialog is dismissed by any means (back button, tap outside, etc.)
+      currentPasswordController.dispose();
+      newPasswordController.dispose();
+      confirmPasswordController.dispose();
+    });
   }
 }

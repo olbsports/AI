@@ -114,12 +114,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Future<void> _saveSettings() async {
     // TODO: Implement API call to save notification settings
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Préférences de notifications enregistrées'),
-        backgroundColor: Colors.green,
-      ),
-    );
-    Navigator.pop(context);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Préférences de notifications enregistrées'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    }
   }
 }

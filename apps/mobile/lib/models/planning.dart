@@ -99,7 +99,7 @@ class CalendarEvent {
 
   Map<String, dynamic> toJson() {
     return {
-      if (id != null) 'id': id,
+      'id': id,
       'userId': userId,
       'title': title,
       'description': description,
@@ -456,7 +456,7 @@ class Goal {
 
   Map<String, dynamic> toJson() {
     return {
-      if (id != null) 'id': id,
+      'id': id,
       'userId': userId,
       'title': title,
       'description': description,

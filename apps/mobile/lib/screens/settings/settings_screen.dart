@@ -193,10 +193,12 @@ class SettingsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${authState.user?.firstName ?? ''} ${authState.user?.lastName ?? ''}',
+                    '${authState.user?.firstName ?? ''} ${authState.user?.lastName ?? ''}'.trim(),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -204,6 +206,8 @@ class SettingsScreen extends ConsumerWidget {
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -257,8 +261,16 @@ class SettingsScreen extends ConsumerWidget {
           style: isDestructive
               ? TextStyle(color: Theme.of(context).colorScheme.error)
               : null,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        subtitle: subtitle != null ? Text(subtitle) : null,
+        subtitle: subtitle != null
+            ? Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              )
+            : null,
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
@@ -270,32 +282,27 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Langue'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              value: 'fr',
-              groupValue: currentLanguage,
-              title: const Text('Français'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setLanguage(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-            RadioListTile<String>(
-              value: 'en',
-              groupValue: currentLanguage,
-              title: const Text('English'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setLanguage(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-          ],
+        content: RadioGroup<String>(
+          groupValue: currentLanguage,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setLanguage(value);
+              Navigator.pop(dialogContext);
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                value: 'fr',
+                title: const Text('Français'),
+              ),
+              RadioListTile<String>(
+                value: 'en',
+                title: const Text('English'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -306,44 +313,32 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Thème'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<ThemeMode>(
-              value: ThemeMode.system,
-              groupValue: currentTheme,
-              title: const Text('Automatique'),
-              subtitle: const Text('Suit les paramètres système'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              value: ThemeMode.light,
-              groupValue: currentTheme,
-              title: const Text('Clair'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              value: ThemeMode.dark,
-              groupValue: currentTheme,
-              title: const Text('Sombre'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-          ],
+        content: RadioGroup<ThemeMode>(
+          groupValue: currentTheme,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setThemeMode(value);
+              Navigator.pop(dialogContext);
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.system,
+                title: const Text('Automatique'),
+                subtitle: const Text('Suit les paramètres système'),
+              ),
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.light,
+                title: const Text('Clair'),
+              ),
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.dark,
+                title: const Text('Sombre'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -386,10 +381,26 @@ class SettingsScreen extends ConsumerWidget {
               'Cette action est irréversible. Toutes vos données seront définitivement supprimées :',
             ),
             SizedBox(height: 12),
-            Text('• Vos chevaux et leur historique'),
-            Text('• Vos analyses et statistiques'),
-            Text('• Vos plannings et événements'),
-            Text('• Votre abonnement'),
+            Text(
+              '• Vos chevaux et leur historique',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              '• Vos analyses et statistiques',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              '• Vos plannings et événements',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              '• Votre abonnement',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             SizedBox(height: 12),
             Text(
               'Êtes-vous sûr de vouloir continuer ?',

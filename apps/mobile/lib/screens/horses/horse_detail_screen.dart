@@ -161,7 +161,7 @@ class HorseDetailScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
@@ -193,7 +193,7 @@ class HorseDetailScreen extends ConsumerWidget {
               context,
               Icons.male,
               'Sexe',
-              horse.gender != null ? _genderLabel(horse.gender!) : '-',
+              _genderLabel(horse.gender),
             ),
             _buildInfoRow(
               context,
@@ -241,18 +241,27 @@ class HorseDetailScreen extends ConsumerWidget {
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 12),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          const Spacer(),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+            ),
           ),
         ],
       ),
@@ -307,7 +316,7 @@ class HorseDetailScreen extends ConsumerWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .primary
-                              .withOpacity(0.3),
+                              .withValues(alpha: 0.3),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -339,9 +348,15 @@ class HorseDetailScreen extends ConsumerWidget {
                         color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
-                    title: Text(analysis.type.toString().split('.').last),
+                    title: Text(
+                      analysis.type.toString().split('.').last,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     subtitle: Text(
                       '${analysis.createdAt.day}/${analysis.createdAt.month}/${analysis.createdAt.year}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push('/analyses/${analysis.id}'),

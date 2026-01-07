@@ -8,7 +8,6 @@ import '../../models/analysis.dart';
 import '../../providers/reports_provider.dart';
 import '../../providers/horses_provider.dart';
 import '../../providers/analyses_provider.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/loading_button.dart';
 
 class NewReportScreen extends ConsumerStatefulWidget {
@@ -154,7 +153,7 @@ class _NewReportScreenState extends ConsumerState<NewReportScreen> {
                   Icon(
                     Icons.pets,
                     size: 48,
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 8),
                   const Text('Aucun cheval enregistré'),
@@ -170,7 +169,7 @@ class _NewReportScreenState extends ConsumerState<NewReportScreen> {
         }
 
         return DropdownButtonFormField<String>(
-          value: _selectedHorseId,
+          initialValue: _selectedHorseId,
           decoration: const InputDecoration(
             labelText: 'Cheval *',
             prefixIcon: Icon(Icons.pets),
@@ -236,7 +235,13 @@ class _NewReportScreenState extends ConsumerState<NewReportScreen> {
                 : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 4),
-          Text(_typeLabel(type)),
+          Flexible(
+            child: Text(
+              _typeLabel(type),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
       onSelected: (_) {
@@ -308,9 +313,15 @@ class _NewReportScreenState extends ConsumerState<NewReportScreen> {
                         color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
-                    title: Text(analysis.type.toString().split('.').last),
+                    title: Text(
+                      analysis.type.toString().split('.').last,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     subtitle: Text(
                       '${analysis.createdAt.day}/${analysis.createdAt.month}/${analysis.createdAt.year}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 );

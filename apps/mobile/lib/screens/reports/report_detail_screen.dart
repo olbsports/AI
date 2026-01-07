@@ -38,7 +38,7 @@ class ReportDetailScreen extends ConsumerWidget {
   Widget _buildContent(BuildContext context, WidgetRef ref, Report report) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(report.title ?? _typeLabel(report.type)),
+        title: Text(report.title.isNotEmpty ? report.title : _typeLabel(report.type)),
         actions: [
           if (report.status == ReportStatus.ready) ...[
             IconButton(
@@ -120,7 +120,7 @@ class ReportDetailScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: _getTypeColor(report.type).withOpacity(0.1),
+            color: _getTypeColor(report.type).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -161,9 +161,7 @@ class ReportDetailScreen extends ConsumerWidget {
         subtitle: const Text('Cheval concerné'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
-          if (report.horseId != null) {
-            context.push('/horses/${report.horseId}');
-          }
+          context.push('/horses/${report.horseId}');
         },
       ),
     );
@@ -408,7 +406,7 @@ class ReportDetailScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
@@ -539,52 +537,54 @@ class ReportDetailScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Partager le rapport'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Lien de partage généré avec succès. Ce lien expirera dans 7 jours.',
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Lien de partage généré avec succès. Ce lien expirera dans 7 jours.',
+                style: TextStyle(fontSize: 14),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      shareUrl,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.copy, size: 20),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: shareUrl));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Lien copié dans le presse-papiers'),
-                          duration: Duration(seconds: 2),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        shareUrl,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontFamily: 'monospace',
                         ),
-                      );
-                    },
-                    tooltip: 'Copier',
-                  ),
-                ],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy, size: 20),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: shareUrl));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Lien copié dans le presse-papiers'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      tooltip: 'Copier',
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -594,9 +594,11 @@ class ReportDetailScreen extends ConsumerWidget {
           FilledButton.icon(
             onPressed: () {
               Navigator.pop(context);
-              Share.share(
-                'Consultez ce rapport : $shareUrl',
-                subject: 'Rapport ${report.title ?? _typeLabel(report.type)} - Horse Vision AI',
+              SharePlus.instance.share(
+                ShareParams(
+                  text: 'Consultez ce rapport : $shareUrl',
+                  subject: 'Rapport ${report.title.isNotEmpty ? report.title : _typeLabel(report.type)} - Horse Vision AI',
+                ),
               );
             },
             icon: const Icon(Icons.share),

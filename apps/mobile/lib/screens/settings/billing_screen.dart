@@ -55,13 +55,13 @@ class BillingScreen extends ConsumerWidget {
                               context,
                               ref,
                               plan: plan,
-                              currentPlanId: subscription['planId'],
+                              currentPlanId: subscription['planId'] ?? subscription['plan'],
                             ),
                           ))
                       .toList(),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => _buildDefaultPlans(context, ref, subscription['planId']),
+                error: (error, _) => _buildDefaultPlans(context, ref, subscription['planId'] ?? subscription['plan']),
               ),
               const SizedBox(height: 24),
 
@@ -74,7 +74,7 @@ class BillingScreen extends ConsumerWidget {
 
               // Cancel subscription button
               if (subscription['status'] == 'active' &&
-                  subscription['planId'] != 'free') ...[
+                  (subscription['planId'] ?? subscription['plan']) != 'free') ...[
                 const SizedBox(height: 24),
                 OutlinedButton(
                   onPressed: () => _confirmCancelSubscription(context, ref),
@@ -108,7 +108,7 @@ class BillingScreen extends ConsumerWidget {
 
   Widget _buildCurrentPlanCard(BuildContext context, Map<String, dynamic> subscription) {
     final planName = subscription['planName'] ?? subscription['plan']?['name'] ?? 'Starter';
-    final price = subscription['plan']?['price'] ?? 0;
+    final price = _parseNumber(subscription['plan']?['price']);
     final status = subscription['status'] ?? 'active';
 
     return Card(
@@ -140,7 +140,7 @@ class BillingScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -163,7 +163,7 @@ class BillingScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              price == 0 ? 'Gratuit' : '${price}€/mois',
+              _formatPrice(price),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
@@ -187,10 +187,10 @@ class BillingScreen extends ConsumerWidget {
   }
 
   Widget _buildUsageSection(BuildContext context, Map<String, dynamic> balance) {
-    final horsesUsed = balance['horsesUsed'] ?? 0;
-    final horsesLimit = balance['horsesLimit'] ?? 5;
-    final analysesUsed = balance['analysesUsed'] ?? 0;
-    final analysesLimit = balance['analysesLimit'] ?? 10;
+    final horsesUsed = _parseInt(balance['horsesUsed']);
+    final horsesLimit = _parseInt(balance['horsesLimit'], defaultValue: 5);
+    final analysesUsed = _parseInt(balance['analysesUsed']);
+    final analysesLimit = _parseInt(balance['analysesLimit'], defaultValue: 10);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,7 +255,7 @@ class BillingScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             LinearProgressIndicator(
               value: total == -1 ? 0 : progress.clamp(0.0, 1.0),
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ],
@@ -272,7 +272,7 @@ class BillingScreen extends ConsumerWidget {
   }) {
     final id = plan['id'] ?? '';
     final name = plan['name'] ?? '';
-    final price = plan['price'] ?? 0;
+    final price = _parseNumber(plan['price']);
     final features = (plan['features'] as List?)?.cast<String>() ?? [];
     final isCurrentPlan = id == currentPlanId;
     final isRecommended = plan['recommended'] == true || name.toLowerCase() == 'pro';
@@ -305,7 +305,7 @@ class BillingScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
+                      color: AppColors.success.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -322,7 +322,7 @@ class BillingScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              price == 0 ? 'Gratuit' : '${price}€/mois',
+              _formatPrice(price),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
@@ -420,7 +420,7 @@ class BillingScreen extends ConsumerWidget {
                 title: Text('Facture ${invoice['number'] ?? invoice['id']}'),
                 subtitle: Text(_formatDate(invoice['date'] ?? invoice['createdAt'])),
                 trailing: Text(
-                  '${invoice['amount'] ?? 0}€',
+                  '${_parseNumber(invoice['amount'])}€',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -564,5 +564,35 @@ class BillingScreen extends ConsumerWidget {
         ),
       );
     }
+  }
+
+  // Helper methods for safe type conversion
+  int _parseInt(dynamic value, {int defaultValue = 0}) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+      final parsedDouble = double.tryParse(value);
+      if (parsedDouble != null) return parsedDouble.toInt();
+    }
+    return defaultValue;
+  }
+
+  num _parseNumber(dynamic value, {num defaultValue = 0}) {
+    if (value == null) return defaultValue;
+    if (value is num) return value;
+    if (value is String) {
+      final parsed = num.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    return defaultValue;
+  }
+
+  String _formatPrice(num price) {
+    if (price == 0) return 'Gratuit';
+    if (price < 0) return 'Sur devis';
+    return '${price}€/mois';
   }
 }

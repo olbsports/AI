@@ -194,6 +194,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: const [
                     Text(
                       'Matching IA',
@@ -202,10 +203,14 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       'Trouvez le croisement idéal basé sur les analyses vidéo',
                       style: TextStyle(color: Colors.white70, fontSize: 12),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -546,7 +551,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: isMare ? Colors.pink.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                              color: isMare ? Colors.pink.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -639,9 +644,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
       margin: const EdgeInsets.only(right: 4, top: 2),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
@@ -787,7 +792,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.sell, color: Colors.green),
@@ -803,7 +808,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.pink.withOpacity(0.1),
+                  color: Colors.pink.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.female, color: Colors.pink),
@@ -819,7 +824,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.male, color: Colors.blue),
@@ -938,7 +943,12 @@ class _MarketplaceSearchDelegate extends SearchDelegate<String> {
                     child: listing.mediaUrls.isNotEmpty
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(listing.mediaUrls.first, fit: BoxFit.cover),
+                            child: Image.network(
+                              listing.mediaUrls.first,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image, color: Colors.grey),
+                            ),
                           )
                         : const Icon(Icons.pets, color: Colors.grey),
                   ),
@@ -1073,19 +1083,19 @@ class _SaleListingDetailSheet extends ConsumerWidget {
                   children: [
                     Chip(
                       label: Text(listing.type.displayName),
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     ),
                     if (listing.isVerified)
                       Chip(
                         avatar: const Icon(Icons.verified, size: 16),
                         label: const Text('Vérifié'),
-                        backgroundColor: AppColors.success.withOpacity(0.1),
+                        backgroundColor: AppColors.success.withValues(alpha: 0.1),
                       ),
                     if (listing.isPremium)
                       Chip(
                         avatar: const Icon(Icons.star, size: 16, color: Colors.amber),
                         label: const Text('Premium'),
-                        backgroundColor: Colors.amber.withOpacity(0.1),
+                        backgroundColor: Colors.amber.withValues(alpha: 0.1),
                       ),
                   ],
                 ),
@@ -1206,9 +1216,9 @@ class _SaleListingDetailSheet extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

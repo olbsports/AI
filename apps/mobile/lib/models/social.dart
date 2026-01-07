@@ -102,27 +102,27 @@ class PublicNote {
 
   factory PublicNote.fromJson(Map<String, dynamic> json) {
     return PublicNote(
-      id: json['id'] as String,
-      authorId: json['authorId'] as String,
-      authorName: json['authorName'] as String,
+      id: json['id'] as String? ?? '',
+      authorId: json['authorId'] as String? ?? '',
+      authorName: json['authorName'] as String? ?? '',
       authorPhotoUrl: json['authorPhotoUrl'] as String?,
       horseId: json['horseId'] as String?,
       horseName: json['horseName'] as String?,
       horsePhotoUrl: json['horsePhotoUrl'] as String?,
       analysisId: json['analysisId'] as String?,
-      content: json['content'] as String,
-      mediaUrls: (json['mediaUrls'] as List?)?.cast<String>() ?? [],
+      content: json['content'] as String? ?? '',
+      mediaUrls: (json['mediaUrls'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       visibility: ContentVisibility.fromString(json['visibility'] as String? ?? 'public'),
       allowComments: json['allowComments'] as bool? ?? true,
       allowSharing: json['allowSharing'] as bool? ?? true,
-      likeCount: json['likeCount'] as int? ?? json['_count']?['likes'] as int? ?? 0,
-      commentCount: json['commentCount'] as int? ?? json['_count']?['comments'] as int? ?? 0,
-      shareCount: json['shareCount'] as int? ?? 0,
+      likeCount: (json['likeCount'] as num?)?.toInt() ?? (json['_count']?['likes'] as num?)?.toInt() ?? 0,
+      commentCount: (json['commentCount'] as num?)?.toInt() ?? (json['_count']?['comments'] as num?)?.toInt() ?? 0,
+      shareCount: (json['shareCount'] as num?)?.toInt() ?? 0,
       isLiked: json['isLiked'] as bool? ?? false,
       isSaved: json['isSaved'] as bool? ?? false,
-      tags: (json['tags'] as List?)?.cast<String>() ?? [],
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : null,
+      tags: (json['tags'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'] as String) : null,
     );
   }
 
@@ -168,16 +168,16 @@ class NoteComment {
 
   factory NoteComment.fromJson(Map<String, dynamic> json) {
     return NoteComment(
-      id: json['id'] as String,
-      noteId: json['noteId'] as String,
-      authorId: json['authorId'] as String,
-      authorName: json['authorName'] as String,
+      id: json['id'] as String? ?? '',
+      noteId: json['noteId'] as String? ?? '',
+      authorId: json['authorId'] as String? ?? '',
+      authorName: json['authorName'] as String? ?? '',
       authorPhotoUrl: json['authorPhotoUrl'] as String?,
-      content: json['content'] as String,
-      likeCount: json['likeCount'] as int? ?? json['_count']?['likes'] as int? ?? 0,
+      content: json['content'] as String? ?? '',
+      likeCount: (json['likeCount'] as num?)?.toInt() ?? (json['_count']?['likes'] as num?)?.toInt() ?? 0,
       isLiked: json['isLiked'] as bool? ?? false,
       parentId: json['parentId'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -204,13 +204,13 @@ class Badge {
 
   factory Badge.fromJson(Map<String, dynamic> json) {
     return Badge(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
       iconUrl: json['iconUrl'] as String? ?? '',
       category: BadgeCategory.fromString(json['category'] as String? ?? 'general'),
       rarity: BadgeRarity.fromString(json['rarity'] as String? ?? 'common'),
-      earnedAt: json['earnedAt'] != null ? DateTime.parse(json['earnedAt'] as String) : null,
+      earnedAt: json['earnedAt'] != null ? DateTime.tryParse(json['earnedAt'] as String) : null,
     );
   }
 }
@@ -309,10 +309,10 @@ class Follow {
 
   factory Follow.fromJson(Map<String, dynamic> json) {
     return Follow(
-      id: json['id'] as String,
-      followerId: json['followerId'] as String,
-      followingId: json['followingId'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: json['id'] as String? ?? '',
+      followerId: json['followerId'] as String? ?? '',
+      followingId: json['followingId'] as String? ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }

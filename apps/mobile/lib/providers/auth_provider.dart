@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 
 import '../models/models.dart';
 import '../services/api_service.dart';
@@ -62,9 +62,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      print('LOGIN: Attempting login for $email');
+      // SECURITY: Do not log email or password
+      debugPrint('AUTH: Attempting login');
       final response = await _api.login(email, password);
-      print('LOGIN: Success!');
+      debugPrint('AUTH: Login successful');
       await _storage.saveTokens(response.accessToken, response.refreshToken);
       await _storage.saveUserId(response.user.id);
 
@@ -80,10 +81,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
-      print('LOGIN ERROR: $e');
+      // SECURITY: Log error without exposing sensitive details
+      debugPrint('AUTH: Login failed');
       state = state.copyWith(
         isLoading: false,
-        error: 'Erreur: ${e.toString().substring(0, e.toString().length > 100 ? 100 : e.toString().length)}',
+        error: _getErrorMessage(e),
       );
       return false;
     }
@@ -152,16 +154,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       // Try to notify backend of logout
       await _api.logout();
+      debugPrint('AUTH: Logout successful');
     } catch (e) {
-      // Log error but continue with logout
-      print('LOGOUT: Backend logout failed: $e');
+      // Log error but continue with logout - user should be logged out locally even if backend fails
+      debugPrint('AUTH: Backend logout failed, continuing with local logout');
     }
 
     try {
       // Clear local storage
       await _storage.clearAll();
     } catch (e) {
-      print('LOGOUT: Failed to clear storage: $e');
+      debugPrint('AUTH: Failed to clear storage');
     }
 
     // Reset state
@@ -172,8 +175,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _api.getProfile();
       state = state.copyWith(user: user);
+      debugPrint('AUTH: User profile refreshed');
     } catch (e) {
-      print('REFRESH USER ERROR: $e');
+      debugPrint('AUTH: Failed to refresh user profile');
       // Don't update state on error, keep current user
     }
   }

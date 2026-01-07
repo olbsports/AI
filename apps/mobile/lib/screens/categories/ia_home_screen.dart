@@ -261,7 +261,7 @@ class _AIBanner extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(
@@ -331,9 +331,9 @@ class _AnalysisTypeCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -402,7 +402,7 @@ class _SectionItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 24),
@@ -448,7 +448,7 @@ class _AnalysisOption extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: color.withOpacity(0.1),
+        backgroundColor: color.withValues(alpha: 0.1),
         child: Icon(icon, color: color),
       ),
       title: Text(title),
@@ -519,7 +519,7 @@ class _RecentAnalysesSection extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.categoryIA.withOpacity(0.1),
+                  backgroundColor: AppColors.categoryIA.withValues(alpha: 0.1),
                   child: const Icon(Icons.analytics, color: AppColors.categoryIA),
                 ),
                 title: Text(analysis.title ?? 'Analyse'),

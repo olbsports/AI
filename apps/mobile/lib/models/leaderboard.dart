@@ -50,8 +50,8 @@ class RiderLeaderboardEntry {
       horseCount: json['horseCount'] as int? ?? 0,
       streakDays: json['streakDays'] as int? ?? 0,
       progressRate: (json['progressRate'] as num?)?.toDouble() ?? 0,
-      badges: (json['badges'] as List?)?.cast<String>() ?? [],
-      lastActivityAt: DateTime.parse(json['lastActivityAt'] as String),
+      badges: (json['badges'] as List?)?.map((e) => e?.toString() ?? '').toList() ?? [],
+      lastActivityAt: DateTime.tryParse(json['lastActivityAt']?.toString() ?? '') ?? DateTime.now(),
     );
   }
 }
@@ -109,8 +109,8 @@ class HorseLeaderboardEntry {
       analysisCount: json['analysisCount'] as int? ?? 0,
       averageScore: (json['averageScore'] as num?)?.toDouble() ?? 0,
       progressRate: (json['progressRate'] as num?)?.toDouble() ?? 0,
-      achievements: (json['achievements'] as List?)?.cast<String>() ?? [],
-      lastAnalysisAt: DateTime.parse(json['lastAnalysisAt'] as String),
+      achievements: (json['achievements'] as List?)?.map((e) => e?.toString() ?? '').toList() ?? [],
+      lastAnalysisAt: DateTime.tryParse(json['lastAnalysisAt']?.toString() ?? '') ?? DateTime.now(),
     );
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import 'package:dio/dio.dart';
 import '../models/leaderboard.dart';
 import '../services/api_service.dart';
@@ -466,6 +465,7 @@ enum LeaderboardTier {
 /// Leaderboard notifier for interactions
 class LeaderboardNotifier extends StateNotifier<AsyncValue<void>> {
   final ApiService _api;
+  // ignore: unused_field - Reserved for future use
   final Ref _ref;
 
   LeaderboardNotifier(this._api, this._ref) : super(const AsyncValue.data(null));

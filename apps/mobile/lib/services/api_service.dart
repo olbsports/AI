@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../models/models.dart';
-import 'storage_service.dart';
 
 // API Base URL - Change this to your backend URL
 const String apiBaseUrl = 'https://api.horsetempo.app/api';
@@ -34,9 +34,12 @@ class _TokenRefreshManager {
 
     if (refreshToken != null) {
       try {
+        debugPrint('AUTH: Attempting token refresh');
         // Create a new Dio instance to avoid interceptor loop
         final refreshDio = Dio(BaseOptions(
           baseUrl: apiBaseUrl,
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': 'application/json'},
         ));
 
@@ -53,6 +56,8 @@ class _TokenRefreshManager {
           await _secureStorage.write(key: 'refresh_token', value: newRefreshToken);
         }
 
+        debugPrint('AUTH: Token refresh successful');
+
         // Notify all waiting requests
         for (final completer in _refreshCompleters) {
           if (!completer.isCompleted) {
@@ -67,6 +72,7 @@ class _TokenRefreshManager {
         _isRefreshing = false;
         return handler.resolve(retryResponse);
       } catch (e) {
+        debugPrint('AUTH: Token refresh failed - clearing tokens');
         _isRefreshing = false;
         for (final completer in _refreshCompleters) {
           if (!completer.isCompleted) {
@@ -74,10 +80,12 @@ class _TokenRefreshManager {
           }
         }
         _refreshCompleters.clear();
-        // Clear tokens on refresh failure
-        await _secureStorage.deleteAll();
+        // SECURITY: Clear only auth tokens on refresh failure, not all secure storage
+        await _secureStorage.delete(key: 'access_token');
+        await _secureStorage.delete(key: 'refresh_token');
       }
     } else {
+      debugPrint('AUTH: No refresh token available');
       _isRefreshing = false;
     }
     return handler.next(error);
@@ -112,29 +120,34 @@ final _tokenRefreshManager = _TokenRefreshManager();
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
     baseUrl: apiBaseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(minutes: 5),
+    sendTimeout: const Duration(minutes: 5),
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
   ));
 
-  // Configure to accept Let's Encrypt certificates
-  (dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate = (client) {
-    client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-      // Only accept certificates for our API domain
-      return host == 'api.horsetempo.app';
-    };
-    return client;
-  };
+  // SECURITY: Certificate validation is handled by the system.
+  // Do NOT bypass certificate validation as it makes the app vulnerable to MITM attacks.
+  // If you have issues with Let's Encrypt certificates, ensure your device's root certificates are up to date.
 
-  // Add logging interceptor
-  dio.interceptors.add(LogInterceptor(
-    requestBody: true,
-    responseBody: true,
-    logPrint: (obj) => print('DIO: $obj'),
-  ));
+  // Add logging interceptor (only in debug mode and without sensitive data)
+  if (kDebugMode) {
+    dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestHeader: false, // Don't log headers (contains auth tokens)
+      requestBody: false, // Don't log body (may contain passwords)
+      responseHeader: false,
+      responseBody: false, // Don't log response body (may contain sensitive data)
+      error: true,
+      logPrint: (obj) {
+        // Use debugPrint which is safe and can be disabled in release mode
+        debugPrint('API: $obj');
+      },
+    ));
+  }
 
   // Add interceptor for auth token
   dio.interceptors.add(InterceptorsWrapper(
@@ -231,14 +244,33 @@ class ApiService {
   }
 
   Future<String> uploadProfilePhoto(File file) async {
-    // Valider le fichier avant upload
-    _validateImageFile(file);
+    try {
+      // Valider le fichier avant upload
+      _validateImageFile(file);
 
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(file.path),
-    });
-    final response = await _dio.post('/auth/profile/photo', data: formData);
-    return response.data['url'];
+      final mimeType = lookupMimeType(file.path);
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ),
+      });
+      final response = await _dio.post('/auth/profile/photo', data: formData);
+      return response.data['url'] as String;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé lors de l\'upload. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Le fichier est trop volumineux pour le serveur.');
+      } else if (e.response?.statusCode == 415) {
+        throw Exception('Format de fichier non accepté par le serveur.');
+      }
+      throw Exception('Erreur lors de l\'upload de la photo: ${e.message}');
+    } catch (e) {
+      throw Exception('Erreur lors de l\'upload de la photo: $e');
+    }
   }
 
   Future<void> changePassword(String currentPassword, String newPassword) async {
@@ -284,14 +316,33 @@ class ApiService {
   }
 
   Future<String> uploadRiderPhoto(String riderId, File file) async {
-    // Valider le fichier avant upload
-    _validateImageFile(file);
+    try {
+      // Valider le fichier avant upload
+      _validateImageFile(file);
 
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(file.path),
-    });
-    final response = await _dio.post('/riders/$riderId/photo', data: formData);
-    return response.data['url'];
+      final mimeType = lookupMimeType(file.path);
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ),
+      });
+      final response = await _dio.post('/riders/$riderId/photo', data: formData);
+      return response.data['url'] as String;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé lors de l\'upload. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Le fichier est trop volumineux pour le serveur.');
+      } else if (e.response?.statusCode == 415) {
+        throw Exception('Format de fichier non accepté par le serveur.');
+      }
+      throw Exception('Erreur lors de l\'upload de la photo: ${e.message}');
+    } catch (e) {
+      throw Exception('Erreur lors de l\'upload de la photo: $e');
+    }
   }
 
   // ==================== HORSES ====================
@@ -332,14 +383,33 @@ class ApiService {
   }
 
   Future<String> uploadHorsePhoto(String horseId, File file) async {
-    // Valider le fichier avant upload
-    _validateImageFile(file);
+    try {
+      // Valider le fichier avant upload
+      _validateImageFile(file);
 
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(file.path),
-    });
-    final response = await _dio.post('/horses/$horseId/photo', data: formData);
-    return response.data['url'];
+      final mimeType = lookupMimeType(file.path);
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ),
+      });
+      final response = await _dio.post('/horses/$horseId/photo', data: formData);
+      return response.data['url'] as String;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé lors de l\'upload. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Le fichier est trop volumineux pour le serveur.');
+      } else if (e.response?.statusCode == 415) {
+        throw Exception('Format de fichier non accepté par le serveur.');
+      }
+      throw Exception('Erreur lors de l\'upload de la photo: ${e.message}');
+    } catch (e) {
+      throw Exception('Erreur lors de l\'upload de la photo: $e');
+    }
   }
 
   // ==================== ANALYSES ====================
@@ -480,7 +550,15 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> getPlans() async {
     final response = await _dio.get('/subscriptions/plans');
-    return List<Map<String, dynamic>>.from(response.data);
+    final data = response.data;
+    // API returns a map of plans keyed by plan ID, convert to list
+    if (data is Map<String, dynamic>) {
+      return data.entries.map((e) => {
+        'id': e.key,
+        ...Map<String, dynamic>.from(e.value as Map),
+      }).toList();
+    }
+    return List<Map<String, dynamic>>.from(data);
   }
 
   Future<Map<String, dynamic>> getCurrentSubscription() async {
@@ -507,7 +585,12 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> getInvoices() async {
     final response = await _dio.get('/invoices');
-    return List<Map<String, dynamic>>.from(response.data);
+    final data = response.data;
+    // API returns {invoices: [], total: 0, ...}, extract the invoices list
+    if (data is Map<String, dynamic> && data.containsKey('invoices')) {
+      return List<Map<String, dynamic>>.from(data['invoices']);
+    }
+    return List<Map<String, dynamic>>.from(data);
   }
 
   // ==================== DASHBOARD ====================
@@ -520,22 +603,98 @@ class ApiService {
   // ==================== GENERIC HTTP METHODS ====================
 
   Future<dynamic> get(String path, {Map<String, dynamic>? queryParams}) async {
-    final response = await _dio.get(path, queryParameters: queryParams);
-    return response.data;
+    try {
+      final response = await _dio.get(path, queryParameters: queryParams);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé. Vérifiez votre connexion internet.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Ressource introuvable.');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Accès refusé.');
+      } else if (e.response?.statusCode == 500) {
+        throw Exception('Erreur serveur. Veuillez réessayer plus tard.');
+      }
+      rethrow;
+    }
   }
 
   Future<dynamic> post(String path, Map<String, dynamic> data) async {
-    final response = await _dio.post(path, data: data);
-    return response.data;
+    try {
+      final response = await _dio.post(path, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé. Vérifiez votre connexion internet.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Accès refusé.');
+      } else if (e.response?.statusCode == 422) {
+        throw Exception('Données invalides. Vérifiez les informations saisies.');
+      } else if (e.response?.statusCode == 500) {
+        throw Exception('Erreur serveur. Veuillez réessayer plus tard.');
+      }
+      rethrow;
+    }
   }
 
   Future<dynamic> put(String path, Map<String, dynamic> data) async {
-    final response = await _dio.put(path, data: data);
-    return response.data;
+    try {
+      final response = await _dio.put(path, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé. Vérifiez votre connexion internet.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Accès refusé.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Ressource introuvable.');
+      } else if (e.response?.statusCode == 422) {
+        throw Exception('Données invalides. Vérifiez les informations saisies.');
+      } else if (e.response?.statusCode == 500) {
+        throw Exception('Erreur serveur. Veuillez réessayer plus tard.');
+      }
+      rethrow;
+    }
   }
 
   Future<void> delete(String path) async {
-    await _dio.delete(path);
+    try {
+      await _dio.delete(path);
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé. Vérifiez votre connexion internet.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Accès refusé.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Ressource introuvable.');
+      } else if (e.response?.statusCode == 500) {
+        throw Exception('Erreur serveur. Veuillez réessayer plus tard.');
+      }
+      rethrow;
+    }
   }
 
   // ==================== MEDIA UPLOAD ====================
@@ -543,38 +702,67 @@ class ApiService {
   /// Upload media file (image or video) for social posts
   /// Returns the URL of the uploaded media
   Future<String> uploadMedia(File file, {String type = 'image'}) async {
-    // Validate file size
-    final fileSize = file.lengthSync();
-    final maxSize = type == 'video' ? 100 * 1024 * 1024 : 10 * 1024 * 1024; // 100MB for video, 10MB for image
+    try {
+      // Validate file size
+      final fileSize = file.lengthSync();
+      final maxSize = type == 'video' ? 100 * 1024 * 1024 : 10 * 1024 * 1024; // 100MB for video, 10MB for image
 
-    if (fileSize > maxSize) {
-      final maxMB = maxSize / 1024 / 1024;
-      throw Exception('La taille du fichier ne doit pas dépasser ${maxMB.toInt()}MB');
+      if (fileSize > maxSize) {
+        final maxMB = maxSize / 1024 / 1024;
+        throw Exception('La taille du fichier ne doit pas dépasser ${maxMB.toInt()}MB');
+      }
+
+      // Validate mime type
+      final mimeType = lookupMimeType(file.path);
+      final allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      final allowedVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-m4v'];
+
+      if (type == 'image' && (mimeType == null || !allowedImageTypes.contains(mimeType))) {
+        throw Exception('Format d\'image non supporté. Formats acceptés: JPEG, PNG, WebP, GIF');
+      }
+
+      if (type == 'video' && (mimeType == null || !allowedVideoTypes.contains(mimeType))) {
+        throw Exception('Format vidéo non supporté. Formats acceptés: MP4, MOV, M4V');
+      }
+
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ),
+        'type': type,
+      });
+
+      // Use longer timeout for video uploads
+      final options = Options(
+        sendTimeout: type == 'video' ? const Duration(minutes: 5) : const Duration(minutes: 2),
+        receiveTimeout: type == 'video' ? const Duration(minutes: 5) : const Duration(minutes: 2),
+      );
+
+      final response = await _dio.post(
+        '/media/upload',
+        data: formData,
+        options: options,
+      );
+      return response.data['url'] as String;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé lors de l\'upload. Vérifiez votre connexion internet et réessayez.');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Le fichier est trop volumineux pour le serveur.');
+      } else if (e.response?.statusCode == 415) {
+        throw Exception('Format de fichier non accepté par le serveur.');
+      } else if (e.type == DioExceptionType.badResponse) {
+        throw Exception('Erreur serveur: ${e.response?.statusMessage ?? "Erreur inconnue"}');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      }
+      throw Exception('Erreur lors de l\'upload: ${e.message}');
+    } catch (e) {
+      throw Exception('Erreur lors de l\'upload du fichier: $e');
     }
-
-    // Validate mime type
-    final mimeType = lookupMimeType(file.path);
-    final allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    final allowedVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-m4v'];
-
-    if (type == 'image' && (mimeType == null || !allowedImageTypes.contains(mimeType))) {
-      throw Exception('Format d\'image non supporté. Formats acceptés: JPEG, PNG, WebP, GIF');
-    }
-
-    if (type == 'video' && (mimeType == null || !allowedVideoTypes.contains(mimeType))) {
-      throw Exception('Format vidéo non supporté. Formats acceptés: MP4, MOV, M4V');
-    }
-
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(
-        file.path,
-        contentType: mimeType != null ? DioMediaType.parse(mimeType) : null,
-      ),
-      'type': type,
-    });
-
-    final response = await _dio.post('/media/upload', data: formData);
-    return response.data['url'] as String;
   }
 
   /// Upload multiple media files

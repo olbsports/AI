@@ -58,23 +58,23 @@ class Club {
 
   factory Club.fromJson(Map<String, dynamic> json) {
     return Club(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       description: json['description'] as String?,
       logoUrl: json['logoUrl'] as String?,
       coverImageUrl: json['coverImageUrl'] as String?,
-      type: ClubType.fromString(json['type'] as String),
-      ownerId: json['ownerId'] as String,
+      type: ClubType.fromString(json['type'] as String? ?? 'stable'),
+      ownerId: json['ownerId'] as String? ?? '',
       ownerName: json['ownerName'] as String? ?? '',
       location: json['location'] as String?,
       address: json['address'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       visibility: ClubVisibility.fromString(json['visibility'] as String? ?? 'public'),
-      memberCount: json['memberCount'] as int? ?? 0,
-      horseCount: json['horseCount'] as int? ?? 0,
-      totalXp: json['totalXp'] as int? ?? 0,
-      rank: json['rank'] as int? ?? 0,
+      memberCount: (json['memberCount'] as num?)?.toInt() ?? 0,
+      horseCount: (json['horseCount'] as num?)?.toInt() ?? 0,
+      totalXp: (json['totalXp'] as num?)?.toInt() ?? 0,
+      rank: (json['rank'] as num?)?.toInt() ?? 0,
       badges: (json['badges'] as List?)
           ?.map((b) => ClubBadge.fromJson(b as Map<String, dynamic>))
           .toList() ?? [],
@@ -82,9 +82,9 @@ class Club {
           ? ClubSettings.fromJson(json['settings'] as Map<String, dynamic>)
           : ClubSettings(),
       isVerified: json['isVerified'] as bool? ?? false,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
+          ? DateTime.tryParse(json['updatedAt'] as String)
           : null,
     );
   }
@@ -195,8 +195,8 @@ class ClubSettings {
       showInLeaderboard: json['showInLeaderboard'] as bool? ?? true,
       allowChallenges: json['allowChallenges'] as bool? ?? true,
       notifyNewMembers: json['notifyNewMembers'] as bool? ?? true,
-      maxMembers: json['maxMembers'] as int? ?? 100,
-      requiredFields: (json['requiredFields'] as List?)?.cast<String>() ?? [],
+      maxMembers: (json['maxMembers'] as num?)?.toInt() ?? 100,
+      requiredFields: (json['requiredFields'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
     );
   }
 
@@ -247,19 +247,19 @@ class ClubMember {
 
   factory ClubMember.fromJson(Map<String, dynamic> json) {
     return ClubMember(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      userName: json['userName'] as String,
+      id: json['id'] as String? ?? '',
+      userId: json['userId'] as String? ?? '',
+      userName: json['userName'] as String? ?? '',
       userAvatarUrl: json['userAvatarUrl'] as String?,
-      clubId: json['clubId'] as String,
+      clubId: json['clubId'] as String? ?? '',
       role: ClubRole.fromString(json['role'] as String? ?? 'member'),
       status: MemberStatus.fromString(json['status'] as String? ?? 'active'),
-      xpContribution: json['xpContribution'] as int? ?? 0,
-      joinedAt: DateTime.parse(json['joinedAt'] as String),
+      xpContribution: (json['xpContribution'] as num?)?.toInt() ?? 0,
+      joinedAt: json['joinedAt'] != null ? DateTime.tryParse(json['joinedAt'] as String) ?? DateTime.now() : DateTime.now(),
       lastActiveAt: json['lastActiveAt'] != null
-          ? DateTime.parse(json['lastActiveAt'] as String)
+          ? DateTime.tryParse(json['lastActiveAt'] as String)
           : null,
-      permissions: (json['permissions'] as List?)?.cast<String>() ?? [],
+      permissions: (json['permissions'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
     );
   }
 }
@@ -344,12 +344,12 @@ class ClubBadge {
 
   factory ClubBadge.fromJson(Map<String, dynamic> json) {
     return ClubBadge(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
       iconUrl: json['iconUrl'] as String? ?? '',
-      type: ClubBadgeType.fromString(json['type'] as String),
-      earnedAt: DateTime.parse(json['earnedAt'] as String),
+      type: ClubBadgeType.fromString(json['type'] as String? ?? 'achievement'),
+      earnedAt: json['earnedAt'] != null ? DateTime.tryParse(json['earnedAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -404,16 +404,16 @@ class ClubLeaderboardEntry {
 
   factory ClubLeaderboardEntry.fromJson(Map<String, dynamic> json) {
     return ClubLeaderboardEntry(
-      clubId: json['clubId'] as String,
-      clubName: json['clubName'] as String,
+      clubId: json['clubId'] as String? ?? '',
+      clubName: json['clubName'] as String? ?? '',
       clubLogoUrl: json['clubLogoUrl'] as String?,
-      clubType: ClubType.fromString(json['clubType'] as String),
-      rank: json['rank'] as int,
-      previousRank: json['previousRank'] as int? ?? 0,
-      totalXp: json['totalXp'] as int,
-      memberCount: json['memberCount'] as int,
-      analysisCount: json['analysisCount'] as int? ?? 0,
-      challengesWon: json['challengesWon'] as int? ?? 0,
+      clubType: ClubType.fromString(json['clubType'] as String? ?? 'stable'),
+      rank: (json['rank'] as num?)?.toInt() ?? 0,
+      previousRank: (json['previousRank'] as num?)?.toInt() ?? 0,
+      totalXp: (json['totalXp'] as num?)?.toInt() ?? 0,
+      memberCount: (json['memberCount'] as num?)?.toInt() ?? 0,
+      analysisCount: (json['analysisCount'] as num?)?.toInt() ?? 0,
+      challengesWon: (json['challengesWon'] as num?)?.toInt() ?? 0,
       region: json['region'] as String?,
     );
   }
@@ -469,23 +469,23 @@ class ClubChallenge {
 
   factory ClubChallenge.fromJson(Map<String, dynamic> json) {
     return ClubChallenge(
-      id: json['id'] as String,
-      title: json['title'] as String,
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
       description: json['description'] as String?,
-      challengerClubId: json['challengerClubId'] as String,
-      challengerClubName: json['challengerClubName'] as String,
-      challengedClubId: json['challengedClubId'] as String,
-      challengedClubName: json['challengedClubName'] as String,
-      category: ChallengeCategory.fromString(json['category'] as String),
-      targetValue: json['targetValue'] as int,
-      challengerProgress: json['challengerProgress'] as int? ?? 0,
-      challengedProgress: json['challengedProgress'] as int? ?? 0,
-      startDate: DateTime.parse(json['startDate'] as String),
-      endDate: DateTime.parse(json['endDate'] as String),
+      challengerClubId: json['challengerClubId'] as String? ?? '',
+      challengerClubName: json['challengerClubName'] as String? ?? '',
+      challengedClubId: json['challengedClubId'] as String? ?? '',
+      challengedClubName: json['challengedClubName'] as String? ?? '',
+      category: ChallengeCategory.fromString(json['category'] as String? ?? 'analysisCount'),
+      targetValue: (json['targetValue'] as num?)?.toInt() ?? 0,
+      challengerProgress: (json['challengerProgress'] as num?)?.toInt() ?? 0,
+      challengedProgress: (json['challengedProgress'] as num?)?.toInt() ?? 0,
+      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'] as String) ?? DateTime.now() : DateTime.now(),
+      endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate'] as String) ?? DateTime.now().add(Duration(days: 7)) : DateTime.now().add(Duration(days: 7)),
       status: ClubChallengeStatus.fromString(json['status'] as String? ?? 'pending'),
       winnerId: json['winnerId'] as String?,
-      xpReward: json['xpReward'] as int? ?? 500,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      xpReward: (json['xpReward'] as num?)?.toInt() ?? 500,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -593,26 +593,26 @@ class ClubEvent {
 
   factory ClubEvent.fromJson(Map<String, dynamic> json) {
     return ClubEvent(
-      id: json['id'] as String,
-      clubId: json['clubId'] as String,
+      id: json['id'] as String? ?? '',
+      clubId: json['clubId'] as String? ?? '',
       clubName: json['clubName'] as String? ?? '',
-      title: json['title'] as String,
+      title: json['title'] as String? ?? '',
       description: json['description'] as String?,
-      type: ClubEventType.fromString(json['type'] as String),
-      startDate: DateTime.parse(json['startDate'] as String),
+      type: ClubEventType.fromString(json['type'] as String? ?? 'other'),
+      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'] as String) ?? DateTime.now() : DateTime.now(),
       endDate: json['endDate'] != null
-          ? DateTime.parse(json['endDate'] as String)
+          ? DateTime.tryParse(json['endDate'] as String)
           : null,
       location: json['location'] as String?,
       address: json['address'] as String?,
-      maxParticipants: json['maxParticipants'] as int? ?? 0,
-      currentParticipants: json['currentParticipants'] as int? ?? 0,
+      maxParticipants: (json['maxParticipants'] as num?)?.toInt() ?? 0,
+      currentParticipants: (json['currentParticipants'] as num?)?.toInt() ?? 0,
       price: (json['price'] as num?)?.toDouble(),
       imageUrl: json['imageUrl'] as String?,
-      participantIds: (json['participantIds'] as List?)?.cast<String>() ?? [],
+      participantIds: (json['participantIds'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       status: ClubEventStatus.fromString(json['status'] as String? ?? 'upcoming'),
       createdBy: json['createdBy'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -704,21 +704,21 @@ class ClubPost {
 
   factory ClubPost.fromJson(Map<String, dynamic> json) {
     return ClubPost(
-      id: json['id'] as String,
-      clubId: json['clubId'] as String,
-      authorId: json['authorId'] as String,
-      authorName: json['authorName'] as String,
+      id: json['id'] as String? ?? '',
+      clubId: json['clubId'] as String? ?? '',
+      authorId: json['authorId'] as String? ?? '',
+      authorName: json['authorName'] as String? ?? '',
       authorAvatarUrl: json['authorAvatarUrl'] as String?,
-      content: json['content'] as String,
-      imageUrls: (json['imageUrls'] as List?)?.cast<String>() ?? [],
+      content: json['content'] as String? ?? '',
+      imageUrls: (json['imageUrls'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       videoUrl: json['videoUrl'] as String?,
       type: PostType.fromString(json['type'] as String? ?? 'general'),
-      likesCount: json['likesCount'] as int? ?? 0,
-      commentsCount: json['commentsCount'] as int? ?? 0,
+      likesCount: (json['likesCount'] as num?)?.toInt() ?? 0,
+      commentsCount: (json['commentsCount'] as num?)?.toInt() ?? 0,
       isPinned: json['isPinned'] as bool? ?? false,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
+          ? DateTime.tryParse(json['updatedAt'] as String)
           : null,
     );
   }
@@ -779,22 +779,22 @@ class ClubInvitation {
 
   factory ClubInvitation.fromJson(Map<String, dynamic> json) {
     return ClubInvitation(
-      id: json['id'] as String,
-      clubId: json['clubId'] as String,
-      clubName: json['clubName'] as String,
+      id: json['id'] as String? ?? '',
+      clubId: json['clubId'] as String? ?? '',
+      clubName: json['clubName'] as String? ?? '',
       clubLogoUrl: json['clubLogoUrl'] as String?,
-      inviterId: json['inviterId'] as String,
-      inviterName: json['inviterName'] as String,
-      inviteeId: json['inviteeId'] as String,
+      inviterId: json['inviterId'] as String? ?? '',
+      inviterName: json['inviterName'] as String? ?? '',
+      inviteeId: json['inviteeId'] as String? ?? '',
       inviteeEmail: json['inviteeEmail'] as String?,
       message: json['message'] as String?,
       status: InvitationStatus.fromString(json['status'] as String? ?? 'pending'),
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
       expiresAt: json['expiresAt'] != null
-          ? DateTime.parse(json['expiresAt'] as String)
+          ? DateTime.tryParse(json['expiresAt'] as String)
           : null,
       respondedAt: json['respondedAt'] != null
-          ? DateTime.parse(json['respondedAt'] as String)
+          ? DateTime.tryParse(json['respondedAt'] as String)
           : null,
     );
   }
@@ -850,20 +850,20 @@ class ClubStats {
 
   factory ClubStats.fromJson(Map<String, dynamic> json) {
     return ClubStats(
-      clubId: json['clubId'] as String,
-      totalMembers: json['totalMembers'] as int? ?? 0,
-      activeMembers: json['activeMembers'] as int? ?? 0,
-      totalHorses: json['totalHorses'] as int? ?? 0,
-      totalAnalyses: json['totalAnalyses'] as int? ?? 0,
-      totalXp: json['totalXp'] as int? ?? 0,
-      rank: json['rank'] as int? ?? 0,
-      challengesWon: json['challengesWon'] as int? ?? 0,
-      challengesLost: json['challengesLost'] as int? ?? 0,
+      clubId: json['clubId'] as String? ?? '',
+      totalMembers: (json['totalMembers'] as num?)?.toInt() ?? 0,
+      activeMembers: (json['activeMembers'] as num?)?.toInt() ?? 0,
+      totalHorses: (json['totalHorses'] as num?)?.toInt() ?? 0,
+      totalAnalyses: (json['totalAnalyses'] as num?)?.toInt() ?? 0,
+      totalXp: (json['totalXp'] as num?)?.toInt() ?? 0,
+      rank: (json['rank'] as num?)?.toInt() ?? 0,
+      challengesWon: (json['challengesWon'] as num?)?.toInt() ?? 0,
+      challengesLost: (json['challengesLost'] as num?)?.toInt() ?? 0,
       averageMemberXp: (json['averageMemberXp'] as num?)?.toDouble() ?? 0,
       monthlyActivity: (json['monthlyActivity'] as List?)
           ?.map((m) => MonthlyActivity.fromJson(m as Map<String, dynamic>))
           .toList() ?? [],
-      calculatedAt: DateTime.parse(json['calculatedAt'] as String),
+      calculatedAt: json['calculatedAt'] != null ? DateTime.tryParse(json['calculatedAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -886,11 +886,11 @@ class MonthlyActivity {
 
   factory MonthlyActivity.fromJson(Map<String, dynamic> json) {
     return MonthlyActivity(
-      year: json['year'] as int,
-      month: json['month'] as int,
-      analyses: json['analyses'] as int? ?? 0,
-      xpEarned: json['xpEarned'] as int? ?? 0,
-      newMembers: json['newMembers'] as int? ?? 0,
+      year: (json['year'] as num?)?.toInt() ?? DateTime.now().year,
+      month: (json['month'] as num?)?.toInt() ?? DateTime.now().month,
+      analyses: (json['analyses'] as num?)?.toInt() ?? 0,
+      xpEarned: (json['xpEarned'] as num?)?.toInt() ?? 0,
+      newMembers: (json['newMembers'] as num?)?.toInt() ?? 0,
     );
   }
 }

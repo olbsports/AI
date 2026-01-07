@@ -292,7 +292,7 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
 
               // Gender
               DropdownButtonFormField<HorseGender>(
-                value: _gender,
+                initialValue: _gender,
                 decoration: const InputDecoration(
                   labelText: 'Sexe *',
                   prefixIcon: Icon(Icons.male),
@@ -398,7 +398,7 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
 
               // Status
               DropdownButtonFormField<HorseStatus>(
-                value: _status,
+                initialValue: _status,
                 decoration: const InputDecoration(
                   labelText: 'Statut',
                   prefixIcon: Icon(Icons.info),

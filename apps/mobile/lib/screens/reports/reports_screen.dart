@@ -88,7 +88,7 @@ class _ReportCard extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: _getTypeColor(report.type).withOpacity(0.1),
+                  color: _getTypeColor(report.type).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -108,7 +108,7 @@ class _ReportCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            report.title ?? _typeLabel(report.type),
+                            report.title.isNotEmpty ? report.title : _typeLabel(report.type),
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -124,6 +124,8 @@ class _ReportCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                             ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     const SizedBox(height: 4),
                     Text(
@@ -259,7 +261,7 @@ class _ReportCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

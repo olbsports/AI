@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../models/health.dart';
 import '../../providers/health_provider.dart';
 import '../../providers/horses_provider.dart';
@@ -62,7 +61,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
             data: (horses) => Container(
               padding: const EdgeInsets.all(16),
               child: DropdownButtonFormField<String>(
-                value: _selectedHorseId,
+                initialValue: _selectedHorseId,
                 decoration: const InputDecoration(
                   labelText: 'Cheval',
                   border: OutlineInputBorder(),
@@ -266,16 +265,21 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   'Score: ${latest.score}/9',
                                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                         fontWeight: FontWeight.bold,
                                       ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
                                   latest.scoreDescription,
                                   style: TextStyle(color: AppColors.textSecondary),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
@@ -362,7 +366,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
+                                color: Colors.green.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Text(
@@ -427,7 +431,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(reminder.type.color).withOpacity(0.1),
+            color: Color(reminder.type.color).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -466,7 +470,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Color(type.color).withOpacity(0.1),
+          color: Color(type.color).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(type.icon, color: Color(type.color)),
@@ -508,7 +512,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
       width: 60,
       height: 60,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
         border: Border.all(color: color, width: 3),
       ),
@@ -543,7 +547,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppColors.primary.withOpacity(0.1),
+          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
           child: Text(item.type.displayName[0]),
         ),
         title: Text(item.name),

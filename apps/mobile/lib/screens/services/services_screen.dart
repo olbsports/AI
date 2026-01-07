@@ -230,7 +230,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Color(type.defaultColor).withOpacity(0.1),
+            color: Color(type.defaultColor).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(type.icon, color: Color(type.defaultColor)),
@@ -261,7 +261,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     backgroundImage: provider.photoUrl != null
                         ? NetworkImage(provider.photoUrl!)
                         : null,
-                    backgroundColor: Color(provider.type.defaultColor).withOpacity(0.1),
+                    backgroundColor: Color(provider.type.defaultColor).withValues(alpha: 0.1),
                     child: provider.photoUrl == null
                         ? Icon(provider.type.icon, color: Color(provider.type.defaultColor))
                         : null,
@@ -270,6 +270,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
                           children: [
@@ -279,6 +280,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
                                     ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             if (provider.isVerified)
@@ -289,6 +292,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                           Text(
                             provider.businessName!,
                             style: TextStyle(color: AppColors.textSecondary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         Text(
                           provider.type.displayName,
@@ -296,6 +301,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                             color: Color(provider.type.defaultColor),
                             fontWeight: FontWeight.w500,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -314,6 +321,8 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       child: Text(
                         provider.address!.shortAddress,
                         style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -376,7 +385,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -418,14 +427,21 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'Contacts d\'urgence',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const Text('Vétérinaires disponibles 24h/24'),
+                        const Text(
+                          'Vétérinaires disponibles 24h/24',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
                   ),
@@ -444,10 +460,14 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         final contact = contacts[index];
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Color(contact.type.defaultColor).withOpacity(0.1),
+                            backgroundColor: Color(contact.type.defaultColor).withValues(alpha: 0.1),
                             child: Icon(contact.type.icon, color: Color(contact.type.defaultColor)),
                           ),
-                          title: Text(contact.name),
+                          title: Text(
+                            contact.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           subtitle: Text(contact.type.displayName),
                           trailing: IconButton(
                             icon: const Icon(Icons.phone, color: Colors.green),

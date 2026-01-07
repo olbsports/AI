@@ -254,7 +254,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
             children: [
               CircleAvatar(
                 radius: 30,
-                backgroundColor: AppColors.primary.withOpacity(0.1),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 backgroundImage: club.logoUrl != null ? NetworkImage(club.logoUrl!) : null,
                 child: club.logoUrl == null
                     ? Text(
@@ -271,6 +271,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
@@ -280,6 +281,8 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (club.isVerified)
@@ -290,6 +293,8 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                     Text(
                       club.type.displayName,
                       style: TextStyle(color: AppColors.textSecondary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -306,7 +311,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.1),
+                              color: Colors.amber.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -334,7 +339,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
   Widget _buildInvitationCard(ClubInvitation invitation) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: Colors.blue.withOpacity(0.05),
+      color: Colors.blue.withValues(alpha: 0.05),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -343,7 +348,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   backgroundImage: invitation.clubLogoUrl != null
                       ? NetworkImage(invitation.clubLogoUrl!)
                       : null,
@@ -355,10 +360,13 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         invitation.clubName,
                         style: const TextStyle(fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         'Invité par ${invitation.inviterName}',
@@ -366,6 +374,8 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                           color: AppColors.textSecondary,
                           fontSize: 12,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -377,6 +387,8 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
               Text(
                 invitation.message!,
                 style: TextStyle(color: AppColors.textSecondary),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
             const SizedBox(height: 12),
@@ -406,15 +418,15 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
     Widget? rankWidget;
 
     if (index == 0) {
-      backgroundColor = Colors.amber.withOpacity(0.1);
+      backgroundColor = Colors.amber.withValues(alpha: 0.1);
       textColor = Colors.amber;
       rankWidget = const Text('🥇', style: TextStyle(fontSize: 24));
     } else if (index == 1) {
-      backgroundColor = Colors.grey.shade300.withOpacity(0.3);
+      backgroundColor = Colors.grey.shade300.withValues(alpha: 0.3);
       textColor = Colors.grey.shade600;
       rankWidget = const Text('🥈', style: TextStyle(fontSize: 24));
     } else if (index == 2) {
-      backgroundColor = Colors.brown.withOpacity(0.1);
+      backgroundColor = Colors.brown.withValues(alpha: 0.1);
       textColor = Colors.brown;
       rankWidget = const Text('🥉', style: TextStyle(fontSize: 24));
     } else {
@@ -457,7 +469,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
         ),
         subtitle: Text(
           '${entry.memberCount} membres',
-          style: TextStyle(color: textColor?.withOpacity(0.7)),
+          style: TextStyle(color: textColor?.withValues(alpha: 0.7)),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -506,8 +518,16 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
               ? Text(entry.clubName[0])
               : null,
         ),
-        title: Text(entry.clubName),
-        subtitle: Text('${entry.memberCount} membres - ${entry.totalXp} XP'),
+        title: Text(
+          entry.clubName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          '${entry.memberCount} membres - ${entry.totalXp} XP',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         trailing: OutlinedButton(
           onPressed: () => _joinClub(entry.clubId),
           child: const Text('Rejoindre'),
@@ -523,7 +543,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -531,9 +551,15 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
             color: AppColors.primary,
           ),
         ),
-        title: Text(event.title),
+        title: Text(
+          event.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         subtitle: Text(
           '${event.clubName} - ${_formatDate(event.startDate)}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         trailing: event.isFull
             ? const Chip(label: Text('Complet'))

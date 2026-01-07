@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../models/planning.dart';
 import '../services/api_service.dart';
 
@@ -8,11 +7,15 @@ final calendarEventsProvider =
     FutureProvider.family<List<CalendarEvent>, ({DateTime start, DateTime end})>(
         (ref, range) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/calendar/events', queryParams: {
-    'start': range.start.toIso8601String(),
-    'end': range.end.toIso8601String(),
-  });
-  return (response as List).map((e) => CalendarEvent.fromJson(e)).toList();
+  try {
+    final response = await api.get('/calendar/events', queryParams: {
+      'start': range.start.toIso8601String(),
+      'end': range.end.toIso8601String(),
+    });
+    return ((response as List?) ?? []).map((e) => CalendarEvent.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Today's events
@@ -35,24 +38,36 @@ final upcomingEventsProvider = FutureProvider<List<CalendarEvent>>((ref) async {
 final eventsByTypeProvider =
     FutureProvider.family<List<CalendarEvent>, EventType>((ref, type) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/calendar/events', queryParams: {
-    'type': type.name,
-  });
-  return (response as List).map((e) => CalendarEvent.fromJson(e)).toList();
+  try {
+    final response = await api.get('/calendar/events', queryParams: {
+      'type': type.name,
+    });
+    return ((response as List?) ?? []).map((e) => CalendarEvent.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Active goals
 final activeGoalsProvider = FutureProvider<List<Goal>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/calendar/goals', queryParams: {'status': 'active'});
-  return (response as List).map((e) => Goal.fromJson(e)).toList();
+  try {
+    final response = await api.get('/calendar/goals', queryParams: {'status': 'active'});
+    return ((response as List?) ?? []).map((e) => Goal.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// All goals
 final allGoalsProvider = FutureProvider<List<Goal>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/calendar/goals');
-  return (response as List).map((e) => Goal.fromJson(e)).toList();
+  try {
+    final response = await api.get('/calendar/goals');
+    return ((response as List?) ?? []).map((e) => Goal.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Goals by category
@@ -76,8 +91,12 @@ final activeTrainingPlanProvider = FutureProvider<TrainingPlan?>((ref) async {
 /// All training plans
 final trainingPlansProvider = FutureProvider<List<TrainingPlan>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/training/plans');
-  return (response as List).map((e) => TrainingPlan.fromJson(e)).toList();
+  try {
+    final response = await api.get('/training/plans');
+    return ((response as List?) ?? []).map((e) => TrainingPlan.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });
 
 /// Today's training session
@@ -95,8 +114,13 @@ final todaySessionProvider = FutureProvider<TrainingSession?>((ref) async {
 /// Training recommendations
 final trainingRecommendationsProvider = FutureProvider<List<TrainingRecommendation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/training/recommendations');
-  return (response as List).map((e) => TrainingRecommendation.fromJson(e)).toList();
+  try {
+    final response = await api.get('/training/recommendations');
+    return (response as List).map((e) => TrainingRecommendation.fromJson(e)).toList();
+  } catch (e) {
+    // Return empty list if endpoint not available
+    return [];
+  }
 });
 
 /// Planning summary
@@ -286,6 +310,10 @@ final planningNotifierProvider =
 final horseEventsProvider =
     FutureProvider.family<List<CalendarEvent>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/horses/$horseId/events');
-  return (response as List).map((e) => CalendarEvent.fromJson(e)).toList();
+  try {
+    final response = await api.get('/horses/$horseId/events');
+    return ((response as List?) ?? []).map((e) => CalendarEvent.fromJson(e)).toList();
+  } catch (e) {
+    return [];
+  }
 });

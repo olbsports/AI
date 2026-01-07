@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../models/analysis.dart';
 import '../../models/horse.dart';
 import '../../providers/analyses_provider.dart';
 import '../../providers/horses_provider.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/loading_button.dart';
 
 class NewAnalysisScreen extends ConsumerStatefulWidget {
@@ -76,6 +76,25 @@ class _NewAnalysisScreenState extends ConsumerState<NewAnalysisScreen> {
   }
 
   Future<void> _recordVideo() async {
+    // Request camera permission
+    final status = await Permission.camera.request();
+
+    if (!status.isGranted) {
+      if (mounted) {
+        if (status.isPermanentlyDenied) {
+          _showPermissionDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Permission caméra refusée'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+      return;
+    }
+
     final picker = ImagePicker();
     final video = await picker.pickVideo(
       source: ImageSource.camera,
@@ -104,6 +123,32 @@ class _NewAnalysisScreenState extends ConsumerState<NewAnalysisScreen> {
         }
       }
     }
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Permission requise'),
+        content: const Text(
+          'L\'accès à la caméra est nécessaire pour enregistrer une vidéo. '
+          'Veuillez autoriser l\'accès dans les paramètres de l\'application.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: const Text('Ouvrir les paramètres'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleSubmit() async {
@@ -333,7 +378,7 @@ class _NewAnalysisScreenState extends ConsumerState<NewAnalysisScreen> {
                   Icon(
                     Icons.pets,
                     size: 48,
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 8),
                   const Text('Aucun cheval enregistré'),
@@ -349,7 +394,7 @@ class _NewAnalysisScreenState extends ConsumerState<NewAnalysisScreen> {
         }
 
         return DropdownButtonFormField<String>(
-          value: _selectedHorseId,
+          initialValue: _selectedHorseId,
           decoration: const InputDecoration(
             labelText: 'Cheval *',
             prefixIcon: Icon(Icons.pets),

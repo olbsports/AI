@@ -172,7 +172,7 @@ class _CommunityBanner extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(
@@ -233,28 +233,35 @@ class _SectionItem extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 24),
               ),
               const Spacer(),
-              Text(
-                label,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  label,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              Flexible(
+                child: Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -292,7 +299,7 @@ class _QuickActionCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 24),
@@ -375,6 +382,7 @@ class _FeaturedCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.color,
+    // ignore: unused_element_parameter - Reserved for future customization
     this.onTap,
   });
 
@@ -389,7 +397,7 @@ class _FeaturedCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color, color.withOpacity(0.8)],
+            colors: [color, color.withValues(alpha: 0.8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -476,7 +484,7 @@ class _TrendingItem extends StatelessWidget {
           context.push('/feed?tag=${title.replaceAll('#', '')}');
         },
         leading: CircleAvatar(
-          backgroundColor: AppColors.categorySocial.withOpacity(0.1),
+          backgroundColor: AppColors.categorySocial.withValues(alpha: 0.1),
           child: Text(
             '#$rank',
             style: TextStyle(

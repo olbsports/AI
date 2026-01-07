@@ -269,6 +269,8 @@ class _AnalysisCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                             ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     const SizedBox(height: 4),
                     Text(
@@ -346,7 +348,7 @@ class _AnalysisCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
