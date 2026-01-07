@@ -38,7 +38,7 @@ export class GestationService {
           },
         },
       },
-      orderBy: { expectedDueDate: 'asc' },
+      orderBy: { estimatedDueDate: 'asc' },
     });
   }
 
@@ -88,18 +88,19 @@ export class GestationService {
 
     // Calculate expected due date if not provided (340 days average for horses)
     const breedingDate = new Date(data.breedingDate);
-    const expectedDueDate = data.expectedDueDate
+    const estimatedDueDate = data.expectedDueDate
       ? new Date(data.expectedDueDate)
       : new Date(breedingDate.getTime() + 340 * 24 * 60 * 60 * 1000);
 
     return this.prisma.gestation.create({
       data: {
         horseId: data.horseId,
-        stallionName: data.stallionName,
+        stallionName: data.stallionName || 'Unknown',
         breedingDate,
-        expectedDueDate,
+        estimatedDueDate,
         notes: data.notes,
-        status: 'active',
+        status: 'pending',
+        method: 'natural',
       },
       include: {
         horse: {
@@ -131,7 +132,7 @@ export class GestationService {
       data: {
         ...(data.stallionName && { stallionName: data.stallionName }),
         ...(data.breedingDate && { breedingDate: new Date(data.breedingDate) }),
-        ...(data.expectedDueDate && { expectedDueDate: new Date(data.expectedDueDate) }),
+        ...(data.expectedDueDate && { estimatedDueDate: new Date(data.expectedDueDate) }),
         ...(data.notes !== undefined && { notes: data.notes }),
         ...(data.status && { status: data.status }),
       },
@@ -247,13 +248,14 @@ export class GestationService {
     await this.prisma.gestation.update({
       where: { id: gestationId },
       data: {
-        status: 'completed',
+        status: 'born',
         actualBirthDate: new Date(data.birthDate),
         foalName: data.foalName,
         foalGender: data.foalGender,
         foalColor: data.foalColor,
-        birthWeight: data.birthWeight,
-        birthNotes: data.notes,
+        notes: data.notes
+          ? `${gestation.notes || ''}\nBirth notes: ${data.notes}`
+          : gestation.notes,
       },
     });
 
@@ -274,15 +276,16 @@ export class GestationService {
       notes?: string;
     }
   ) {
-    await this.getGestation(gestationId, organizationId);
+    const gestation = await this.getGestation(gestationId, organizationId);
 
     await this.prisma.gestation.update({
       where: { id: gestationId },
       data: {
         status: 'lost',
-        lossDate: new Date(data.date),
-        lossReason: data.reason,
-        notes: data.notes,
+        complications: data.reason,
+        notes: data.notes
+          ? `${gestation.notes || ''}\nLoss: ${data.date} - ${data.notes}`
+          : gestation.notes,
       },
     });
 

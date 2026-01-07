@@ -585,7 +585,7 @@ export class MarketplaceService {
       data: {
         status: 'sold',
         soldPrice: soldPrice || listing.price,
-        soldDate: soldDate || new Date(),
+        soldAt: soldDate ? new Date(soldDate) : new Date(),
       },
     });
   }
@@ -604,13 +604,13 @@ export class MarketplaceService {
       throw new ForbiddenException('You can only promote your own listings');
     }
 
-    const boostExpiresAt = new Date(Date.now() + duration * 24 * 60 * 60 * 1000);
+    const featuredUntil = new Date(Date.now() + duration * 24 * 60 * 60 * 1000);
 
     return this.prisma.marketplaceListing.update({
       where: { id: listingId },
       data: {
         boostLevel,
-        boostExpiresAt,
+        featuredUntil,
         isFeatured: boostLevel >= 2,
       },
     });
@@ -636,43 +636,8 @@ export class MarketplaceService {
       throw new NotFoundException('Horse not found');
     }
 
-    // Check if we have a cached AI profile
-    const existingProfile = await this.prisma.aIAnalysis.findFirst({
-      where: {
-        entityType: 'horse',
-        entityId: horseId,
-        analysisType: 'marketplace_profile',
-        createdAt: {
-          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    if (existingProfile) {
-      return {
-        horseId,
-        horseName: horse.name,
-        profile: existingProfile.content,
-        highlights: existingProfile.insights,
-        lastUpdated: existingProfile.createdAt,
-        cached: true,
-      };
-    }
-
-    // Generate new AI profile (would call AI service here)
+    // Generate AI profile
     const profile = this.generateBasicProfile(horse);
-
-    // Cache the profile
-    await this.prisma.aIAnalysis.create({
-      data: {
-        entityType: 'horse',
-        entityId: horseId,
-        analysisType: 'marketplace_profile',
-        content: profile.description,
-        insights: profile.highlights,
-      },
-    });
 
     return {
       horseId,
