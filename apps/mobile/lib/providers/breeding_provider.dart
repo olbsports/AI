@@ -290,7 +290,7 @@ class BreedingNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncValue.loading();
     try {
-      final response = await _api.post('/breeding/recommendations/generate', {
+      final response = await _api.post('/breeding/ai-recommendations', {
         'mareId': mareId,
         'goal': goal.name,
         'targetDisciplines': targetDisciplines,

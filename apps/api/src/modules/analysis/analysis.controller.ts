@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AnalysisService } from './analysis.service';
@@ -54,5 +46,17 @@ export class AnalysisController {
       status: analysis.status,
       progress: analysis.status === 'processing' ? 50 : analysis.status === 'completed' ? 100 : 0,
     };
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete an analysis' })
+  async delete(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.analysisService.delete(id, user.organizationId);
+  }
+
+  @Post(':id/retry')
+  @ApiOperation({ summary: 'Retry a failed analysis' })
+  async retry(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.analysisService.retry(id, user.organizationId, user.id);
   }
 }

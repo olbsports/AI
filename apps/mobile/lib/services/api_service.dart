@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mime/mime.dart';
 
 import '../models/models.dart';
 import 'storage_service.dart';
@@ -12,6 +14,100 @@ const String apiBaseUrl = 'https://api.horsetempo.app/api';
 
 // Shared secure storage instance for token access
 const _secureStorage = FlutterSecureStorage();
+
+// Token refresh state management
+class _TokenRefreshManager {
+  bool _isRefreshing = false;
+  final List<Completer<String>> _refreshCompleters = [];
+
+  Future<void> handleRefresh(
+    Dio dio,
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
+    if (_isRefreshing) {
+      return _waitForRefresh(dio, error, handler);
+    }
+
+    _isRefreshing = true;
+    final refreshToken = await _secureStorage.read(key: 'refresh_token');
+
+    if (refreshToken != null) {
+      try {
+        // Create a new Dio instance to avoid interceptor loop
+        final refreshDio = Dio(BaseOptions(
+          baseUrl: apiBaseUrl,
+          headers: {'Content-Type': 'application/json'},
+        ));
+
+        final response = await refreshDio.post('/auth/refresh', data: {
+          'refreshToken': refreshToken,
+        });
+
+        final newAccessToken = response.data['accessToken'] as String;
+        final newRefreshToken = response.data['refreshToken'] as String?;
+
+        // Save new tokens
+        await _secureStorage.write(key: 'access_token', value: newAccessToken);
+        if (newRefreshToken != null) {
+          await _secureStorage.write(key: 'refresh_token', value: newRefreshToken);
+        }
+
+        // Notify all waiting requests
+        for (final completer in _refreshCompleters) {
+          if (!completer.isCompleted) {
+            completer.complete(newAccessToken);
+          }
+        }
+        _refreshCompleters.clear();
+
+        // Retry the failed request with new token
+        error.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+        final retryResponse = await dio.fetch(error.requestOptions);
+        _isRefreshing = false;
+        return handler.resolve(retryResponse);
+      } catch (e) {
+        _isRefreshing = false;
+        for (final completer in _refreshCompleters) {
+          if (!completer.isCompleted) {
+            completer.completeError(e);
+          }
+        }
+        _refreshCompleters.clear();
+        // Clear tokens on refresh failure
+        await _secureStorage.deleteAll();
+      }
+    } else {
+      _isRefreshing = false;
+    }
+    return handler.next(error);
+  }
+
+  Future<void> _waitForRefresh(
+    Dio dio,
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
+    final completer = Completer<String>();
+    _refreshCompleters.add(completer);
+
+    try {
+      final newToken = await completer.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException('Token refresh timeout'),
+      );
+
+      // Retry request with new token
+      error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+      final retryResponse = await dio.fetch(error.requestOptions);
+      return handler.resolve(retryResponse);
+    } catch (e) {
+      return handler.next(error);
+    }
+  }
+}
+
+final _tokenRefreshManager = _TokenRefreshManager();
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
@@ -52,24 +148,7 @@ final dioProvider = Provider<Dio>((ref) {
     },
     onError: (error, handler) async {
       if (error.response?.statusCode == 401) {
-        // Handle token refresh here
-        final refreshToken = await _secureStorage.read(key: 'refresh_token');
-        if (refreshToken != null) {
-          try {
-            final response = await dio.post('/auth/refresh', data: {
-              'refreshToken': refreshToken,
-            });
-            final newToken = response.data['accessToken'];
-            await _secureStorage.write(key: 'access_token', value: newToken);
-
-            // Retry the failed request
-            error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-            final retryResponse = await dio.fetch(error.requestOptions);
-            return handler.resolve(retryResponse);
-          } catch (e) {
-            await _secureStorage.deleteAll();
-          }
-        }
+        return _tokenRefreshManager.handleRefresh(dio, error, handler);
       }
       return handler.next(error);
     },
@@ -87,6 +166,24 @@ class ApiService {
 
   ApiService(this._dio);
 
+  // Validation des fichiers avant upload
+  void _validateImageFile(File file) {
+    // Vérifier la taille (max 5MB)
+    final fileSize = file.lengthSync();
+    const maxSize = 5 * 1024 * 1024; // 5MB en bytes
+    if (fileSize > maxSize) {
+      throw Exception('La taille du fichier ne doit pas dépasser 5MB (taille actuelle: ${(fileSize / 1024 / 1024).toStringAsFixed(2)}MB)');
+    }
+
+    // Vérifier le type MIME
+    final mimeType = lookupMimeType(file.path);
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (mimeType == null || !allowedMimeTypes.contains(mimeType)) {
+      throw Exception('Format de fichier non supporté. Formats acceptés: JPEG, PNG, WebP');
+    }
+  }
+
   // ==================== AUTH ====================
 
   Future<AuthResponse> login(String email, String password) async {
@@ -103,6 +200,7 @@ class ApiService {
     required String firstName,
     required String lastName,
     required String organizationName,
+    required bool acceptTerms,
   }) async {
     final response = await _dio.post('/auth/register', data: {
       'email': email,
@@ -110,7 +208,7 @@ class ApiService {
       'firstName': firstName,
       'lastName': lastName,
       'organizationName': organizationName,
-      'acceptTerms': true,
+      'acceptTerms': acceptTerms,
     });
     return AuthResponse.fromJson(response.data);
   }
@@ -134,6 +232,9 @@ class ApiService {
   }
 
   Future<String> uploadProfilePhoto(File file) async {
+    // Valider le fichier avant upload
+    _validateImageFile(file);
+
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(file.path),
     });
@@ -184,6 +285,9 @@ class ApiService {
   }
 
   Future<String> uploadRiderPhoto(String riderId, File file) async {
+    // Valider le fichier avant upload
+    _validateImageFile(file);
+
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(file.path),
     });
@@ -229,6 +333,9 @@ class ApiService {
   }
 
   Future<String> uploadHorsePhoto(String horseId, File file) async {
+    // Valider le fichier avant upload
+    _validateImageFile(file);
+
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(file.path),
     });

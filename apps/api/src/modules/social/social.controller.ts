@@ -173,6 +173,36 @@ export class SocialController {
     return this.socialService.unsavePost(id, user.id);
   }
 
+  @Post('notes/:id/share')
+  @ApiOperation({ summary: 'Share a post' })
+  async sharePost(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { platform?: string; message?: string }
+  ) {
+    return this.socialService.sharePost(id, user.id, body);
+  }
+
+  @Delete('notes/:id/comments/:commentId')
+  @ApiOperation({ summary: 'Delete a comment' })
+  async deleteComment(
+    @CurrentUser() user: any,
+    @Param('id') postId: string,
+    @Param('commentId') commentId: string
+  ) {
+    return this.socialService.deleteComment(commentId, user.id, postId);
+  }
+
+  @Post('notes/:id/comments/:commentId/like')
+  @ApiOperation({ summary: 'Like a comment' })
+  async likeComment(
+    @CurrentUser() user: any,
+    @Param('id') postId: string,
+    @Param('commentId') commentId: string
+  ) {
+    return this.socialService.likeComment(commentId, user.id);
+  }
+
   @Put('notes/:id')
   @ApiOperation({ summary: 'Update a post' })
   async updatePost(

@@ -53,16 +53,15 @@ export class BillingService {
 
   // Token pricing
   private readonly tokenPriceId = 'price_tokens_pack';
-  private readonly tokenPricePerUnit = 0.10; // €0.10 per token
+  private readonly tokenPricePerUnit = 0.1; // €0.10 per token
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {
-    this.stripe = new Stripe(
-      this.configService.get('STRIPE_SECRET_KEY', 'sk_test_placeholder'),
-      { apiVersion: '2023-10-16' },
-    );
+    this.stripe = new Stripe(this.configService.get('STRIPE_SECRET_KEY', 'sk_test_placeholder'), {
+      apiVersion: '2023-10-16',
+    });
     this.webhookSecret = this.configService.get('STRIPE_WEBHOOK_SECRET', 'whsec_placeholder');
     this.frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:3000');
   }
@@ -70,7 +69,7 @@ export class BillingService {
   async createCheckoutSession(
     organizationId: string,
     userId: string,
-    dto: CreateCheckoutDto,
+    dto: CreateCheckoutDto
   ): Promise<{ sessionId: string; url: string }> {
     const organization = await this.prisma.organization.findUnique({
       where: { id: organizationId },
@@ -105,9 +104,8 @@ export class BillingService {
     }
 
     const plan = this.plans[dto.plan];
-    const priceId = dto.interval === BillingInterval.MONTHLY
-      ? plan.monthlyPriceId
-      : plan.yearlyPriceId;
+    const priceId =
+      dto.interval === BillingInterval.MONTHLY ? plan.monthlyPriceId : plan.yearlyPriceId;
 
     const session = await this.stripe.checkout.sessions.create({
       customer: stripeCustomerId,
@@ -146,7 +144,7 @@ export class BillingService {
   async createTokenPurchaseSession(
     organizationId: string,
     userId: string,
-    dto: PurchaseTokensDto,
+    dto: PurchaseTokensDto
   ): Promise<{ sessionId: string; url: string }> {
     const organization = await this.prisma.organization.findUnique({
       where: { id: organizationId },
@@ -213,7 +211,7 @@ export class BillingService {
 
   async createPortalSession(
     organizationId: string,
-    dto: CreatePortalSessionDto,
+    dto: CreatePortalSessionDto
   ): Promise<{ url: string }> {
     const organization = await this.prisma.organization.findUnique({
       where: { id: organizationId },
@@ -241,11 +239,7 @@ export class BillingService {
     let event: Stripe.Event;
 
     try {
-      event = this.stripe.webhooks.constructEvent(
-        payload,
-        signature,
-        this.webhookSecret,
-      );
+      event = this.stripe.webhooks.constructEvent(payload, signature, this.webhookSecret);
     } catch (err) {
       this.logger.error('Webhook signature verification failed', err);
       throw new BadRequestException('Invalid webhook signature');
@@ -425,7 +419,12 @@ export class BillingService {
   private async creditTokens(
     organizationId: string,
     amount: number,
-    metadata: { type: string; description: string; stripeSessionId?: string; stripeInvoiceId?: string },
+    metadata: {
+      type: string;
+      description: string;
+      stripeSessionId?: string;
+      stripeInvoiceId?: string;
+    }
   ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       // Update balance
@@ -483,5 +482,73 @@ export class BillingService {
 
   getPlans(): Record<PlanType, PlanConfig> {
     return this.plans;
+  }
+
+  async getTokenBalance(organizationId: string): Promise<{
+    balance: number;
+    tokensPerMonth: number;
+    plan: PlanType | null;
+  }> {
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    const settings = organization.settings as any;
+
+    return {
+      balance: organization.tokenBalance || 0,
+      tokensPerMonth: settings?.tokensPerMonth || 0,
+      plan: settings?.plan || null,
+    };
+  }
+
+  async getTokenHistory(
+    organizationId: string,
+    page = 1,
+    pageSize = 20
+  ): Promise<{
+    items: any[];
+    pagination: {
+      page: number;
+      pageSize: number;
+      totalItems: number;
+      totalPages: number;
+    };
+  }> {
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    const skip = (page - 1) * pageSize;
+
+    const [items, totalItems] = await Promise.all([
+      this.prisma.tokenTransaction.findMany({
+        where: { organizationId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      this.prisma.tokenTransaction.count({
+        where: { organizationId },
+      }),
+    ]);
+
+    return {
+      items,
+      pagination: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+      },
+    };
   }
 }

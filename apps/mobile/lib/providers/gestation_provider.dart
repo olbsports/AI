@@ -75,12 +75,13 @@ final birthRecordProvider =
 });
 
 /// Foal development records
-final foalDevelopmentProvider =
-    FutureProvider.family<List<FoalDevelopment>, String>((ref, foalId) async {
-  final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/foals/$foalId/development');
-  return (response as List).map((e) => FoalDevelopment.fromJson(e)).toList();
-});
+/// COMMENTED OUT: Endpoint /foals/:id/development does not exist
+// final foalDevelopmentProvider =
+//     FutureProvider.family<List<FoalDevelopment>, String>((ref, foalId) async {
+//   final api = ref.watch(apiServiceProvider);
+//   final response = await api.get('/foals/$foalId/development');
+//   return (response as List).map((e) => FoalDevelopment.fromJson(e)).toList();
+// });
 
 /// Breeding statistics
 final breedingStatsProvider = FutureProvider<BreedingStats>((ref) async {
@@ -90,11 +91,12 @@ final breedingStatsProvider = FutureProvider<BreedingStats>((ref) async {
 });
 
 /// Upcoming checkups
-final upcomingCheckupsProvider = FutureProvider<List<GestationCheckup>>((ref) async {
-  final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/gestations/checkups/upcoming');
-  return (response as List).map((e) => GestationCheckup.fromJson(e)).toList();
-});
+/// COMMENTED OUT: Endpoint /gestations/checkups/upcoming does not exist
+// final upcomingCheckupsProvider = FutureProvider<List<GestationCheckup>>((ref) async {
+//   final api = ref.watch(apiServiceProvider);
+//   final response = await api.get('/gestations/checkups/upcoming');
+//   return (response as List).map((e) => GestationCheckup.fromJson(e)).toList();
+// });
 
 /// Gestations due soon (within 30 days)
 final gestationsDueSoonProvider = FutureProvider<List<GestationRecord>>((ref) async {
@@ -164,7 +166,7 @@ class GestationNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final response = await _api.post('/gestations/$gestationId/checkups', data);
       _ref.invalidate(gestationCheckupsProvider(gestationId));
-      _ref.invalidate(upcomingCheckupsProvider);
+      // _ref.invalidate(upcomingCheckupsProvider); // Provider commented out
       state = const AsyncValue.data(null);
       return GestationCheckup.fromJson(response);
     } catch (e, st) {
@@ -255,18 +257,19 @@ class GestationNotifier extends StateNotifier<AsyncValue<void>> {
   }
 
   /// Add foal development record
-  Future<FoalDevelopment?> addFoalDevelopment(String foalId, Map<String, dynamic> data) async {
-    state = const AsyncValue.loading();
-    try {
-      final response = await _api.post('/foals/$foalId/development', data);
-      _ref.invalidate(foalDevelopmentProvider(foalId));
-      state = const AsyncValue.data(null);
-      return FoalDevelopment.fromJson(response);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-      return null;
-    }
-  }
+  /// COMMENTED OUT: Endpoint /foals/:id/development does not exist
+  // Future<FoalDevelopment?> addFoalDevelopment(String foalId, Map<String, dynamic> data) async {
+  //   state = const AsyncValue.loading();
+  //   try {
+  //     final response = await _api.post('/foals/$foalId/development', data);
+  //     _ref.invalidate(foalDevelopmentProvider(foalId));
+  //     state = const AsyncValue.data(null);
+  //     return FoalDevelopment.fromJson(response);
+  //   } catch (e, st) {
+  //     state = AsyncValue.error(e, st);
+  //     return null;
+  //   }
+  // }
 
   /// Mark gestation as lost
   Future<bool> markGestationLost(String gestationId, String? reason) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/horse.dart';
 import '../../providers/horses_provider.dart';
@@ -211,26 +212,37 @@ class _HorseCard extends StatelessWidget {
           child: Row(
             children: [
               // Horse avatar
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                  image: horse.photoUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(horse.photoUrl!),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: horse.photoUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: horse.photoUrl!,
                           fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                            child: const Center(child: CircularProgressIndicator()),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                            child: Icon(
+                              Icons.pets,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 28,
+                            ),
+                          ),
                         )
-                      : null,
+                      : Container(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          child: Icon(
+                            Icons.pets,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 28,
+                          ),
+                        ),
                 ),
-                child: horse.photoUrl == null
-                    ? Icon(
-                        Icons.pets,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 28,
-                      )
-                    : null,
               ),
               const SizedBox(width: 16),
 

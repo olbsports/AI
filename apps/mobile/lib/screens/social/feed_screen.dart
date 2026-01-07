@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/models.dart';
 import '../../providers/social_provider.dart';
@@ -226,14 +227,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
         children: [
           // Header
           ListTile(
-            leading: CircleAvatar(
-              backgroundImage: post.authorPhotoUrl != null
-                  ? NetworkImage(post.authorPhotoUrl!)
-                  : null,
-              child: post.authorPhotoUrl == null
-                  ? Text(post.authorName.isNotEmpty ? post.authorName[0] : '?')
-                  : null,
-            ),
+            leading: post.authorPhotoUrl != null
+                ? CircleAvatar(
+                    backgroundImage: CachedNetworkImageProvider(post.authorPhotoUrl!),
+                  )
+                : CircleAvatar(
+                    child: Text(post.authorName.isNotEmpty ? post.authorName[0] : '?'),
+                  ),
             title: Text(
               post.authorName,
               style: const TextStyle(fontWeight: FontWeight.w600),
@@ -367,10 +367,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
     if (urls.length == 1) {
       return AspectRatio(
         aspectRatio: 16 / 9,
-        child: Image.network(
-          urls[0],
+        child: CachedNetworkImage(
+          imageUrl: urls[0],
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
+          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+          errorWidget: (context, url, error) => Container(
             color: Colors.grey.shade200,
             child: const Center(child: Icon(Icons.image, size: 48)),
           ),
@@ -383,10 +384,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
       crossAxisCount: 2,
       mainAxisSpacing: 2,
       crossAxisSpacing: 2,
-      children: urls.take(4).map((url) => Image.network(
-        url,
+      children: urls.take(4).map((url) => CachedNetworkImage(
+        imageUrl: url,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+        errorWidget: (context, url, error) => Container(
           color: Colors.grey.shade200,
           child: const Center(child: Icon(Icons.image)),
         ),
@@ -630,12 +632,13 @@ class _FeedSearchDelegate extends SearchDelegate<String> {
             itemBuilder: (context, index) {
               final user = users[index];
               return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: user.photoUrl != null
-                      ? NetworkImage(user.photoUrl!)
-                      : null,
-                  child: user.photoUrl == null ? Text(user.name[0]) : null,
-                ),
+                leading: user.photoUrl != null
+                    ? CircleAvatar(
+                        backgroundImage: CachedNetworkImageProvider(user.photoUrl!),
+                      )
+                    : CircleAvatar(
+                        child: Text(user.name[0]),
+                      ),
                 title: Text(user.name),
                 onTap: () {
                   // Navigate to user profile
@@ -766,14 +769,13 @@ class _NotificationsSheet extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final notif = notifications[index];
                   return ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: notif.actorPhotoUrl != null
-                          ? NetworkImage(notif.actorPhotoUrl!)
-                          : null,
-                      child: notif.actorPhotoUrl == null
-                          ? Text(notif.actorName[0])
-                          : null,
-                    ),
+                    leading: notif.actorPhotoUrl != null
+                        ? CircleAvatar(
+                            backgroundImage: CachedNetworkImageProvider(notif.actorPhotoUrl!),
+                          )
+                        : CircleAvatar(
+                            child: Text(notif.actorName[0]),
+                          ),
                     title: Text(notif.message),
                     subtitle: Text(_formatTimeAgo(notif.createdAt)),
                     tileColor: notif.isRead ? null : Colors.blue.withOpacity(0.1),
@@ -857,14 +859,13 @@ class _CommentsSheetState extends ConsumerState<CommentsSheet> {
                   itemBuilder: (context, index) {
                     final comment = comments[index];
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: comment.authorPhotoUrl != null
-                            ? NetworkImage(comment.authorPhotoUrl!)
-                            : null,
-                        child: comment.authorPhotoUrl == null
-                            ? Text(comment.authorName[0])
-                            : null,
-                      ),
+                      leading: comment.authorPhotoUrl != null
+                          ? CircleAvatar(
+                              backgroundImage: CachedNetworkImageProvider(comment.authorPhotoUrl!),
+                            )
+                          : CircleAvatar(
+                              child: Text(comment.authorName[0]),
+                            ),
                       title: Text(comment.authorName),
                       subtitle: Text(comment.content),
                     );

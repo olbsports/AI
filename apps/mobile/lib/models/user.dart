@@ -1,3 +1,35 @@
+class Organization {
+  final String id;
+  final String name;
+  final String? logo;
+  final DateTime createdAt;
+
+  Organization({
+    required this.id,
+    required this.name,
+    this.logo,
+    required this.createdAt,
+  });
+
+  factory Organization.fromJson(Map<String, dynamic> json) {
+    return Organization(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      logo: json['logo'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'logo': logo,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
+}
+
 class User {
   final String id;
   final String email;
@@ -70,11 +102,15 @@ class AuthResponse {
   final User user;
   final String accessToken;
   final String refreshToken;
+  final Organization? organization;
+  final int? expiresAt;
 
   AuthResponse({
     required this.user,
     required this.accessToken,
     required this.refreshToken,
+    this.organization,
+    this.expiresAt,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
@@ -82,6 +118,10 @@ class AuthResponse {
       user: User.fromJson(json['user'] as Map<String, dynamic>),
       accessToken: json['accessToken'] as String,
       refreshToken: json['refreshToken'] as String,
+      organization: json['organization'] != null
+          ? Organization.fromJson(json['organization'] as Map<String, dynamic>)
+          : null,
+      expiresAt: json['expiresAt'] as int?,
     );
   }
 }

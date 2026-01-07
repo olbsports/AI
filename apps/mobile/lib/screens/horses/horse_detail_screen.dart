@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/horse.dart';
 import '../../providers/horses_provider.dart';
@@ -50,9 +51,11 @@ class HorseDetailScreen extends ConsumerWidget {
             flexibleSpace: FlexibleSpaceBar(
               title: Text(horse.name),
               background: horse.photoUrl != null
-                  ? Image.network(
-                      horse.photoUrl!,
+                  ? CachedNetworkImage(
+                      imageUrl: horse.photoUrl!,
                       fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => const Icon(Icons.broken_image),
                     )
                   : Container(
                       color: Theme.of(context).colorScheme.primaryContainer,

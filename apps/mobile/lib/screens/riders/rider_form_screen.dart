@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../providers/riders_provider.dart';
 import '../../widgets/loading_button.dart';
@@ -72,13 +73,72 @@ class _RiderFormScreenState extends ConsumerState<RiderFormScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _selectedPhoto = File(image.path);
-      });
+    // Demander la permission
+    PermissionStatus status;
+    if (Platform.isAndroid) {
+      // Android 13+ utilise photos au lieu de storage
+      if (await Permission.photos.isGranted) {
+        status = PermissionStatus.granted;
+      } else {
+        status = await Permission.photos.request();
+        // Fallback pour Android < 13
+        if (status.isDenied) {
+          status = await Permission.storage.request();
+        }
+      }
+    } else {
+      // iOS
+      status = await Permission.photos.request();
     }
+
+    if (status.isGranted) {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _selectedPhoto = File(image.path);
+        });
+      }
+    } else if (status.isPermanentlyDenied) {
+      if (mounted) {
+        _showPermissionDialog();
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Permission d\'accès aux photos refusée'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Permission requise'),
+        content: const Text(
+          'L\'accès aux photos est nécessaire pour ajouter une photo de profil. '
+          'Veuillez autoriser l\'accès dans les paramètres de l\'application.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: const Text('Ouvrir les paramètres'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleSubmit() async {

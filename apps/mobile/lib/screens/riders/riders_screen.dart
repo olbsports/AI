@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../models/rider.dart';
 import '../../providers/riders_provider.dart';
@@ -127,25 +128,35 @@ class _RiderCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(25),
-                  image: rider.photoUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(rider.photoUrl!),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: rider.photoUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: rider.photoUrl!,
                           fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                            child: const Center(child: CircularProgressIndicator()),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                            child: Icon(
+                              Icons.person,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
                         )
-                      : null,
+                      : Container(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          child: Icon(
+                            Icons.person,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                 ),
-                child: rider.photoUrl == null
-                    ? Icon(
-                        Icons.person,
-                        color: Theme.of(context).colorScheme.primary,
-                      )
-                    : null,
               ),
               const SizedBox(width: 16),
               Expanded(
