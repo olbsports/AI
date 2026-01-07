@@ -8,10 +8,10 @@ import '../../models/models.dart';
 import '../../providers/horses_provider.dart';
 import '../../widgets/loading_button.dart';
 
-enum ListingType { sale, mare, stallion }
+enum CreateListingType { sale, mare, stallion }
 
 class CreateListingScreen extends ConsumerStatefulWidget {
-  final ListingType type;
+  final CreateListingType type;
 
   const CreateListingScreen({super.key, required this.type});
 
@@ -48,27 +48,17 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     super.dispose();
   }
 
-  String get _screenTitle {
-    switch (widget.type) {
-      case ListingType.sale:
-        return 'Vendre un cheval';
-      case ListingType.mare:
-        return 'Proposer une jument';
-      case ListingType.stallion:
-        return 'Proposer un étalon';
-    }
-  }
+  String get _screenTitle => switch (widget.type) {
+    CreateListingType.sale => 'Vendre un cheval',
+    CreateCreateListingType.mare => 'Proposer une jument',
+    CreateCreateListingType.stallion => 'Proposer un étalon',
+  };
 
-  String get _priceLabel {
-    switch (widget.type) {
-      case ListingType.sale:
-        return 'Prix de vente';
-      case ListingType.mare:
-        return 'Prix de la saillie';
-      case ListingType.stallion:
-        return 'Prix de la saillie';
-    }
-  }
+  String get _priceLabel => switch (widget.type) {
+    CreateListingType.sale => 'Prix de vente',
+    CreateCreateListingType.mare => 'Prix de la saillie',
+    CreateCreateListingType.stallion => 'Prix de la saillie',
+  };
 
   Future<void> _pickImages() async {
     final picker = ImagePicker();
@@ -98,9 +88,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
     // Filter horses by gender for mare/stallion
     final filteredHorses = horses.where((h) {
-      if (widget.type == ListingType.mare) {
+      if (widget.type == CreateListingType.mare) {
         return h.gender == HorseGender.female;
-      } else if (widget.type == ListingType.stallion) {
+      } else if (widget.type == CreateListingType.stallion) {
         return h.gender == HorseGender.male;
       }
       return true;
@@ -110,9 +100,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            widget.type == ListingType.mare
+            widget.type == CreateListingType.mare
                 ? 'Aucune jument disponible'
-                : widget.type == ListingType.stallion
+                : widget.type == CreateListingType.stallion
                     ? 'Aucun étalon disponible'
                     : 'Aucun cheval disponible',
           ),
@@ -426,7 +416,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
               const SizedBox(height: 16),
 
               // Type-specific fields
-              if (widget.type == ListingType.stallion) ...[
+              if (widget.type == CreateListingType.stallion) ...[
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -455,7 +445,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                 const SizedBox(height: 16),
               ],
 
-              if (widget.type == ListingType.mare) ...[
+              if (widget.type == CreateListingType.mare) ...[
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),

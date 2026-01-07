@@ -62,29 +62,18 @@ class Horse {
     return age;
   }
 
-  String get genderLabel {
-    switch (gender) {
-      case HorseGender.male:
-        return 'Étalon';
-      case HorseGender.female:
-        return 'Jument';
-      case HorseGender.gelding:
-        return 'Hongre';
-    }
-  }
+  String get genderLabel => switch (gender) {
+    HorseGender.male => 'Étalon',
+    HorseGender.female => 'Jument',
+    HorseGender.gelding => 'Hongre',
+  };
 
-  String get statusLabel {
-    switch (status) {
-      case HorseStatus.active:
-        return 'Actif';
-      case HorseStatus.retired:
-        return 'Retraité';
-      case HorseStatus.sold:
-        return 'Vendu';
-      case HorseStatus.deceased:
-        return 'Décédé';
-    }
-  }
+  String get statusLabel => switch (status) {
+    HorseStatus.active => 'Actif',
+    HorseStatus.retired => 'Retraité',
+    HorseStatus.sold => 'Vendu',
+    HorseStatus.deceased => 'Décédé',
+  };
 
   factory Horse.fromJson(Map<String, dynamic> json) {
     return Horse(

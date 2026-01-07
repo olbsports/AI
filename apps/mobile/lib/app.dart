@@ -253,15 +253,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: 'create/sale',
-                builder: (context, state) => const CreateListingScreen(type: ListingType.sale),
+                builder: (context, state) => const CreateListingScreen(type: CreateListingType.sale),
               ),
               GoRoute(
                 path: 'create/mare',
-                builder: (context, state) => const CreateListingScreen(type: ListingType.mare),
+                builder: (context, state) => const CreateListingScreen(type: CreateListingType.mare),
               ),
               GoRoute(
                 path: 'create/stallion',
-                builder: (context, state) => const CreateListingScreen(type: ListingType.stallion),
+                builder: (context, state) => const CreateListingScreen(type: CreateListingType.stallion),
               ),
             ],
           ),
