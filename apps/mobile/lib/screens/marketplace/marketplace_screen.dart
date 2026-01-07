@@ -849,7 +849,6 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         builder: (context, scrollController) => _SaleListingDetailSheet(
           listing: listing,
           scrollController: scrollController,
-          ref: ref,
         ),
       ),
     );
@@ -867,7 +866,6 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         builder: (context, scrollController) => _BreedingListingDetailSheet(
           listing: listing,
           scrollController: scrollController,
-          ref: ref,
         ),
       ),
     );
@@ -994,19 +992,17 @@ class _MarketplaceSearchDelegate extends SearchDelegate<String> {
   }
 }
 
-class _SaleListingDetailSheet extends StatelessWidget {
+class _SaleListingDetailSheet extends ConsumerWidget {
   final MarketplaceListing listing;
   final ScrollController scrollController;
-  final WidgetRef ref;
 
   const _SaleListingDetailSheet({
     required this.listing,
     required this.scrollController,
-    required this.ref,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -1250,25 +1246,22 @@ class _SaleListingDetailSheet extends StatelessWidget {
       builder: (context) => _ContactSellerDialog(
         listingId: listing.id,
         sellerName: listing.sellerName,
-        ref: ref,
       ),
     );
   }
 }
 
-class _BreedingListingDetailSheet extends StatelessWidget {
+class _BreedingListingDetailSheet extends ConsumerWidget {
   final BreedingListing listing;
   final ScrollController scrollController;
-  final WidgetRef ref;
 
   const _BreedingListingDetailSheet({
     required this.listing,
     required this.scrollController,
-    required this.ref,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isMare = listing.type == ListingType.mareForBreeding;
 
     return Container(
@@ -1507,28 +1500,25 @@ class _BreedingListingDetailSheet extends StatelessWidget {
       builder: (context) => _ContactSellerDialog(
         listingId: listing.id,
         sellerName: listing.sellerName,
-        ref: ref,
       ),
     );
   }
 }
 
-class _ContactSellerDialog extends StatefulWidget {
+class _ContactSellerDialog extends ConsumerStatefulWidget {
   final String listingId;
   final String sellerName;
-  final WidgetRef ref;
 
   const _ContactSellerDialog({
     required this.listingId,
     required this.sellerName,
-    required this.ref,
   });
 
   @override
-  State<_ContactSellerDialog> createState() => _ContactSellerDialogState();
+  ConsumerState<_ContactSellerDialog> createState() => _ContactSellerDialogState();
 }
 
-class _ContactSellerDialogState extends State<_ContactSellerDialog> {
+class _ContactSellerDialogState extends ConsumerState<_ContactSellerDialog> {
   final _messageController = TextEditingController();
   bool _isSending = false;
 
@@ -1579,7 +1569,7 @@ class _ContactSellerDialogState extends State<_ContactSellerDialog> {
 
     setState(() => _isSending = true);
 
-    final success = await widget.ref
+    final success = await ref
         .read(marketplaceNotifierProvider.notifier)
         .contactSeller(widget.listingId, _messageController.text);
 

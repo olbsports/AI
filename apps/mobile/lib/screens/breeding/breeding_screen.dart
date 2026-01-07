@@ -686,7 +686,6 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
         builder: (context, scrollController) => _StallionDetailSheet(
           recommendation: rec,
           scrollController: scrollController,
-          ref: ref,
         ),
       ),
     );
@@ -826,19 +825,17 @@ class _MareSelectionSheet extends ConsumerWidget {
   }
 }
 
-class _StallionDetailSheet extends StatelessWidget {
+class _StallionDetailSheet extends ConsumerWidget {
   final BreedingRecommendation recommendation;
   final ScrollController scrollController;
-  final WidgetRef ref;
 
   const _StallionDetailSheet({
     required this.recommendation,
     required this.scrollController,
-    required this.ref,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Get stallion details if stallionId is available
     final stallionAsync = recommendation.stallionId != null
         ? ref.watch(stallionProvider(recommendation.stallionId!))
