@@ -21,7 +21,7 @@ import {
   CardTitle,
   CardContent,
   Badge,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 
 export default function HorseDetailPage() {
   const params = useParams();

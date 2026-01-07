@@ -1,6 +1,6 @@
 'use client';
 
-import { createApiClient } from '@horse-vision/api-client';
+import { createApiClient } from '@horse-tempo/api-client';
 import { useAuthStore } from '@/stores/auth';
 
 const apiClient = createApiClient({

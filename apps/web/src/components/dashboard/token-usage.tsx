@@ -1,7 +1,7 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@horse-vision/ui';
-import { Progress } from '@horse-vision/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@horse-tempo/ui';
+import { Progress } from '@horse-tempo/ui';
 import { Coins } from 'lucide-react';
 
 interface TokenUsageProps {

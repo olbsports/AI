@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
-import { Button } from '@horse-vision/ui';
+import { Button } from '@horse-tempo/ui';
 
 export default function HomePage() {
   const t = useTranslations('home');

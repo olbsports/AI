@@ -22,7 +22,7 @@ import {
   Badge,
   Alert,
   AlertDescription,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 import { useAuthStore } from '@/stores/auth';
 
 interface TeamMember {

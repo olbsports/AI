@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { useAuthStore } from '@/stores/auth';
-import { Spinner } from '@horse-vision/ui';
+import { Spinner } from '@horse-tempo/ui';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

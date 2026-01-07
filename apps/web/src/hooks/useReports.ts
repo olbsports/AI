@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { Report } from '@horse-vision/types';
+import type { Report } from '@horse-tempo/types';
 
 export const reportKeys = {
   all: ['reports'] as const,

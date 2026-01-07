@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { AnalysisSession, CreateAnalysisInput } from '@horse-vision/types';
+import type { AnalysisSession, CreateAnalysisInput } from '@horse-tempo/types';
 
 export const analysisKeys = {
   all: ['analyses'] as const,

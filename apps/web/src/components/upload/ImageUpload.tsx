@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { Camera, Upload, X } from 'lucide-react';
 
-import { cn, Button } from '@horse-vision/ui';
+import { cn, Button } from '@horse-tempo/ui';
 
 interface ImageUploadProps {
   value?: string;

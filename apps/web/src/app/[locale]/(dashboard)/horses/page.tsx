@@ -20,7 +20,7 @@ import {
   Card,
   CardContent,
   Badge,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 
 export default function HorsesPage() {
   const t = useTranslations('horses');

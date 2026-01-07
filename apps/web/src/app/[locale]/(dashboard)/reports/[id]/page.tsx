@@ -29,7 +29,7 @@ import {
   Badge,
   Alert,
   AlertDescription,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 
 export default function ReportDetailPage() {
   const params = useParams();

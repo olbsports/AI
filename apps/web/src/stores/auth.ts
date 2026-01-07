@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User, Organization } from '@horse-vision/types';
+import type { User, Organization } from '@horse-tempo/types';
 
 interface AuthState {
   user: User | null;

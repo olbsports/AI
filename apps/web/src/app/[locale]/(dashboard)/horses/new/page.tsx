@@ -15,7 +15,7 @@ import {
   CardContent,
   Alert,
   AlertDescription,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 import { ImageUpload } from '@/components/upload';
 import { api } from '@/lib/api';
 

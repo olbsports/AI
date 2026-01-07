@@ -16,7 +16,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-import { cn } from '@horse-vision/ui';
+import { cn } from '@horse-tempo/ui';
 import { useAuthStore } from '@/stores/auth';
 
 interface SidebarProps {

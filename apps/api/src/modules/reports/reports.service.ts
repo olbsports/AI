@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { calculatePagination, calculateOffset } from '@horse-vision/types';
+import { calculatePagination, calculateOffset } from '@horse-tempo/types';
 import { randomBytes } from 'crypto';
 
 @Injectable()

@@ -22,7 +22,7 @@ import {
   Card,
   CardContent,
   Badge,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 
 export default function AnalysesPage() {
   const t = useTranslations('analyses');

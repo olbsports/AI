@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@horse-vision/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@horse-tempo/ui';
 import { Activity, FileText, User, CreditCard } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
