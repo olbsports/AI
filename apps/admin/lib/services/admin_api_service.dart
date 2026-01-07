@@ -22,9 +22,8 @@ class AdminApiService {
       'Accept': 'application/json',
     },
   )) {
-    // Configure to accept Let's Encrypt certificates
-    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final client = HttpClient();
+    // Configure to accept Let's Encrypt certificates (Dio 5.x API)
+    (_dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate = (client) {
       client.badCertificateCallback = (X509Certificate cert, String host, int port) {
         // Only accept certificates for our API domain
         return host == 'api.horsetempo.app';
