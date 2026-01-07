@@ -230,22 +230,24 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
         }
       }
 
-      if (mounted) {
-        if (horse != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_isEditing ? 'Cheval modifié' : 'Cheval ajouté'),
-            ),
-          );
+      if (!mounted) return;
+
+      if (horse != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isEditing ? 'Cheval modifié' : 'Cheval ajouté'),
+          ),
+        );
+        if (mounted) {
           context.go('/horses/${horse.id}');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Erreur lors de l\'enregistrement'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'enregistrement'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) {
