@@ -1,5 +1,5 @@
 {
-  "name": "@horse-vision/web",
+  "name": "@horse-tempo/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,11 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@horse-vision/api-client": "workspace:*",
-    "@horse-vision/config": "workspace:*",
-    "@horse-vision/core": "workspace:*",
-    "@horse-vision/types": "workspace:*",
-    "@horse-vision/ui": "workspace:*",
+    "@horse-tempo/api-client": "workspace:*",
+    "@horse-tempo/config": "workspace:*",
+    "@horse-tempo/core": "workspace:*",
+    "@horse-tempo/types": "workspace:*",
+    "@horse-tempo/ui": "workspace:*",
     "@tanstack/react-query": "^5.17.9",
     "lucide-react": "^0.312.0",
     "next": "14.1.0",

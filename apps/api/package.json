@@ -1,5 +1,5 @@
 {
-  "name": "@horse-vision/api",
+  "name": "@horse-tempo/api",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -36,9 +36,9 @@
     "@types/nodemailer": "^6.4.14",
     "@aws-sdk/client-s3": "^3.490.0",
     "@aws-sdk/s3-request-presigner": "^3.490.0",
-    "@horse-vision/config": "workspace:*",
-    "@horse-vision/core": "workspace:*",
-    "@horse-vision/types": "workspace:*",
+    "@horse-tempo/config": "workspace:*",
+    "@horse-tempo/core": "workspace:*",
+    "@horse-tempo/types": "workspace:*",
     "@nestjs/bull": "^10.0.1",
     "@nestjs/common": "^10.3.0",
     "@nestjs/config": "^3.1.1",
