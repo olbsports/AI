@@ -1,5 +1,5 @@
 {
-  "name": "@horse-vision/core",
+  "name": "@horse-tempo/core",
   "version": "0.1.0",
   "private": true,
   "main": "./dist/index.js",
@@ -19,8 +19,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@horse-vision/config": "workspace:*",
-    "@horse-vision/types": "workspace:*",
+    "@horse-tempo/config": "workspace:*",
+    "@horse-tempo/types": "workspace:*",
     "date-fns": "^3.2.0",
     "zod": "^3.22.4"
   },

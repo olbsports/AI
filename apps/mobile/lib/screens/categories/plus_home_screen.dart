@@ -510,7 +510,7 @@ class _AppInfoCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Horse Vision AI',
+              'Horse Tempo',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -695,7 +695,7 @@ void _showLegalDocument(BuildContext context, String type) {
                 ? '''CONDITIONS GÉNÉRALES D'UTILISATION
 
 1. OBJET
-Les présentes conditions générales d'utilisation ont pour objet de définir les conditions d'accès et d'utilisation de l'application Horse Vision AI.
+Les présentes conditions générales d'utilisation ont pour objet de définir les conditions d'accès et d'utilisation de l'application Horse Tempo.
 
 2. ACCEPTATION
 L'utilisation de l'application implique l'acceptation pleine et entière des présentes conditions.
@@ -749,7 +749,7 @@ privacy@horsetempo.app''',
 void _showLicensesPage(BuildContext context) {
   showLicensePage(
     context: context,
-    applicationName: 'Horse Vision AI',
+    applicationName: 'Horse Tempo',
     applicationVersion: '1.0.0',
     applicationIcon: Padding(
       padding: const EdgeInsets.all(8.0),

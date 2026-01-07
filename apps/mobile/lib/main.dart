@@ -31,7 +31,7 @@ void main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
       ],
-      child: const HorseVisionApp(),
+      child: const HorseTempoApp(),
     ),
   );
 }

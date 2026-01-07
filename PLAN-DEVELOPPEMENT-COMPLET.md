@@ -2,7 +2,7 @@
 
 ## 📋 Vue d'Ensemble
 
-Ce document présente le plan de développement complet de Horse Vision AI, découpé en **6 phases**, **24 sprints** et **+400 tâches individuelles**.
+Ce document présente le plan de développement complet de Horse Tempo, découpé en **6 phases**, **24 sprints** et **+400 tâches individuelles**.
 
 ---
 
@@ -195,7 +195,7 @@ Ce document présente le plan de développement complet de Horse Vision AI, déc
 
 ### 4.2 CDN Cloudflare
 - [ ] 4.2.1 Configurer le compte Cloudflare
-- [ ] 4.2.2 Ajouter le domaine horsevision.ai
+- [ ] 4.2.2 Ajouter le domaine horsetempo.app
 - [ ] 4.2.3 Configurer les DNS records
 - [ ] 4.2.4 Activer le proxy Cloudflare
 - [ ] 4.2.5 Configurer les règles de cache

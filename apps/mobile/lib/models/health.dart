@@ -1,4 +1,4 @@
-/// Complete Health Tracking System for Horse Vision AI
+/// Complete Health Tracking System for Horse Tempo
 
 import 'package:flutter/material.dart';
 

@@ -1,4 +1,4 @@
-/// Complete Service Directory for Horse Vision AI
+/// Complete Service Directory for Horse Tempo
 /// Veterinarians, Farriers, Dentists, Osteopaths, and other equine professionals
 
 import 'package:flutter/material.dart';

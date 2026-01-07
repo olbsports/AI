@@ -76,7 +76,7 @@ export class ReportProcessor {
   private async generateHtmlReport(report: any): Promise<string> {
     // In production, generate actual HTML and upload to S3
     // For now, return a mock URL
-    const baseUrl = this.configService.get('CDN_URL', 'https://cdn.horsevision.ai');
+    const baseUrl = this.configService.get('CDN_URL', 'https://cdn.horsetempo.app');
     const key = `reports/${report.organizationId}/${report.id}/report.html`;
 
     // Simulate HTML generation
@@ -87,7 +87,7 @@ export class ReportProcessor {
 
   private async generatePdfReport(report: any, htmlUrl: string | null): Promise<string> {
     // In production, use Puppeteer/WeasyPrint to convert HTML to PDF
-    const baseUrl = this.configService.get('CDN_URL', 'https://cdn.horsevision.ai');
+    const baseUrl = this.configService.get('CDN_URL', 'https://cdn.horsetempo.app');
     const key = `reports/${report.organizationId}/${report.id}/report.pdf`;
 
     // Simulate PDF generation

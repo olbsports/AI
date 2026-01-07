@@ -1,4 +1,4 @@
-# 🔌 ARCHITECTURE BACKEND & COÛTS - Horse Vision AI
+# 🔌 ARCHITECTURE BACKEND & COÛTS - Horse Tempo
 
 ## 📊 SOURCES DE DONNÉES ÉQUINES
 
@@ -293,4 +293,4 @@ interface HistovecService {
 
 ---
 
-*Document généré pour Horse Vision AI - Janvier 2025*
+*Document généré pour Horse Tempo - Janvier 2025*

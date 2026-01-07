@@ -93,14 +93,14 @@ class SettingsScreen extends ConsumerWidget {
             icon: Icons.help_outline,
             title: 'Aide',
             subtitle: 'Centre d\'aide et FAQ',
-            onTap: () => _launchUrl('https://horsevision.ai/help'),
+            onTap: () => _launchUrl('https://horsetempo.app/help'),
           ),
           _buildSettingsTile(
             context,
             icon: Icons.mail_outline,
             title: 'Nous contacter',
-            subtitle: 'support@horsevision.ai',
-            onTap: () => _launchUrl('mailto:support@horsevision.ai'),
+            subtitle: 'support@horsetempo.app',
+            onTap: () => _launchUrl('mailto:support@horsetempo.app'),
           ),
           _buildSettingsTile(
             context,
@@ -118,13 +118,13 @@ class SettingsScreen extends ConsumerWidget {
             context,
             icon: Icons.privacy_tip_outlined,
             title: 'Politique de confidentialité',
-            onTap: () => _launchUrl('https://horsevision.ai/privacy'),
+            onTap: () => _launchUrl('https://horsetempo.app/privacy'),
           ),
           _buildSettingsTile(
             context,
             icon: Icons.description_outlined,
             title: 'Conditions d\'utilisation',
-            onTap: () => _launchUrl('https://horsevision.ai/terms'),
+            onTap: () => _launchUrl('https://horsetempo.app/terms'),
           ),
           const SizedBox(height: 24),
 
@@ -355,7 +355,7 @@ class SettingsScreen extends ConsumerWidget {
   void _showAboutDialog(BuildContext context) {
     showAboutDialog(
       context: context,
-      applicationName: 'Horse Vision AI',
+      applicationName: 'Horse Tempo',
       applicationVersion: '1.0.0',
       applicationIcon: Icon(
         Icons.pets,
@@ -427,7 +427,7 @@ class SettingsScreen extends ConsumerWidget {
               // TODO: Implement account deletion API call
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Pour supprimer votre compte, contactez support@horsevision.ai'),
+                  content: Text('Pour supprimer votre compte, contactez support@horsetempo.app'),
                   duration: Duration(seconds: 5),
                 ),
               );

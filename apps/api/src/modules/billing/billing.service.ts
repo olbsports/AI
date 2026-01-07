@@ -185,7 +185,7 @@ export class BillingService {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: `${dto.amount} Tokens Horse Vision AI`,
+              name: `${dto.amount} Tokens Horse Tempo`,
               description: `Pack de ${dto.amount} tokens pour analyses`,
             },
             unit_amount: amount,

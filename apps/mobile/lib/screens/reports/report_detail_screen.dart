@@ -597,7 +597,7 @@ class ReportDetailScreen extends ConsumerWidget {
               SharePlus.instance.share(
                 ShareParams(
                   text: 'Consultez ce rapport : $shareUrl',
-                  subject: 'Rapport ${report.title.isNotEmpty ? report.title : _typeLabel(report.type)} - Horse Vision AI',
+                  subject: 'Rapport ${report.title.isNotEmpty ? report.title : _typeLabel(report.type)} - Horse Tempo',
                 ),
               );
             },

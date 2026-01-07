@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace = "com.horsevision.ai"
+    namespace = "com.horsetempo.app"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -37,7 +37,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.horsevision.ai"
+        applicationId = "com.horsetempo.app"
         minSdk = 26
         targetSdk = 36
         versionCode = flutterVersionCode.toInteger()

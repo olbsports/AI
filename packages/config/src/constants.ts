@@ -1,12 +1,12 @@
 /**
- * Constantes globales de l'application Horse Vision AI
+ * Constantes globales de l'application Horse Tempo
  */
 
 // =============================================================================
 // APPLICATION
 // =============================================================================
 
-export const APP_NAME = 'Horse Vision AI';
+export const APP_NAME = 'Horse Tempo';
 export const APP_DESCRIPTION = "Plateforme d'analyse équestre par intelligence artificielle";
 export const APP_VERSION = '0.1.0';
 

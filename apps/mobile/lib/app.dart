@@ -43,8 +43,8 @@ import 'screens/categories/plus_home_screen.dart';
 import 'theme/app_theme.dart';
 import 'widgets/main_scaffold.dart';
 
-class HorseVisionApp extends ConsumerWidget {
-  const HorseVisionApp({super.key});
+class HorseTempoApp extends ConsumerWidget {
+  const HorseTempoApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,7 +52,7 @@ class HorseVisionApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'Horse Vision AI',
+      title: 'Horse Tempo',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

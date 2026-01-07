@@ -43,8 +43,8 @@ async function bootstrap() {
   // Swagger
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Horse Vision AI API')
-      .setDescription('API pour la plateforme Horse Vision AI')
+      .setTitle('Horse Tempo API')
+      .setDescription('API pour la plateforme Horse Tempo')
       .setVersion('1.0')
       .addBearerAuth()
       .build();

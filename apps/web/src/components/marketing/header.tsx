@@ -24,7 +24,7 @@ export function Header() {
               <span className="text-white font-bold text-xl">HV</span>
             </div>
             <span className="text-gray-900 font-bold text-xl hidden sm:block">
-              Horse Vision AI
+              Horse Tempo
             </span>
           </Link>
 

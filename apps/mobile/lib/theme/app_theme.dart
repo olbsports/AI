@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// App color palette for Horse Vision AI
+/// App color palette for Horse Tempo
 class AppColors {
   // Primary brand colors - Equestrian Blue
   static const Color primary = Color(0xFF2563EB);

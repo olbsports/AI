@@ -1,4 +1,4 @@
-/// Complete Planning System for Horse Vision AI
+/// Complete Planning System for Horse Tempo
 
 import 'package:flutter/material.dart';
 

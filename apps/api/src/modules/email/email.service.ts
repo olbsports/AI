@@ -34,7 +34,7 @@ export class EmailService {
     try {
       const from = this.configService.get(
         'EMAIL_FROM',
-        'Horse Vision AI <noreply@horsevision.ai>',
+        'Horse Tempo <noreply@horsetempo.app>',
       );
 
       await this.transporter.sendMail({
@@ -62,7 +62,7 @@ export class EmailService {
 
     await this.sendEmail({
       to: email,
-      subject: 'Réinitialisation de votre mot de passe - Horse Vision AI',
+      subject: 'Réinitialisation de votre mot de passe - Horse Tempo',
       html: `
         <!DOCTYPE html>
         <html>
@@ -80,7 +80,7 @@ export class EmailService {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🐴 Horse Vision AI</h1>
+              <h1>🐴 Horse Tempo</h1>
             </div>
             <div class="content">
               <h2>Bonjour ${firstName},</h2>
@@ -93,7 +93,7 @@ export class EmailService {
               <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.</p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} Horse Vision AI. Tous droits réservés.</p>
+              <p>© ${new Date().getFullYear()} Horse Tempo. Tous droits réservés.</p>
             </div>
           </div>
         </body>
@@ -112,7 +112,7 @@ export class EmailService {
 
     await this.sendEmail({
       to: email,
-      subject: 'Vérifiez votre adresse email - Horse Vision AI',
+      subject: 'Vérifiez votre adresse email - Horse Tempo',
       html: `
         <!DOCTYPE html>
         <html>
@@ -130,11 +130,11 @@ export class EmailService {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🐴 Horse Vision AI</h1>
+              <h1>🐴 Horse Tempo</h1>
             </div>
             <div class="content">
               <h2>Bienvenue ${firstName} !</h2>
-              <p>Merci de vous être inscrit sur Horse Vision AI.</p>
+              <p>Merci de vous être inscrit sur Horse Tempo.</p>
               <p>Veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :</p>
               <p style="text-align: center;">
                 <a href="${verifyUrl}" class="button">Vérifier mon email</a>
@@ -142,7 +142,7 @@ export class EmailService {
               <p>Ce lien expirera dans 24 heures.</p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} Horse Vision AI. Tous droits réservés.</p>
+              <p>© ${new Date().getFullYear()} Horse Tempo. Tous droits réservés.</p>
             </div>
           </div>
         </body>
@@ -170,7 +170,7 @@ export class EmailService {
 
     await this.sendEmail({
       to: email,
-      subject: `${inviterName} vous invite à rejoindre ${organizationName} - Horse Vision AI`,
+      subject: `${inviterName} vous invite à rejoindre ${organizationName} - Horse Tempo`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -189,11 +189,11 @@ export class EmailService {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🐴 Horse Vision AI</h1>
+              <h1>🐴 Horse Tempo</h1>
             </div>
             <div class="content">
               <h2>Vous êtes invité !</h2>
-              <p><strong>${inviterName}</strong> vous invite à rejoindre l'organisation <strong>${organizationName}</strong> sur Horse Vision AI.</p>
+              <p><strong>${inviterName}</strong> vous invite à rejoindre l'organisation <strong>${organizationName}</strong> sur Horse Tempo.</p>
               <div class="highlight">
                 <p><strong>Rôle :</strong> ${roleLabels[role] || role}</p>
                 <p><strong>Organisation :</strong> ${organizationName}</p>
@@ -204,7 +204,7 @@ export class EmailService {
               <p>Cette invitation expirera dans 7 jours.</p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} Horse Vision AI. Tous droits réservés.</p>
+              <p>© ${new Date().getFullYear()} Horse Tempo. Tous droits réservés.</p>
             </div>
           </div>
         </body>

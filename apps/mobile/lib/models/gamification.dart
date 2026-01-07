@@ -1,4 +1,4 @@
-/// Complete Gamification System for Horse Vision AI
+/// Complete Gamification System for Horse Tempo
 
 // ============================================
 // XP & LEVELS

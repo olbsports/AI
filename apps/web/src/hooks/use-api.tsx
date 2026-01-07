@@ -1,10 +1,10 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { createApiClient, type HorseVisionApi } from '@horse-vision/api-client';
+import { createApiClient, type HorseTempoApi } from '@horse-vision/api-client';
 import { useAuthStore } from '@/stores/auth';
 
-const ApiContext = createContext<HorseVisionApi | null>(null);
+const ApiContext = createContext<HorseTempoApi | null>(null);
 
 interface ApiProviderProps {
   children: ReactNode;
@@ -27,7 +27,7 @@ export function ApiProvider({ children }: ApiProviderProps) {
   return <ApiContext.Provider value={api}>{children}</ApiContext.Provider>;
 }
 
-export function useApi(): HorseVisionApi {
+export function useApi(): HorseTempoApi {
   const context = useContext(ApiContext);
   if (!context) {
     throw new Error('useApi must be used within an ApiProvider');

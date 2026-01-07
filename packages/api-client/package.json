@@ -1,5 +1,5 @@
 {
-  "name": "@horse-vision/api-client",
+  "name": "@horse-tempo/api-client",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",
@@ -13,11 +13,11 @@
     "build": "echo 'api-client is consumed as TypeScript source'"
   },
   "dependencies": {
-    "@horse-vision/types": "workspace:*",
+    "@horse-tempo/types": "workspace:*",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@horse-vision/config": "workspace:*",
+    "@horse-tempo/config": "workspace:*",
     "typescript": "^5.3.3"
   }
 }

@@ -19,15 +19,15 @@ import 'screens/reports/admin_reports_screen.dart';
 import 'theme/admin_theme.dart';
 import 'widgets/admin_shell.dart';
 
-class HorseVisionAdminApp extends ConsumerWidget {
-  const HorseVisionAdminApp({super.key});
+class HorseTempoAdminApp extends ConsumerWidget {
+  const HorseTempoAdminApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(adminRouterProvider);
 
     return MaterialApp.router(
-      title: 'Horse Vision Admin',
+      title: 'Horse Tempo Admin',
       debugShowCheckedModeBanner: false,
       theme: AdminTheme.lightTheme,
       darkTheme: AdminTheme.darkTheme,

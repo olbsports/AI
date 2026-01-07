@@ -37,7 +37,7 @@ export class SubscriptionsService {
   private readonly planDetails: Record<SubscriptionPlan, PlanDetails> = {
     [SubscriptionPlan.FREE]: {
       name: 'Gratuit',
-      description: 'Pour découvrir Horse Vision AI',
+      description: 'Pour découvrir Horse Tempo',
       monthlyPrice: 0,
       yearlyPrice: 0,
       features: [

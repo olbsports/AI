@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
               <span className="text-2xl">🐴</span>
             </div>
-            <span className="text-2xl font-bold">Horse Vision AI</span>
+            <span className="text-2xl font-bold">Horse Tempo</span>
           </Link>
           <h1 className="text-4xl font-bold mb-6">
             Analysez vos performances équestres avec l'IA

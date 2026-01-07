@@ -95,8 +95,8 @@ export class NotificationProcessor {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-HorseVision-Event': event,
-        'X-HorseVision-Signature': this.generateSignature(payload),
+        'X-HorseTempo-Event': event,
+        'X-HorseTempo-Signature': this.generateSignature(payload),
       },
       body: JSON.stringify({
         event,
@@ -127,7 +127,7 @@ export class NotificationProcessor {
       'team.invitation': `Invitation à rejoindre ${data.organizationName}`,
     };
 
-    return subjects[template] || 'Notification Horse Vision AI';
+    return subjects[template] || 'Notification Horse Tempo';
   }
 
   private renderEmailTemplate(

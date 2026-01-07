@@ -1,4 +1,4 @@
-/// Complete Clubs & Stables System for Horse Vision AI
+/// Complete Clubs & Stables System for Horse Tempo
 
 import 'package:flutter/material.dart';
 

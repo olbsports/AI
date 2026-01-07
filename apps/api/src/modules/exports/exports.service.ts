@@ -216,7 +216,7 @@ export class ExportsService {
   </table>
 
   <div class="footer">
-    <p>Horse Vision AI - Export automatique</p>
+    <p>Horse Tempo - Export automatique</p>
   </div>
 </body>
 </html>`;
@@ -284,7 +284,7 @@ export class ExportsService {
 </head>
 <body>
   <div class="header">
-    <div class="logo">🐴 Horse Vision AI</div>
+    <div class="logo">🐴 Horse Tempo</div>
     <h1>Rapport d'Analyse ${report.type === 'radiological' ? 'Radiologique' : 'de Performance'}</h1>
     <p>N° ${report.reportNumber}</p>
   </div>
@@ -335,8 +335,8 @@ export class ExportsService {
   }
 
   <div class="footer">
-    <p>Rapport généré automatiquement par Horse Vision AI</p>
-    <p>© ${new Date().getFullYear()} Horse Vision AI - Tous droits réservés</p>
+    <p>Rapport généré automatiquement par Horse Tempo</p>
+    <p>© ${new Date().getFullYear()} Horse Tempo - Tous droits réservés</p>
   </div>
 </body>
 </html>`;
