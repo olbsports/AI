@@ -70,6 +70,12 @@ export class MarketplaceController {
     return this.marketplaceService.getBreedingListings(type || 'stallion_service', breed);
   }
 
+  @Get('breeding-matches/:mareId')
+  @ApiOperation({ summary: 'Get AI breeding matches for a mare' })
+  async getBreedingMatches(@CurrentUser() user: any, @Param('mareId') mareId: string) {
+    return this.marketplaceService.getBreedingMatches(mareId, user.id);
+  }
+
   @Get('stats')
   @ApiOperation({ summary: 'Get marketplace statistics' })
   async getStats() {
@@ -168,6 +174,16 @@ export class MarketplaceController {
     @Body() body: { boostLevel: number; duration: number }
   ) {
     return this.marketplaceService.promoteListing(id, user.id, body.boostLevel, body.duration);
+  }
+
+  @Post(':id/report')
+  @ApiOperation({ summary: 'Report a listing' })
+  async reportListing(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { reason: string; details?: string }
+  ) {
+    return this.marketplaceService.reportListing(id, user.id, body.reason, body.details);
   }
 
   // Support for query param type filter

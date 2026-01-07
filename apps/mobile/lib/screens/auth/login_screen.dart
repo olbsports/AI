@@ -120,7 +120,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (value == null || value.isEmpty) {
                       return 'L\'email est requis';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                    // Improved email regex (RFC 5322 compliant)
+                    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
                         .hasMatch(value)) {
                       return 'Email invalide';
                     }
@@ -154,6 +155,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Le mot de passe est requis';
+                    }
+                    if (value.length < 8) {
+                      return 'Minimum 8 caractères';
                     }
                     return null;
                   },

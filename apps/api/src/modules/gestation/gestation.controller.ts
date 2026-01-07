@@ -110,6 +110,24 @@ export class GestationController {
     return this.gestationService.addCheckup(id, user.organizationId, body);
   }
 
+  @Put(':id/checkups/:checkupId')
+  @ApiOperation({ summary: 'Update checkup' })
+  async updateCheckup(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Param('checkupId') checkupId: string,
+    @Body()
+    body: {
+      date?: string;
+      type?: string;
+      notes?: string;
+      vetName?: string;
+      results?: any;
+    }
+  ) {
+    return this.gestationService.updateCheckup(id, checkupId, user.organizationId, body);
+  }
+
   // ==================== MILESTONES ====================
 
   @Get(':id/milestones')
@@ -201,6 +219,23 @@ export class BirthsController {
   @ApiOperation({ summary: 'Get birth by ID' })
   async getBirth(@CurrentUser() user: any, @Param('id') id: string) {
     return this.gestationService.getBirth(id, user.organizationId);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update birth record' })
+  async updateBirth(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body()
+    body: {
+      foalName?: string;
+      foalGender?: string;
+      foalColor?: string;
+      birthWeight?: number;
+      notes?: string;
+    }
+  ) {
+    return this.gestationService.updateBirth(id, user.organizationId, body);
   }
 }
 

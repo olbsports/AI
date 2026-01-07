@@ -204,6 +204,12 @@ export class ClubsController {
     return this.clubsService.createChallenge(id, user.id, body);
   }
 
+  @Post('challenges/:id/accept')
+  @ApiOperation({ summary: 'Accept a challenge' })
+  async acceptChallenge(@CurrentUser() user: any, @Param('id') challengeId: string) {
+    return this.clubsService.acceptChallenge(challengeId, user.id);
+  }
+
   @Post(':id/events')
   @ApiOperation({ summary: 'Create club event' })
   async createEvent(
@@ -222,6 +228,12 @@ export class ClubsController {
     return this.clubsService.createEvent(id, user.id, body);
   }
 
+  @Post('events/:id/join')
+  @ApiOperation({ summary: 'Join a club event' })
+  async joinEvent(@CurrentUser() user: any, @Param('id') eventId: string) {
+    return this.clubsService.joinEvent(eventId, user.id);
+  }
+
   @Post(':id/posts')
   @ApiOperation({ summary: 'Create club post' })
   async createPost(
@@ -230,5 +242,15 @@ export class ClubsController {
     @Body() body: { content: string; mediaUrls?: string[] }
   ) {
     return this.clubsService.createPost(id, user.id, body);
+  }
+
+  @Post(':id/posts/:postId/like')
+  @ApiOperation({ summary: 'Like a club post' })
+  async likePost(
+    @CurrentUser() user: any,
+    @Param('id') clubId: string,
+    @Param('postId') postId: string
+  ) {
+    return this.clubsService.likePost(clubId, postId, user.id);
   }
 }

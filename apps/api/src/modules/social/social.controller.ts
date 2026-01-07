@@ -14,6 +14,30 @@ export class SocialController {
 
   // ==================== FEED ENDPOINTS ====================
 
+  @Get('feed')
+  @ApiOperation({ summary: 'Get feed by type (query param)' })
+  async getFeed(
+    @CurrentUser() user: any,
+    @Query('type') type?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    const pageNum = page ? parseInt(page) : 1;
+    const limitNum = limit ? parseInt(limit) : 20;
+
+    switch (type) {
+      case 'following':
+        return this.socialService.getFollowingFeed(user.id, pageNum, limitNum);
+      case 'trending':
+        return this.socialService.getTrendingPosts(pageNum, limitNum);
+      case 'discover':
+        return this.socialService.getTrendingPosts(pageNum, limitNum);
+      case 'forYou':
+      default:
+        return this.socialService.getForYouFeed(user.id, pageNum, limitNum);
+    }
+  }
+
   @Get('feed/for-you')
   @ApiOperation({ summary: 'Get personalized feed' })
   async getForYouFeed(
@@ -108,9 +132,16 @@ export class SocialController {
 
   @Get('notes/saved')
   @ApiOperation({ summary: 'Get saved posts' })
-  async getSavedPosts(@CurrentUser() user: any) {
-    // TODO: Implement saved posts feature
-    return [];
+  async getSavedPosts(
+    @CurrentUser() user: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.socialService.getSavedPosts(
+      user.id,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20
+    );
   }
 
   @Get('notes/:id')
@@ -171,6 +202,46 @@ export class SocialController {
   @ApiOperation({ summary: 'Unsave a post' })
   async unsavePost(@CurrentUser() user: any, @Param('id') id: string) {
     return this.socialService.unsavePost(id, user.id);
+  }
+
+  @Post('notes/:id/share')
+  @ApiOperation({ summary: 'Share a post' })
+  async sharePost(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { platform?: string; message?: string }
+  ) {
+    return this.socialService.sharePost(id, user.id, body);
+  }
+
+  @Delete('notes/:id/comments/:commentId')
+  @ApiOperation({ summary: 'Delete a comment' })
+  async deleteComment(
+    @CurrentUser() user: any,
+    @Param('id') postId: string,
+    @Param('commentId') commentId: string
+  ) {
+    return this.socialService.deleteComment(commentId, user.id, postId);
+  }
+
+  @Post('notes/:id/comments/:commentId/like')
+  @ApiOperation({ summary: 'Like a comment' })
+  async likeComment(
+    @CurrentUser() user: any,
+    @Param('id') postId: string,
+    @Param('commentId') commentId: string
+  ) {
+    return this.socialService.likeComment(commentId, user.id);
+  }
+
+  @Delete('notes/:id/comments/:commentId/like')
+  @ApiOperation({ summary: 'Unlike a comment' })
+  async unlikeComment(
+    @CurrentUser() user: any,
+    @Param('id') postId: string,
+    @Param('commentId') commentId: string
+  ) {
+    return this.socialService.unlikeComment(commentId, user.id);
   }
 
   @Put('notes/:id')

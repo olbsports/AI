@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { calculatePagination, calculateOffset } from '@horse-vision/types';
 import { randomBytes } from 'crypto';
@@ -16,7 +21,7 @@ export class ReportsService {
       status?: string;
       horseId?: string;
       category?: string;
-    },
+    }
   ) {
     const page = params.page ?? 1;
     const pageSize = params.pageSize ?? 20;
@@ -44,6 +49,54 @@ export class ReportsService {
       items,
       pagination: calculatePagination(totalItems, page, pageSize),
     };
+  }
+
+  async create(organizationId: string, data: any) {
+    // Validate analysis session exists and belongs to organization
+    const analysisSession = await this.prisma.analysisSession.findFirst({
+      where: {
+        id: data.analysisSessionId,
+        organizationId,
+      },
+    });
+
+    if (!analysisSession) {
+      throw new BadRequestException('Analysis session not found');
+    }
+
+    // Check if report already exists for this analysis session
+    const existingReport = await this.prisma.report.findUnique({
+      where: { analysisSessionId: data.analysisSessionId },
+    });
+
+    if (existingReport) {
+      throw new BadRequestException('Report already exists for this analysis session');
+    }
+
+    // Generate report number
+    const reportNumber = `HV-${data.type.toUpperCase().substring(0, 5)}-${Math.floor(Math.random() * 10000)}`;
+
+    return this.prisma.report.create({
+      data: {
+        reportNumber,
+        type: data.type,
+        examDate: new Date(data.examDate),
+        examTime: data.examTime,
+        location: data.location,
+        veterinarians: data.veterinarians || [],
+        examinedRegions: data.examinedRegions || [],
+        globalScore: data.globalScore,
+        category: data.category,
+        horseId: data.horseId,
+        analysisSessionId: data.analysisSessionId,
+        organizationId,
+        status: 'draft',
+      },
+      include: {
+        horse: true,
+        analysisSession: true,
+      },
+    });
   }
 
   async findById(id: string, organizationId: string) {

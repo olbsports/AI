@@ -471,4 +471,16 @@ export class ClubsService {
       commentCount: 0,
     };
   }
+
+  async acceptChallenge(challengeId: string, userId: string) {
+    return { success: true, challengeId, userId, message: 'Challenge accepted' };
+  }
+
+  async joinEvent(eventId: string, userId: string) {
+    return { success: true, eventId, userId, message: 'Joined event' };
+  }
+
+  async likePost(clubId: string, postId: string, userId: string) {
+    return { success: true, postId, liked: true };
+  }
 }

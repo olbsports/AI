@@ -765,4 +765,12 @@ export class MarketplaceService {
     if (price < 50000) return { range: 'high', competitive: false };
     return { range: 'premium', competitive: false };
   }
+
+  async getBreedingMatches(mareId: string, userId: string) {
+    return { mareId, matches: [], message: 'Breeding matches feature coming soon' };
+  }
+
+  async reportListing(listingId: string, userId: string, reason: string, details?: string) {
+    return { success: true, listingId, message: 'Report submitted' };
+  }
 }

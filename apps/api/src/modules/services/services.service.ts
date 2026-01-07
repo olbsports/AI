@@ -21,7 +21,13 @@ export class ServicesService {
       distance: 5.2,
       photoUrl: null,
       services: ['Consultation', 'Urgences', 'Chirurgie', 'Dentisterie'],
-      workingHours: { mon: '8:00-18:00', tue: '8:00-18:00', wed: '8:00-18:00', thu: '8:00-18:00', fri: '8:00-18:00' },
+      workingHours: {
+        mon: '8:00-18:00',
+        tue: '8:00-18:00',
+        wed: '8:00-18:00',
+        thu: '8:00-18:00',
+        fri: '8:00-18:00',
+      },
     },
     {
       id: 'farrier-1',
@@ -37,7 +43,13 @@ export class ServicesService {
       distance: 12.5,
       photoUrl: null,
       services: ['Ferrure', 'Parage', 'Orthopédie'],
-      workingHours: { mon: '7:00-17:00', tue: '7:00-17:00', wed: '7:00-17:00', thu: '7:00-17:00', fri: '7:00-17:00' },
+      workingHours: {
+        mon: '7:00-17:00',
+        tue: '7:00-17:00',
+        wed: '7:00-17:00',
+        thu: '7:00-17:00',
+        fri: '7:00-17:00',
+      },
     },
     {
       id: 'osteo-1',
@@ -53,7 +65,13 @@ export class ServicesService {
       distance: 8.3,
       photoUrl: null,
       services: ['Ostéopathie', 'Massage', 'Rééducation'],
-      workingHours: { mon: '9:00-19:00', tue: '9:00-19:00', wed: '9:00-19:00', thu: '9:00-19:00', fri: '9:00-19:00' },
+      workingHours: {
+        mon: '9:00-19:00',
+        tue: '9:00-19:00',
+        wed: '9:00-19:00',
+        thu: '9:00-19:00',
+        fri: '9:00-19:00',
+      },
     },
     {
       id: 'dentist-1',
@@ -77,14 +95,13 @@ export class ServicesService {
     let providers = [...this.mockProviders];
 
     if (filters.type) {
-      providers = providers.filter(p => p.type === filters.type);
+      providers = providers.filter((p) => p.type === filters.type);
     }
 
     if (filters.query) {
       const q = filters.query.toLowerCase();
-      providers = providers.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.specialty.toLowerCase().includes(q)
+      providers = providers.filter(
+        (p) => p.name.toLowerCase().includes(q) || p.specialty.toLowerCase().includes(q)
       );
     }
 
@@ -93,7 +110,7 @@ export class ServicesService {
 
   async getProviders(type?: string) {
     if (type) {
-      return this.mockProviders.filter(p => p.type === type);
+      return this.mockProviders.filter((p) => p.type === type);
     }
     return this.mockProviders;
   }
@@ -102,7 +119,7 @@ export class ServicesService {
     let providers = [...this.mockProviders].sort((a, b) => a.distance - b.distance);
 
     if (emergency) {
-      providers = providers.filter(p => p.available);
+      providers = providers.filter((p) => p.available);
     }
 
     return providers.slice(0, 5);
@@ -114,7 +131,7 @@ export class ServicesService {
   }
 
   async getFeaturedProviders() {
-    return this.mockProviders.filter(p => p.rating >= 4.7);
+    return this.mockProviders.filter((p) => p.rating >= 4.7);
   }
 
   async getStats(organizationId: string) {
@@ -128,20 +145,52 @@ export class ServicesService {
 
   async getEmergencyContacts(organizationId: string) {
     return [
-      { id: 'ec-1', name: 'Urgences Vétérinaires', phone: '01 44 44 44 44', type: 'emergency', notes: 'Disponible 24h/24' },
-      { id: 'ec-2', name: 'Dr. Martin (vétérinaire)', phone: '+33 6 12 34 56 78', type: 'veterinarian', notes: 'Vétérinaire principal' },
-      { id: 'ec-3', name: 'Clinique équine de Paris', phone: '01 55 55 55 55', type: 'clinic', notes: 'Clinique de référence' },
+      {
+        id: 'ec-1',
+        name: 'Urgences Vétérinaires',
+        phone: '01 44 44 44 44',
+        type: 'emergency',
+        notes: 'Disponible 24h/24',
+      },
+      {
+        id: 'ec-2',
+        name: 'Dr. Martin (vétérinaire)',
+        phone: '+33 6 12 34 56 78',
+        type: 'veterinarian',
+        notes: 'Vétérinaire principal',
+      },
+      {
+        id: 'ec-3',
+        name: 'Clinique équine de Paris',
+        phone: '01 55 55 55 55',
+        type: 'clinic',
+        notes: 'Clinique de référence',
+      },
     ];
   }
 
   async getProvider(id: string) {
-    return this.mockProviders.find(p => p.id === id) || null;
+    return this.mockProviders.find((p) => p.id === id) || null;
   }
 
   async getProviderReviews(providerId: string) {
     return [
-      { id: 'r1', userId: 'u1', userName: 'Jean D.', rating: 5, comment: 'Excellent vétérinaire, très professionnel', date: new Date() },
-      { id: 'r2', userId: 'u2', userName: 'Marie L.', rating: 4, comment: 'Bon service, un peu cher', date: new Date(Date.now() - 86400000) },
+      {
+        id: 'r1',
+        userId: 'u1',
+        userName: 'Jean D.',
+        rating: 5,
+        comment: 'Excellent vétérinaire, très professionnel',
+        date: new Date(),
+      },
+      {
+        id: 'r2',
+        userId: 'u2',
+        userName: 'Marie L.',
+        rating: 4,
+        comment: 'Bon service, un peu cher',
+        date: new Date(Date.now() - 86400000),
+      },
     ];
   }
 
@@ -163,7 +212,10 @@ export class ServicesService {
     };
   }
 
-  async addEmergencyContact(organizationId: string, data: { name: string; phone: string; type: string; notes?: string }) {
+  async addEmergencyContact(
+    organizationId: string,
+    data: { name: string; phone: string; type: string; notes?: string }
+  ) {
     return {
       id: `ec-${Date.now()}`,
       ...data,
@@ -229,5 +281,21 @@ export class ServicesService {
 
   async rateAppointment(id: string, data: { rating: number; comment?: string }) {
     return { id, ...data, ratedAt: new Date() };
+  }
+
+  async updateReview(userId: string, providerId: string, reviewId: string, data: any) {
+    return { success: true, reviewId, ...data };
+  }
+
+  async deleteReview(userId: string, providerId: string, reviewId: string) {
+    return { success: true, reviewId, message: 'Review deleted' };
+  }
+
+  async markReviewHelpful(userId: string, reviewId: string) {
+    return { success: true, reviewId, helpful: true };
+  }
+
+  async reportProvider(userId: string, providerId: string, data: any) {
+    return { success: true, providerId, message: 'Report submitted' };
   }
 }

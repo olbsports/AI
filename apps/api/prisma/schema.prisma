@@ -104,6 +104,8 @@ model User {
   socialPosts             SocialPost[]
   comments                Comment[]
   likes                   Like[]
+  commentLikes            CommentLike[]
+  savedPosts              SavedPost[]
   sentMessages            Message[]             @relation("SentMessages")
   receivedMessages        Message[]             @relation("ReceivedMessages")
   notifications           Notification[]
@@ -721,6 +723,7 @@ model SocialPost {
   // Relations
   comments        Comment[]
   likes           Like[]
+  savedPosts      SavedPost[]
   reports         UserReport[]
 
   @@index([authorId, createdAt])
@@ -734,6 +737,7 @@ model Comment {
   id              String   @id @default(uuid())
 
   content         String
+  likeCount       Int      @default(0)
 
   // Parent (for replies)
   parentId        String?
@@ -747,6 +751,9 @@ model Comment {
   // Author
   authorId        String
   author          User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Relations
+  likes           CommentLike[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -770,6 +777,40 @@ model Like {
 
   @@unique([userId, postId])
   @@map("likes")
+}
+
+// ==================== COMMENT LIKES ====================
+
+model CommentLike {
+  id              String   @id @default(uuid())
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  commentId       String
+  comment         Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, commentId])
+  @@map("comment_likes")
+}
+
+// ==================== SAVED POSTS ====================
+
+model SavedPost {
+  id              String   @id @default(uuid())
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId          String
+  post            SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@map("saved_posts")
 }
 
 // ==================== FOLLOWS ====================

@@ -5,7 +5,12 @@ import { SireWebService } from '../external-data/sireweb.service';
 import { IFCEService } from '../external-data/ifce.service';
 import { MarketDataService } from '../external-data/market-data.service';
 import { AnthropicService } from '../ai/anthropic.service';
-import { CreateValuationDto, QuickEstimateDto, ValuationResponse, ValuationFactors } from './dto/equicote.dto';
+import {
+  CreateValuationDto,
+  QuickEstimateDto,
+  ValuationResponse,
+  ValuationFactors,
+} from './dto/equicote.dto';
 
 @Injectable()
 export class EquiCoteService {
@@ -13,22 +18,22 @@ export class EquiCoteService {
 
   // Base prices by studbook (EUR)
   private readonly BASE_PRICES: Record<string, number> = {
-    SF: 15000,     // Selle Français
-    KWPN: 25000,   // Dutch Warmblood
-    BWP: 20000,    // Belgian Warmblood
-    HOLST: 22000,  // Holsteiner
-    HANN: 20000,   // Hanoverian
-    OLD: 18000,    // Oldenburg
-    WEST: 17000,   // Westphalian
-    AA: 12000,     // Anglo-Arabe
-    PS: 30000,     // Pur-Sang (Thoroughbred)
-    AR: 8000,      // Arabe
-    PFS: 5000,     // Poney Français de Selle
-    CO: 6000,      // Connemara
-    WEL: 7000,     // Welsh
-    ISH: 16000,    // Irish Sport Horse
-    ZANG: 19000,   // Zangersheide
-    DSP: 18000,    // German Sport Horse
+    SF: 15000, // Selle Français
+    KWPN: 25000, // Dutch Warmblood
+    BWP: 20000, // Belgian Warmblood
+    HOLST: 22000, // Holsteiner
+    HANN: 20000, // Hanoverian
+    OLD: 18000, // Oldenburg
+    WEST: 17000, // Westphalian
+    AA: 12000, // Anglo-Arabe
+    PS: 30000, // Pur-Sang (Thoroughbred)
+    AR: 8000, // Arabe
+    PFS: 5000, // Poney Français de Selle
+    CO: 6000, // Connemara
+    WEL: 7000, // Welsh
+    ISH: 16000, // Irish Sport Horse
+    ZANG: 19000, // Zangersheide
+    DSP: 18000, // German Sport Horse
   };
 
   // Level multipliers
@@ -52,8 +57,8 @@ export class EquiCoteService {
 
   // Discipline demand factors
   private readonly DISCIPLINE_FACTORS: Record<string, number> = {
-    CSO: 1.2,      // Show Jumping - High demand
-    CCE: 1.15,     // Eventing
+    CSO: 1.2, // Show Jumping - High demand
+    CCE: 1.15, // Eventing
     Dressage: 1.1,
     Hunter: 1.05,
     Endurance: 0.9,
@@ -61,7 +66,7 @@ export class EquiCoteService {
     Voltige: 0.8,
     TREC: 0.75,
     Polo: 1.3,
-    Course: 1.5,   // Racing
+    Course: 1.5, // Racing
   };
 
   constructor(
@@ -70,7 +75,7 @@ export class EquiCoteService {
     private sireWebService: SireWebService,
     private ifceService: IFCEService,
     private marketDataService: MarketDataService,
-    private anthropicService: AnthropicService,
+    private anthropicService: AnthropicService
   ) {}
 
   /**
@@ -79,7 +84,7 @@ export class EquiCoteService {
   async createValuation(
     horseId: string,
     userId: string,
-    organizationId: string,
+    organizationId: string
   ): Promise<ValuationResponse> {
     this.logger.log(`Creating EquiCote valuation for horse ${horseId}`);
 
@@ -148,7 +153,7 @@ export class EquiCoteService {
 
     // Determine market trend
     const marketTrend = this.determineMarketTrend(
-      marketData.status === 'fulfilled' ? marketData.value : null,
+      marketData.status === 'fulfilled' ? marketData.value : null
     );
 
     // Save valuation
@@ -160,7 +165,8 @@ export class EquiCoteService {
         averagePrice,
         confidence,
         factors: factors as any,
-        comparableCount: marketData.status === 'fulfilled' ? marketData.value?.comparables?.length || 0 : 0,
+        comparableCount:
+          marketData.status === 'fulfilled' ? marketData.value?.comparables?.length || 0 : 0,
         marketTrend,
         demandIndex: factors.demand * 100,
         aiAnalysis,
@@ -209,19 +215,19 @@ export class EquiCoteService {
   /**
    * Calculate all valuation factors
    */
-  private calculateFactors(
-    horse: any,
-    age: number | null,
-    externalData: any,
-  ): ValuationFactors {
+  private calculateFactors(horse: any, age: number | null, externalData: any): ValuationFactors {
     // Age factor (0.4 - 1.2)
     let ageFactor = 1.0;
     if (age !== null) {
       if (age < 3) ageFactor = 0.5;
-      else if (age >= 3 && age <= 5) ageFactor = 0.8; // Young, potential
-      else if (age >= 6 && age <= 8) ageFactor = 1.2; // Prime age
-      else if (age >= 9 && age <= 12) ageFactor = 1.0; // Experienced
-      else if (age >= 13 && age <= 16) ageFactor = 0.7; // Aging
+      else if (age >= 3 && age <= 5)
+        ageFactor = 0.8; // Young, potential
+      else if (age >= 6 && age <= 8)
+        ageFactor = 1.2; // Prime age
+      else if (age >= 9 && age <= 12)
+        ageFactor = 1.0; // Experienced
+      else if (age >= 13 && age <= 16)
+        ageFactor = 0.7; // Aging
       else ageFactor = 0.4; // Senior
     }
 
@@ -235,7 +241,7 @@ export class EquiCoteService {
       const podiums = horse.competitionResults.filter((r: any) => r.rank <= 3).length;
       const classedCount = horse.competitionResults.filter((r: any) => r.rank <= 10).length;
 
-      competitionFactor = 1.0 + (wins * 0.05) + (podiums * 0.03) + (classedCount * 0.01);
+      competitionFactor = 1.0 + wins * 0.05 + podiums * 0.03 + classedCount * 0.01;
       competitionFactor = Math.min(competitionFactor, 2.0); // Cap at 2x
     }
 
@@ -249,7 +255,7 @@ export class EquiCoteService {
     let lineageFactor = 1.0;
     if (externalData.ifce?.indices) {
       const iso = externalData.ifce.indices.ISO || 100;
-      lineageFactor = 0.8 + (iso / 500); // ISO 100 = 1.0, ISO 150 = 1.1
+      lineageFactor = 0.8 + iso / 500; // ISO 100 = 1.0, ISO 150 = 1.1
       lineageFactor = Math.min(Math.max(lineageFactor, 0.8), 1.5);
     } else if (horse.sireName && horse.damName) {
       lineageFactor = 1.1; // Known pedigree bonus
@@ -276,7 +282,8 @@ export class EquiCoteService {
     // Physical attributes factor
     let physicalFactor = 1.0;
     if (horse.heightCm) {
-      if (horse.heightCm >= 165 && horse.heightCm <= 175) physicalFactor = 1.1; // Ideal height
+      if (horse.heightCm >= 165 && horse.heightCm <= 175)
+        physicalFactor = 1.1; // Ideal height
       else if (horse.heightCm < 155 || horse.heightCm > 180) physicalFactor = 0.9;
     }
 
@@ -299,7 +306,8 @@ export class EquiCoteService {
   private calculateBasePrice(horse: any, factors: ValuationFactors): number {
     const baseStudbookPrice = this.BASE_PRICES[horse.studbook] || 10000;
 
-    const price = baseStudbookPrice *
+    const price =
+      baseStudbookPrice *
       factors.age *
       factors.level *
       factors.competition *
@@ -317,15 +325,15 @@ export class EquiCoteService {
    */
   private calculatePriceRange(
     basePrice: number,
-    factors: ValuationFactors,
+    factors: ValuationFactors
   ): { minPrice: number; maxPrice: number; averagePrice: number } {
     // Variance depends on data completeness
     const dataCompleteness = Object.values(factors).filter((v) => v !== 1.0).length / 9;
-    const variance = 0.25 - (dataCompleteness * 0.1); // 15-25% variance
+    const variance = 0.25 - dataCompleteness * 0.1; // 15-25% variance
 
     const minPrice = Math.round((basePrice * (1 - variance)) / 500) * 500;
     const maxPrice = Math.round((basePrice * (1 + variance)) / 500) * 500;
-    const averagePrice = Math.round(((minPrice + maxPrice) / 2) / 500) * 500;
+    const averagePrice = Math.round((minPrice + maxPrice) / 2 / 500) * 500;
 
     return { minPrice, maxPrice, averagePrice };
   }
@@ -359,7 +367,7 @@ export class EquiCoteService {
   private async getAIAnalysis(
     horse: any,
     factors: ValuationFactors,
-    externalData: any,
+    externalData: any
   ): Promise<{ analysis: string; recommendations: string[] }> {
     try {
       const prompt = `
@@ -374,7 +382,9 @@ CHEVAL:
 - État de santé: ${horse.healthStatus}
 
 FACTEURS DE VALORISATION:
-${Object.entries(factors).map(([k, v]) => `- ${k}: ${v.toFixed(2)}`).join('\n')}
+${Object.entries(factors)
+  .map(([k, v]) => `- ${k}: ${v.toFixed(2)}`)
+  .join('\n')}
 
 DONNÉES EXTERNES:
 - FFE: ${externalData.ffe ? 'Disponible' : 'Non disponible'}
@@ -514,5 +524,9 @@ Fournis:
     if (age >= 9 && age <= 12) return 1.0;
     if (age >= 13 && age <= 16) return 0.7;
     return 0.4;
+  }
+
+  async getComparables(horseId: string) {
+    return { horseId, comparables: [], message: 'No comparable horses found' };
   }
 }

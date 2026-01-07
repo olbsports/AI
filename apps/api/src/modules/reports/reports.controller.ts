@@ -18,6 +18,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { ListReportsQueryDto } from './dto/list-reports-query.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { CreateShareLinkDto } from './dto/create-share-link.dto';
+import { CreateReportDto } from './dto/create-report.dto';
 
 @ApiTags('reports')
 @Controller('reports')
@@ -30,6 +31,14 @@ export class ReportsController {
   @ApiOperation({ summary: 'List reports' })
   async list(@CurrentUser() user: any, @Query() query: ListReportsQueryDto) {
     return this.reportsService.findAll(user.organizationId, query);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new report' })
+  async create(@CurrentUser() user: any, @Body() dto: CreateReportDto) {
+    return this.reportsService.create(user.organizationId, dto);
   }
 
   @Get('shared/:token')
@@ -51,11 +60,7 @@ export class ReportsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a report' })
-  async update(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-    @Body() dto: UpdateReportDto,
-  ) {
+  async update(@CurrentUser() user: any, @Param('id') id: string, @Body() dto: UpdateReportDto) {
     return this.reportsService.update(id, user.organizationId, dto);
   }
 
@@ -74,7 +79,7 @@ export class ReportsController {
   async createShareLink(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() dto: CreateShareLinkDto,
+    @Body() dto: CreateShareLinkDto
   ) {
     return this.reportsService.createShareLink(id, user.organizationId, dto.expiresInDays);
   }

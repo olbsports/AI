@@ -67,6 +67,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       print('LOGIN: Success!');
       await _storage.saveTokens(response.accessToken, response.refreshToken);
       await _storage.saveUserId(response.user.id);
+
+      // Save token expiry if provided
+      if (response.expiresAt != null) {
+        await _storage.saveTokenExpiry(response.expiresAt!);
+      }
+
       state = state.copyWith(
         user: response.user,
         isAuthenticated: true,
@@ -89,6 +95,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String firstName,
     required String lastName,
     required String organizationName,
+    required bool acceptTerms,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -98,9 +105,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
         firstName: firstName,
         lastName: lastName,
         organizationName: organizationName,
+        acceptTerms: acceptTerms,
       );
       await _storage.saveTokens(response.accessToken, response.refreshToken);
       await _storage.saveUserId(response.user.id);
+
+      // Save token expiry if provided
+      if (response.expiresAt != null) {
+        await _storage.saveTokenExpiry(response.expiresAt!);
+      }
+
       state = state.copyWith(
         user: response.user,
         isAuthenticated: true,
@@ -132,11 +146,36 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // Clear local state first
+    state = AuthState(isLoading: true);
+
     try {
+      // Try to notify backend of logout
       await _api.logout();
-    } catch (_) {}
-    await _storage.clearAll();
+    } catch (e) {
+      // Log error but continue with logout
+      print('LOGOUT: Backend logout failed: $e');
+    }
+
+    try {
+      // Clear local storage
+      await _storage.clearAll();
+    } catch (e) {
+      print('LOGOUT: Failed to clear storage: $e');
+    }
+
+    // Reset state
     state = AuthState();
+  }
+
+  Future<void> refreshUser() async {
+    try {
+      final user = await _api.getProfile();
+      state = state.copyWith(user: user);
+    } catch (e) {
+      print('REFRESH USER ERROR: $e');
+      // Don't update state on error, keep current user
+    }
   }
 
   void clearError() {

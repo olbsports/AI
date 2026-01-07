@@ -22,6 +22,7 @@ class StorageService {
   // Keys
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _tokenExpiryKey = 'token_expiry';
   static const String _userIdKey = 'user_id';
   static const String _themeKey = 'theme_mode';
   static const String _localeKey = 'locale';
@@ -50,9 +51,26 @@ class StorageService {
     await saveRefreshToken(refreshToken);
   }
 
+  Future<void> saveTokenExpiry(int expiresAt) async {
+    await _prefs.setInt(_tokenExpiryKey, expiresAt);
+  }
+
+  int? getAccessTokenExpiry() {
+    return _prefs.getInt(_tokenExpiryKey);
+  }
+
+  bool isAccessTokenExpired() {
+    final expiresAt = getAccessTokenExpiry();
+    if (expiresAt == null) return false;
+
+    final currentTimestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    return currentTimestamp >= expiresAt;
+  }
+
   Future<void> clearTokens() async {
     await _secureStorage.delete(key: _accessTokenKey);
     await _secureStorage.delete(key: _refreshTokenKey);
+    await _prefs.remove(_tokenExpiryKey);
   }
 
   // ==================== Shared Preferences ====================

@@ -23,6 +23,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _organizationController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _acceptTerms = false;
 
   @override
   void dispose() {
@@ -37,12 +38,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     if (_formKey.currentState!.validate()) {
+      if (!_acceptTerms) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vous devez accepter les CGU pour continuer'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       final success = await ref.read(authProvider.notifier).register(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             firstName: _firstNameController.text.trim(),
             lastName: _lastNameController.text.trim(),
             organizationName: _organizationController.text.trim(),
+            acceptTerms: _acceptTerms,
           );
 
       if (success && mounted) {
@@ -194,7 +206,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     if (value == null || value.isEmpty) {
                       return 'L\'email est requis';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                    // Improved email regex (RFC 5322 compliant)
+                    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
                         .hasMatch(value)) {
                       return 'Email invalide';
                     }
@@ -267,6 +280,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+
+                // Terms and conditions checkbox (RGPD compliance)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Checkbox(
+                      value: _acceptTerms,
+                      onChanged: (value) {
+                        setState(() {
+                          _acceptTerms = value ?? false;
+                        });
+                      },
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _acceptTerms = !_acceptTerms;
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text.rich(
+                            TextSpan(
+                              text: 'J\'accepte les ',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              children: [
+                                TextSpan(
+                                  text: 'Conditions Générales d\'Utilisation',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                                const TextSpan(text: ' et la '),
+                                TextSpan(
+                                  text: 'Politique de Confidentialité',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
 

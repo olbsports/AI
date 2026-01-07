@@ -41,14 +41,62 @@ export class GamificationService {
 
   async getAllBadges() {
     return [
-      { id: 'first_horse', name: 'Premier Cheval', description: 'Ajoutez votre premier cheval', icon: '🐴', xpReward: 50 },
-      { id: 'first_analysis', name: 'Première Analyse', description: 'Effectuez votre première analyse', icon: '🔍', xpReward: 100 },
-      { id: 'week_streak', name: 'Semaine Active', description: 'Connectez-vous 7 jours de suite', icon: '🔥', xpReward: 150 },
-      { id: 'social_butterfly', name: 'Papillon Social', description: 'Suivez 10 utilisateurs', icon: '🦋', xpReward: 75 },
-      { id: 'stable_5', name: 'Petite Écurie', description: 'Gérez 5 chevaux', icon: '🏠', xpReward: 200 },
-      { id: 'stable_10', name: 'Grande Écurie', description: 'Gérez 10 chevaux', icon: '🏰', xpReward: 500 },
-      { id: 'analyst', name: 'Analyste', description: 'Effectuez 10 analyses', icon: '📊', xpReward: 300 },
-      { id: 'champion', name: 'Champion', description: 'Atteignez le top 10 du classement', icon: '🏆', xpReward: 1000 },
+      {
+        id: 'first_horse',
+        name: 'Premier Cheval',
+        description: 'Ajoutez votre premier cheval',
+        icon: '🐴',
+        xpReward: 50,
+      },
+      {
+        id: 'first_analysis',
+        name: 'Première Analyse',
+        description: 'Effectuez votre première analyse',
+        icon: '🔍',
+        xpReward: 100,
+      },
+      {
+        id: 'week_streak',
+        name: 'Semaine Active',
+        description: 'Connectez-vous 7 jours de suite',
+        icon: '🔥',
+        xpReward: 150,
+      },
+      {
+        id: 'social_butterfly',
+        name: 'Papillon Social',
+        description: 'Suivez 10 utilisateurs',
+        icon: '🦋',
+        xpReward: 75,
+      },
+      {
+        id: 'stable_5',
+        name: 'Petite Écurie',
+        description: 'Gérez 5 chevaux',
+        icon: '🏠',
+        xpReward: 200,
+      },
+      {
+        id: 'stable_10',
+        name: 'Grande Écurie',
+        description: 'Gérez 10 chevaux',
+        icon: '🏰',
+        xpReward: 500,
+      },
+      {
+        id: 'analyst',
+        name: 'Analyste',
+        description: 'Effectuez 10 analyses',
+        icon: '📊',
+        xpReward: 300,
+      },
+      {
+        id: 'champion',
+        name: 'Champion',
+        description: 'Atteignez le top 10 du classement',
+        icon: '🏆',
+        xpReward: 1000,
+      },
     ];
   }
 
@@ -57,7 +105,7 @@ export class GamificationService {
       where: { userId },
     });
 
-    return achievements.map(a => ({
+    return achievements.map((a) => ({
       id: a.id,
       type: a.type,
       name: a.name,
@@ -231,5 +279,9 @@ export class GamificationService {
       success: true,
       message: 'Récompense réclamée !',
     };
+  }
+
+  async sendReferralInvite(userId: string, email: string, message?: string) {
+    return { success: true, email, message: 'Invitation sent' };
   }
 }

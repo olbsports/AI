@@ -16,7 +16,7 @@ export class AnalysisService {
       type?: string;
       status?: string;
       horseId?: string;
-    },
+    }
   ) {
     const page = params.page ?? 1;
     const pageSize = params.pageSize ?? 20;
@@ -58,11 +58,7 @@ export class AnalysisService {
     return analysis;
   }
 
-  async create(
-    organizationId: string,
-    userId: string,
-    data: CreateAnalysisDto,
-  ) {
+  async create(organizationId: string, userId: string, data: CreateAnalysisDto) {
     // Check token balance
     const organization = await this.prisma.organization.findUnique({
       where: { id: organizationId },
@@ -130,11 +126,7 @@ export class AnalysisService {
     });
   }
 
-  async updateStatus(
-    id: string,
-    status: string,
-    results?: any,
-  ) {
+  async updateStatus(id: string, status: string, results?: any) {
     const data: any = { status };
 
     if (status === 'processing') {
@@ -161,5 +153,70 @@ export class AnalysisService {
       where: { id },
       data,
     });
+  }
+
+  async delete(id: string, organizationId: string) {
+    const analysis = await this.findById(id, organizationId);
+
+    // Refund tokens if not completed
+    if (analysis.status === 'pending') {
+      await this.prisma.organization.update({
+        where: { id: organizationId },
+        data: {
+          tokenBalance: { increment: analysis.tokensConsumed },
+        },
+      });
+    }
+
+    return this.prisma.analysisSession.delete({
+      where: { id },
+    });
+  }
+
+  async retry(id: string, organizationId: string, userId: string) {
+    const analysis = await this.findById(id, organizationId);
+
+    if (analysis.status !== 'failed') {
+      throw new BadRequestException('Can only retry failed analyses');
+    }
+
+    // Check token balance
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    const tokenCost = calculateTokenCost(analysis.type as any);
+
+    if (!hasEnoughTokens(organization.tokenBalance, analysis.type as any)) {
+      throw new BadRequestException('Insufficient tokens');
+    }
+
+    // Deduct tokens
+    await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: {
+        tokenBalance: { decrement: tokenCost },
+      },
+    });
+
+    // Reset analysis to pending
+    const updatedAnalysis = await this.prisma.analysisSession.update({
+      where: { id },
+      data: {
+        status: 'pending',
+        errorMessage: null,
+        startedAt: null,
+        completedAt: null,
+        tokensConsumed: tokenCost,
+      },
+    });
+
+    // TODO: Queue analysis job
+
+    return updatedAnalysis;
   }
 }

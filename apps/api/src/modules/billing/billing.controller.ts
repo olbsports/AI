@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Body,
+  Query,
   UseGuards,
   Req,
   RawBodyRequest,
@@ -44,7 +45,7 @@ export class BillingController {
   async createCheckout(
     @CurrentOrganization() organizationId: string,
     @CurrentUser('id') userId: string,
-    @Body() dto: CreateCheckoutDto,
+    @Body() dto: CreateCheckoutDto
   ) {
     return this.billingService.createCheckoutSession(organizationId, userId, dto);
   }
@@ -57,7 +58,7 @@ export class BillingController {
   async purchaseTokens(
     @CurrentOrganization() organizationId: string,
     @CurrentUser('id') userId: string,
-    @Body() dto: PurchaseTokensDto,
+    @Body() dto: PurchaseTokensDto
   ) {
     return this.billingService.createTokenPurchaseSession(organizationId, userId, dto);
   }
@@ -69,7 +70,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Create a billing portal session' })
   async createPortalSession(
     @CurrentOrganization() organizationId: string,
-    @Body() dto: CreatePortalSessionDto,
+    @Body() dto: CreatePortalSessionDto
   ) {
     return this.billingService.createPortalSession(organizationId, dto);
   }
@@ -82,12 +83,36 @@ export class BillingController {
     return this.billingService.getSubscriptionStatus(organizationId);
   }
 
+  @Get('tokens')
+  @UseGuards(JwtAuthGuard, OrganizationGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get token balance' })
+  async getTokenBalance(@CurrentOrganization() organizationId: string) {
+    return this.billingService.getTokenBalance(organizationId);
+  }
+
+  @Get('tokens/history')
+  @UseGuards(JwtAuthGuard, OrganizationGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get token transaction history' })
+  async getTokenHistory(
+    @CurrentOrganization() organizationId: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string
+  ) {
+    return this.billingService.getTokenHistory(
+      organizationId,
+      page ? parseInt(page) : 1,
+      pageSize ? parseInt(pageSize) : 20
+    );
+  }
+
   @Post('webhook')
   @HttpCode(200)
   @ApiOperation({ summary: 'Handle Stripe webhooks' })
   async handleWebhook(
     @Req() req: RawBodyRequest<Request>,
-    @Headers('stripe-signature') signature: string,
+    @Headers('stripe-signature') signature: string
   ) {
     await this.billingService.handleWebhook(req.rawBody!, signature);
     return { received: true };

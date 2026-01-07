@@ -43,14 +43,14 @@ final eventsByTypeProvider =
 /// Active goals
 final activeGoalsProvider = FutureProvider<List<Goal>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/goals', queryParams: {'status': 'active'});
+  final response = await api.get('/calendar/goals', queryParams: {'status': 'active'});
   return (response as List).map((e) => Goal.fromJson(e)).toList();
 });
 
 /// All goals
 final allGoalsProvider = FutureProvider<List<Goal>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/goals');
+  final response = await api.get('/calendar/goals');
   return (response as List).map((e) => Goal.fromJson(e)).toList();
 });
 
@@ -161,7 +161,7 @@ class PlanningNotifier extends StateNotifier<AsyncValue<void>> {
   Future<Goal?> createGoal(Map<String, dynamic> data) async {
     state = const AsyncValue.loading();
     try {
-      final response = await _api.post('/goals', data);
+      final response = await _api.post('/calendar/goals', data);
       _ref.invalidate(activeGoalsProvider);
       _ref.invalidate(allGoalsProvider);
       state = const AsyncValue.data(null);
@@ -176,7 +176,7 @@ class PlanningNotifier extends StateNotifier<AsyncValue<void>> {
   Future<bool> updateGoalProgress(String goalId, double value) async {
     state = const AsyncValue.loading();
     try {
-      await _api.put('/goals/$goalId', {'currentValue': value});
+      await _api.put('/calendar/goals/$goalId', {'currentValue': value});
       _ref.invalidate(activeGoalsProvider);
       _ref.invalidate(allGoalsProvider);
       state = const AsyncValue.data(null);
@@ -191,7 +191,7 @@ class PlanningNotifier extends StateNotifier<AsyncValue<void>> {
   Future<bool> completeGoal(String goalId) async {
     state = const AsyncValue.loading();
     try {
-      await _api.post('/goals/$goalId/complete', {});
+      await _api.post('/calendar/goals/$goalId/complete', {});
       _ref.invalidate(activeGoalsProvider);
       _ref.invalidate(allGoalsProvider);
       state = const AsyncValue.data(null);

@@ -12,21 +12,26 @@ export class SocialService {
     const postIds = posts.map((p) => p.id);
 
     // Get user's likes and saves for these posts
-    const [userLikes] = await Promise.all([
+    const [userLikes, userSaves] = await Promise.all([
       this.prisma.like.findMany({
+        where: { userId, postId: { in: postIds } },
+        select: { postId: true },
+      }),
+      this.prisma.savedPost.findMany({
         where: { userId, postId: { in: postIds } },
         select: { postId: true },
       }),
     ]);
 
     const likedPostIds = new Set(userLikes.map((l) => l.postId));
+    const savedPostIds = new Set(userSaves.map((s) => s.postId));
 
     return posts.map((post) => ({
       ...post,
       authorName: `${post.author.firstName} ${post.author.lastName}`,
       authorPhotoUrl: post.author.avatarUrl,
       isLiked: likedPostIds.has(post.id),
-      isSaved: false, // TODO: implement saved posts table
+      isSaved: savedPostIds.has(post.id),
       likeCount: post._count?.likes || post.likeCount || 0,
       commentCount: post._count?.comments || post.commentCount || 0,
     }));
@@ -317,6 +322,47 @@ export class SocialService {
 
   async getMyPosts(userId: string, page = 1, limit = 20) {
     return this.getUserPosts(userId, userId, page, limit);
+  }
+
+  async getSavedPosts(userId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    const savedPosts = await this.prisma.savedPost.findMany({
+      where: { userId },
+      include: {
+        post: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                avatarUrl: true,
+              },
+            },
+            horse: {
+              select: {
+                id: true,
+                name: true,
+                photoUrl: true,
+              },
+            },
+            _count: {
+              select: {
+                comments: true,
+                likes: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    });
+
+    const posts = savedPosts.map((sp) => sp.post);
+    return this.transformPosts(posts, userId);
   }
 
   async deletePost(postId: string, userId: string) {
@@ -739,12 +785,47 @@ export class SocialService {
   // ==================== SAVE/UNSAVE ====================
 
   async savePost(postId: string, userId: string) {
-    // For now, return mock success - would need SavedPost model in schema
+    // Check if already saved
+    const existingSave = await this.prisma.savedPost.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    if (existingSave) {
+      return { saved: true, message: 'Post already saved' };
+    }
+
+    // Save post
+    await this.prisma.savedPost.create({
+      data: {
+        userId,
+        postId,
+      },
+    });
+
     return { saved: true };
   }
 
   async unsavePost(postId: string, userId: string) {
-    // For now, return mock success - would need SavedPost model in schema
+    const existingSave = await this.prisma.savedPost.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    if (existingSave) {
+      await this.prisma.savedPost.delete({
+        where: { id: existingSave.id },
+      });
+    }
+
     return { saved: false };
   }
 
@@ -1039,5 +1120,130 @@ export class SocialService {
     });
 
     return { success: true, message: 'Report submitted successfully' };
+  }
+
+  // ==================== SHARE POST ====================
+
+  async sharePost(postId: string, userId: string, data: { platform?: string; message?: string }) {
+    const post = await this.prisma.socialPost.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    // Increment share count
+    await this.prisma.socialPost.update({
+      where: { id: postId },
+      data: { shareCount: { increment: 1 } },
+    });
+
+    // In a real app, you'd create a share record or integrate with social platforms
+    return {
+      success: true,
+      message: 'Post shared successfully',
+      platform: data.platform || 'internal',
+      shareUrl: `/notes/${postId}`,
+    };
+  }
+
+  // ==================== DELETE COMMENT ====================
+
+  async deleteComment(commentId: string, userId: string, postId: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    if (comment.authorId !== userId) {
+      throw new ForbiddenException('You can only delete your own comments');
+    }
+
+    // Delete comment
+    await this.prisma.comment.delete({
+      where: { id: commentId },
+    });
+
+    // Decrement comment count on post
+    await this.prisma.socialPost.update({
+      where: { id: postId },
+      data: { commentCount: { decrement: 1 } },
+    });
+
+    return { success: true, message: 'Comment deleted successfully' };
+  }
+
+  // ==================== LIKE COMMENT ====================
+
+  async likeComment(commentId: string, userId: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    // Check if already liked
+    const existingLike = await this.prisma.commentLike.findUnique({
+      where: {
+        userId_commentId: {
+          userId,
+          commentId,
+        },
+      },
+    });
+
+    if (existingLike) {
+      // Unlike
+      await this.prisma.commentLike.delete({
+        where: { id: existingLike.id },
+      });
+      await this.prisma.comment.update({
+        where: { id: commentId },
+        data: { likeCount: { decrement: 1 } },
+      });
+      return { liked: false };
+    } else {
+      // Like
+      await this.prisma.commentLike.create({
+        data: {
+          userId,
+          commentId,
+        },
+      });
+      await this.prisma.comment.update({
+        where: { id: commentId },
+        data: { likeCount: { increment: 1 } },
+      });
+      return { liked: true };
+    }
+  }
+
+  async unlikeComment(commentId: string, userId: string) {
+    const existingLike = await this.prisma.commentLike.findUnique({
+      where: {
+        userId_commentId: {
+          userId,
+          commentId,
+        },
+      },
+    });
+
+    if (existingLike) {
+      await this.prisma.commentLike.delete({
+        where: { id: existingLike.id },
+      });
+      await this.prisma.comment.update({
+        where: { id: commentId },
+        data: { likeCount: { decrement: 1 } },
+      });
+    }
+
+    return { liked: false };
   }
 }
