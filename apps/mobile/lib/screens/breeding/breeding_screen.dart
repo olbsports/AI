@@ -84,6 +84,8 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
                     child: Text(
                       'Renseignez les caractéristiques de votre jument pour obtenir des recommandations d\'étalons adaptés.',
                       style: TextStyle(color: AppColors.primary),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -261,10 +263,13 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           _selectedMare!.name,
                           style: const TextStyle(fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         if (_selectedMare!.breed != null)
                           Text(
@@ -273,6 +278,8 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
                               fontSize: 12,
                               color: Colors.grey.shade600,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                       ],
                     ),
@@ -491,6 +498,7 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         rec.stallionName,
@@ -498,6 +506,8 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         rec.stallionStudbook,
@@ -505,6 +515,8 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
                           fontSize: 12,
                           color: Colors.grey.shade600,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -602,6 +614,8 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
                               color: Colors.grey.shade700,
                               fontStyle: FontStyle.italic,
                             ),
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -871,16 +885,21 @@ class _StallionDetailSheet extends ConsumerWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       recommendation.stallionName,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       recommendation.stallionStudbook,
                       style: TextStyle(color: Colors.grey.shade600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

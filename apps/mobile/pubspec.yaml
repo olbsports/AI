@@ -23,6 +23,7 @@ dependencies:
   # Network
   dio: ^5.4.0
   retrofit: ^4.0.3
+  http_parser: ^4.0.2
 
   # Storage
   shared_preferences: ^2.2.2

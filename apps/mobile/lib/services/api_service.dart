@@ -5,6 +5,7 @@ import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../models/models.dart';
 import 'storage_service.dart';
@@ -113,7 +114,8 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
     baseUrl: apiBaseUrl,
     connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(minutes: 2),
+    sendTimeout: const Duration(minutes: 2),
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -231,14 +233,33 @@ class ApiService {
   }
 
   Future<String> uploadProfilePhoto(File file) async {
-    // Valider le fichier avant upload
-    _validateImageFile(file);
+    try {
+      // Valider le fichier avant upload
+      _validateImageFile(file);
 
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(file.path),
-    });
-    final response = await _dio.post('/auth/profile/photo', data: formData);
-    return response.data['url'];
+      final mimeType = lookupMimeType(file.path);
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ),
+      });
+      final response = await _dio.post('/auth/profile/photo', data: formData);
+      return response.data['url'] as String;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé lors de l\'upload. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Le fichier est trop volumineux pour le serveur.');
+      } else if (e.response?.statusCode == 415) {
+        throw Exception('Format de fichier non accepté par le serveur.');
+      }
+      throw Exception('Erreur lors de l\'upload de la photo: ${e.message}');
+    } catch (e) {
+      throw Exception('Erreur lors de l\'upload de la photo: $e');
+    }
   }
 
   Future<void> changePassword(String currentPassword, String newPassword) async {
@@ -284,14 +305,33 @@ class ApiService {
   }
 
   Future<String> uploadRiderPhoto(String riderId, File file) async {
-    // Valider le fichier avant upload
-    _validateImageFile(file);
+    try {
+      // Valider le fichier avant upload
+      _validateImageFile(file);
 
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(file.path),
-    });
-    final response = await _dio.post('/riders/$riderId/photo', data: formData);
-    return response.data['url'];
+      final mimeType = lookupMimeType(file.path);
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ),
+      });
+      final response = await _dio.post('/riders/$riderId/photo', data: formData);
+      return response.data['url'] as String;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé lors de l\'upload. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Le fichier est trop volumineux pour le serveur.');
+      } else if (e.response?.statusCode == 415) {
+        throw Exception('Format de fichier non accepté par le serveur.');
+      }
+      throw Exception('Erreur lors de l\'upload de la photo: ${e.message}');
+    } catch (e) {
+      throw Exception('Erreur lors de l\'upload de la photo: $e');
+    }
   }
 
   // ==================== HORSES ====================
@@ -332,14 +372,33 @@ class ApiService {
   }
 
   Future<String> uploadHorsePhoto(String horseId, File file) async {
-    // Valider le fichier avant upload
-    _validateImageFile(file);
+    try {
+      // Valider le fichier avant upload
+      _validateImageFile(file);
 
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(file.path),
-    });
-    final response = await _dio.post('/horses/$horseId/photo', data: formData);
-    return response.data['url'];
+      final mimeType = lookupMimeType(file.path);
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ),
+      });
+      final response = await _dio.post('/horses/$horseId/photo', data: formData);
+      return response.data['url'] as String;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé lors de l\'upload. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Le fichier est trop volumineux pour le serveur.');
+      } else if (e.response?.statusCode == 415) {
+        throw Exception('Format de fichier non accepté par le serveur.');
+      }
+      throw Exception('Erreur lors de l\'upload de la photo: ${e.message}');
+    } catch (e) {
+      throw Exception('Erreur lors de l\'upload de la photo: $e');
+    }
   }
 
   // ==================== ANALYSES ====================
@@ -556,38 +615,67 @@ class ApiService {
   /// Upload media file (image or video) for social posts
   /// Returns the URL of the uploaded media
   Future<String> uploadMedia(File file, {String type = 'image'}) async {
-    // Validate file size
-    final fileSize = file.lengthSync();
-    final maxSize = type == 'video' ? 100 * 1024 * 1024 : 10 * 1024 * 1024; // 100MB for video, 10MB for image
+    try {
+      // Validate file size
+      final fileSize = file.lengthSync();
+      final maxSize = type == 'video' ? 100 * 1024 * 1024 : 10 * 1024 * 1024; // 100MB for video, 10MB for image
 
-    if (fileSize > maxSize) {
-      final maxMB = maxSize / 1024 / 1024;
-      throw Exception('La taille du fichier ne doit pas dépasser ${maxMB.toInt()}MB');
+      if (fileSize > maxSize) {
+        final maxMB = maxSize / 1024 / 1024;
+        throw Exception('La taille du fichier ne doit pas dépasser ${maxMB.toInt()}MB');
+      }
+
+      // Validate mime type
+      final mimeType = lookupMimeType(file.path);
+      final allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      final allowedVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-m4v'];
+
+      if (type == 'image' && (mimeType == null || !allowedImageTypes.contains(mimeType))) {
+        throw Exception('Format d\'image non supporté. Formats acceptés: JPEG, PNG, WebP, GIF');
+      }
+
+      if (type == 'video' && (mimeType == null || !allowedVideoTypes.contains(mimeType))) {
+        throw Exception('Format vidéo non supporté. Formats acceptés: MP4, MOV, M4V');
+      }
+
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+        ),
+        'type': type,
+      });
+
+      // Use longer timeout for video uploads
+      final options = Options(
+        sendTimeout: type == 'video' ? const Duration(minutes: 5) : const Duration(minutes: 2),
+        receiveTimeout: type == 'video' ? const Duration(minutes: 5) : const Duration(minutes: 2),
+      );
+
+      final response = await _dio.post(
+        '/media/upload',
+        data: formData,
+        options: options,
+      );
+      return response.data['url'] as String;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé lors de l\'upload. Vérifiez votre connexion internet et réessayez.');
+      } else if (e.response?.statusCode == 413) {
+        throw Exception('Le fichier est trop volumineux pour le serveur.');
+      } else if (e.response?.statusCode == 415) {
+        throw Exception('Format de fichier non accepté par le serveur.');
+      } else if (e.type == DioExceptionType.badResponse) {
+        throw Exception('Erreur serveur: ${e.response?.statusMessage ?? "Erreur inconnue"}');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      }
+      throw Exception('Erreur lors de l\'upload: ${e.message}');
+    } catch (e) {
+      throw Exception('Erreur lors de l\'upload du fichier: $e');
     }
-
-    // Validate mime type
-    final mimeType = lookupMimeType(file.path);
-    final allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    final allowedVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-m4v'];
-
-    if (type == 'image' && (mimeType == null || !allowedImageTypes.contains(mimeType))) {
-      throw Exception('Format d\'image non supporté. Formats acceptés: JPEG, PNG, WebP, GIF');
-    }
-
-    if (type == 'video' && (mimeType == null || !allowedVideoTypes.contains(mimeType))) {
-      throw Exception('Format vidéo non supporté. Formats acceptés: MP4, MOV, M4V');
-    }
-
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(
-        file.path,
-        contentType: mimeType != null ? DioMediaType.parse(mimeType) : null,
-      ),
-      'type': type,
-    });
-
-    final response = await _dio.post('/media/upload', data: formData);
-    return response.data['url'] as String;
   }
 
   /// Upload multiple media files

@@ -281,21 +281,24 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             _buildRankChange(entry.rankChange),
           ],
         ),
-        subtitle: Row(
-          children: [
-            const SizedBox(width: 36),
-            Text('Galop ${entry.galopLevel}'),
-            const SizedBox(width: 8),
-            Icon(Icons.analytics, size: 14, color: Colors.grey.shade600),
-            const SizedBox(width: 2),
-            Text('${entry.analysisCount}'),
-            const SizedBox(width: 8),
-            if (entry.streakDays > 0) ...[
-              const Icon(Icons.local_fire_department, size: 14, color: Colors.orange),
+        subtitle: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              const SizedBox(width: 36),
+              Text('Galop ${entry.galopLevel}'),
+              const SizedBox(width: 8),
+              Icon(Icons.analytics, size: 14, color: Colors.grey.shade600),
               const SizedBox(width: 2),
-              Text('${entry.streakDays}j'),
+              Text('${entry.analysisCount}'),
+              const SizedBox(width: 8),
+              if (entry.streakDays > 0) ...[
+                const Icon(Icons.local_fire_department, size: 14, color: Colors.orange),
+                const SizedBox(width: 2),
+                Text('${entry.streakDays}j'),
+              ],
             ],
-          ],
+          ),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,

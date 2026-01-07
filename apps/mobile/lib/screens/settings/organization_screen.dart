@@ -23,7 +23,10 @@ class _OrganizationScreenState extends ConsumerState<OrganizationScreen> {
   @override
   void initState() {
     super.initState();
-    _loadOrganizationData();
+    // Schedule data loading after the first frame to avoid initState ref.read issues
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadOrganizationData();
+    });
   }
 
   void _loadOrganizationData() {

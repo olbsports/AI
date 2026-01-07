@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../models/models.dart';
 import '../../providers/social_provider.dart';
 import '../../providers/horses_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -240,6 +242,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
             title: Text(
               post.authorName,
               style: const TextStyle(fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             subtitle: Row(
               children: [
@@ -275,7 +279,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
           // Content
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(post.content),
+            child: Text(
+              post.content,
+              maxLines: 10,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           // Media
           if (post.mediaUrls.isNotEmpty) ...[
@@ -502,6 +510,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
   }
 
   void _showPostOptions(BuildContext context, PublicNote post) {
+    final currentUserId = ref.read(authProvider).user?.id;
+    final isOwnPost = currentUserId != null && currentUserId == post.authorId;
+
     showModalBottomSheet(
       context: context,
       builder: (context) => Column(
@@ -523,14 +534,26 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
               // Copy link functionality
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.report_outlined),
-            title: const Text('Signaler'),
-            onTap: () {
-              Navigator.pop(context);
-              _showReportDialog(context, post);
-            },
-          ),
+          if (isOwnPost) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteConfirmation(context, post);
+              },
+            ),
+          ] else ...[
+            ListTile(
+              leading: const Icon(Icons.report_outlined),
+              title: const Text('Signaler'),
+              onTap: () {
+                Navigator.pop(context);
+                _showReportDialog(context, post);
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -576,6 +599,68 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Signalement envoyé')),
       );
+    }
+  }
+
+  void _showDeleteConfirmation(BuildContext context, PublicNote post) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer la publication'),
+        content: const Text(
+          'Êtes-vous sûr de vouloir supprimer cette publication ? Cette action est irréversible.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deletePost(context, post);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deletePost(BuildContext context, PublicNote post) async {
+    // Show loading indicator
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Suppression en cours...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    final notifier = ref.read(socialNotifierProvider.notifier);
+    final success = await notifier.deleteNote(post.id);
+
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Publication supprimée avec succès'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Refresh the feeds
+        ref.invalidate(forYouFeedProvider);
+        ref.invalidate(followingFeedProvider);
+      } else {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de la suppression'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -645,7 +730,11 @@ class _FeedSearchDelegate extends SearchDelegate<String> {
                     : CircleAvatar(
                         child: Text(user.name[0]),
                       ),
-                title: Text(user.name),
+                title: Text(
+                  user.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 onTap: () {
                   // Navigate to user profile
                 },
@@ -782,7 +871,11 @@ class _NotificationsSheet extends ConsumerWidget {
                         : CircleAvatar(
                             child: Text(notif.actorName[0]),
                           ),
-                    title: Text(notif.message),
+                    title: Text(
+                      notif.message,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     subtitle: Text(_formatTimeAgo(notif.createdAt)),
                     tileColor: notif.isRead ? null : Colors.blue.withOpacity(0.1),
                   );
@@ -872,8 +965,16 @@ class _CommentsSheetState extends ConsumerState<CommentsSheet> {
                           : CircleAvatar(
                               child: Text(comment.authorName[0]),
                             ),
-                      title: Text(comment.authorName),
-                      subtitle: Text(comment.content),
+                      title: Text(
+                        comment.authorName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        comment.content,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     );
                   },
                 );
@@ -967,6 +1068,37 @@ class _CreateNoteSheetState extends ConsumerState<CreateNoteSheet> {
       return;
     }
 
+    // Request photo permission
+    PermissionStatus status;
+    if (Platform.isAndroid) {
+      // Android 13+ uses photos instead of storage
+      if (await Permission.photos.isGranted) {
+        status = PermissionStatus.granted;
+      } else {
+        status = await Permission.photos.request();
+        // Fallback for Android < 13
+        if (status.isDenied) {
+          status = await Permission.storage.request();
+        }
+      }
+    } else {
+      // iOS
+      status = await Permission.photos.request();
+    }
+
+    if (!status.isGranted) {
+      if (mounted) {
+        if (status.isPermanentlyDenied) {
+          _showPermissionDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Permission d\'accès aux photos refusée')),
+          );
+        }
+      }
+      return;
+    }
+
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
@@ -988,6 +1120,32 @@ class _CreateNoteSheetState extends ConsumerState<CreateNoteSheet> {
         );
       }
     }
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Permission requise'),
+        content: const Text(
+          'L\'accès aux photos est nécessaire pour ajouter des images. '
+          'Veuillez autoriser l\'accès dans les paramètres de l\'application.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: const Text('Ouvrir les paramètres'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _pickVideo() async {
@@ -1090,8 +1248,16 @@ class _CreateNoteSheetState extends ConsumerState<CreateNoteSheet> {
                               ? const Icon(Icons.pets)
                               : null,
                         ),
-                        title: Text(horse.name),
-                        subtitle: Text(horse.breed ?? 'Race inconnue'),
+                        title: Text(
+                          horse.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          horse.breed ?? 'Race inconnue',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         trailing: isSelected
                             ? Icon(Icons.check, color: AppColors.primary)
                             : null,
@@ -1179,7 +1345,11 @@ class _CreateNoteSheetState extends ConsumerState<CreateNoteSheet> {
                         ? const Icon(Icons.pets, size: 20)
                         : null,
                   ),
-                  title: Text(_selectedHorse!.name),
+                  title: Text(
+                    _selectedHorse!.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   trailing: IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: _isLoading ? null : () {

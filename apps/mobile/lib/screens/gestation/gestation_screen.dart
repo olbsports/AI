@@ -253,17 +253,22 @@ class GestationScreen extends ConsumerWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           gestation.mareName,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         if (gestation.stallionName != null)
                           Text(
                             'x ${gestation.stallionName}',
                             style: TextStyle(color: AppColors.textSecondary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                       ],
                     ),
@@ -372,10 +377,16 @@ class GestationScreen extends ConsumerWidget {
             color: birth.sex == FoalSex.male ? Colors.blue : Colors.pink,
           ),
         ),
-        title: Text(birth.foalName),
+        title: Text(
+          birth.foalName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         subtitle: Text(
           '${birth.mareName} x ${birth.stallionName ?? "Inconnu"}\n'
           'Né le ${_formatDate(birth.birthDate)}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
         isThreeLine: true,
         trailing: Container(
@@ -439,10 +450,13 @@ class GestationScreen extends ConsumerWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   value,
                   style: const TextStyle(fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   label,
@@ -450,6 +464,8 @@ class GestationScreen extends ConsumerWidget {
                     fontSize: 11,
                     color: AppColors.textSecondary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

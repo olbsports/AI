@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../models/models.dart';
 import '../../providers/horses_provider.dart';
@@ -61,6 +62,37 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   };
 
   Future<void> _pickImages() async {
+    // Request photo permission
+    PermissionStatus status;
+    if (Platform.isAndroid) {
+      // Android 13+ uses photos instead of storage
+      if (await Permission.photos.isGranted) {
+        status = PermissionStatus.granted;
+      } else {
+        status = await Permission.photos.request();
+        // Fallback for Android < 13
+        if (status.isDenied) {
+          status = await Permission.storage.request();
+        }
+      }
+    } else {
+      // iOS
+      status = await Permission.photos.request();
+    }
+
+    if (!status.isGranted) {
+      if (mounted) {
+        if (status.isPermanentlyDenied) {
+          _showPermissionDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Permission d\'accès aux photos refusée')),
+          );
+        }
+      }
+      return;
+    }
+
     final picker = ImagePicker();
     final images = await picker.pickMultiImage();
 
@@ -75,6 +107,32 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         }
       });
     }
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Permission requise'),
+        content: const Text(
+          'L\'accès aux photos est nécessaire pour ajouter des photos. '
+          'Veuillez autoriser l\'accès dans les paramètres de l\'application.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: const Text('Ouvrir les paramètres'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _removePhoto(int index) {

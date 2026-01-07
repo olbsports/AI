@@ -194,6 +194,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: const [
                     Text(
                       'Matching IA',
@@ -202,10 +203,14 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       'Trouvez le croisement idéal basé sur les analyses vidéo',
                       style: TextStyle(color: Colors.white70, fontSize: 12),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
