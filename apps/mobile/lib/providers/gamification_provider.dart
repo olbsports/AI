@@ -14,28 +14,36 @@ final userLevelProvider = FutureProvider<UserLevel>((ref) async {
 final xpTransactionsProvider = FutureProvider<List<XpTransaction>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/xp/history');
-  return (response as List).map((e) => XpTransaction.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => XpTransaction.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// All badges provider
 final allBadgesProvider = FutureProvider<List<Badge>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/badges');
-  return (response as List).map((e) => Badge.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => Badge.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Earned badges provider
 final earnedBadgesProvider = FutureProvider<List<Badge>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/badges/earned');
-  return (response as List).map((e) => Badge.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => Badge.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Active challenges provider
 final activeChallengesProvider = FutureProvider<List<Challenge>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/challenges/active');
-  return (response as List).map((e) => Challenge.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => Challenge.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// User streak provider
@@ -49,7 +57,9 @@ final userStreakProvider = FutureProvider<UserStreak>((ref) async {
 final availableRewardsProvider = FutureProvider<List<Reward>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/rewards');
-  return (response as List).map((e) => Reward.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => Reward.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Referral stats provider

@@ -236,7 +236,13 @@ class _NewReportScreenState extends ConsumerState<NewReportScreen> {
                 : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 4),
-          Text(_typeLabel(type)),
+          Flexible(
+            child: Text(
+              _typeLabel(type),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
       onSelected: (_) {
@@ -308,9 +314,15 @@ class _NewReportScreenState extends ConsumerState<NewReportScreen> {
                         color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
-                    title: Text(analysis.type.toString().split('.').last),
+                    title: Text(
+                      analysis.type.toString().split('.').last,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     subtitle: Text(
                       '${analysis.createdAt.day}/${analysis.createdAt.month}/${analysis.createdAt.year}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 );

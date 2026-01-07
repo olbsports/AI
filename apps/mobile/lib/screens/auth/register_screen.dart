@@ -242,7 +242,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       return 'Le mot de passe est requis';
                     }
                     if (value.length < 8) {
-                      return 'Au moins 8 caractères';
+                      return 'Au moins 8 caractères requis';
+                    }
+                    // SECURITY: Enforce strong password requirements
+                    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$').hasMatch(value)) {
+                      return 'Doit contenir majuscule, minuscule et chiffre';
                     }
                     return null;
                   },

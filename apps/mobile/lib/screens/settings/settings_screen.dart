@@ -193,10 +193,12 @@ class SettingsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${authState.user?.firstName ?? ''} ${authState.user?.lastName ?? ''}',
+                    '${authState.user?.firstName ?? ''} ${authState.user?.lastName ?? ''}'.trim(),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -204,6 +206,8 @@ class SettingsScreen extends ConsumerWidget {
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -257,8 +261,16 @@ class SettingsScreen extends ConsumerWidget {
           style: isDestructive
               ? TextStyle(color: Theme.of(context).colorScheme.error)
               : null,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        subtitle: subtitle != null ? Text(subtitle) : null,
+        subtitle: subtitle != null
+            ? Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              )
+            : null,
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
@@ -386,10 +398,26 @@ class SettingsScreen extends ConsumerWidget {
               'Cette action est irréversible. Toutes vos données seront définitivement supprimées :',
             ),
             SizedBox(height: 12),
-            Text('• Vos chevaux et leur historique'),
-            Text('• Vos analyses et statistiques'),
-            Text('• Vos plannings et événements'),
-            Text('• Votre abonnement'),
+            Text(
+              '• Vos chevaux et leur historique',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              '• Vos analyses et statistiques',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              '• Vos plannings et événements',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              '• Votre abonnement',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             SizedBox(height: 12),
             Text(
               'Êtes-vous sûr de vouloir continuer ?',

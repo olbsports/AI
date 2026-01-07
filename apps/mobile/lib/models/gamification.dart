@@ -27,12 +27,12 @@ class UserLevel {
 
   factory UserLevel.fromJson(Map<String, dynamic> json) {
     return UserLevel(
-      level: json['level'] as int,
-      title: json['title'] as String,
-      currentXp: json['currentXp'] as int,
-      xpForNextLevel: json['xpForNextLevel'] as int,
-      totalXp: json['totalXp'] as int,
-      unlockedFeatures: (json['unlockedFeatures'] as List?)?.cast<String>() ?? [],
+      level: (json['level'] as num?)?.toInt() ?? 1,
+      title: json['title'] as String? ?? 'Débutant',
+      currentXp: (json['currentXp'] as num?)?.toInt() ?? 0,
+      xpForNextLevel: (json['xpForNextLevel'] as num?)?.toInt() ?? 100,
+      totalXp: (json['totalXp'] as num?)?.toInt() ?? 0,
+      unlockedFeatures: (json['unlockedFeatures'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
     );
   }
 
@@ -76,13 +76,13 @@ class XpTransaction {
 
   factory XpTransaction.fromJson(Map<String, dynamic> json) {
     return XpTransaction(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      amount: json['amount'] as int,
-      source: XpSource.fromString(json['source'] as String),
+      id: json['id'] as String? ?? '',
+      userId: json['userId'] as String? ?? '',
+      amount: (json['amount'] as num?)?.toInt() ?? 0,
+      source: XpSource.fromString(json['source'] as String? ?? 'achievement'),
       sourceId: json['sourceId'] as String?,
-      description: json['description'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      description: json['description'] as String? ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -163,17 +163,19 @@ class Badge {
 
   factory Badge.fromJson(Map<String, dynamic> json) {
     return Badge(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
       iconUrl: json['iconUrl'] as String? ?? '',
-      category: BadgeCategory.fromString(json['category'] as String),
+      category: BadgeCategory.fromString(json['category'] as String? ?? 'general'),
       rarity: BadgeRarity.fromString(json['rarity'] as String? ?? 'common'),
-      requirement: BadgeRequirement.fromJson(json['requirement'] as Map<String, dynamic>),
-      xpReward: json['xpReward'] as int? ?? 50,
+      requirement: json['requirement'] != null
+          ? BadgeRequirement.fromJson(json['requirement'] as Map<String, dynamic>)
+          : BadgeRequirement(type: BadgeRequirementType.specificAction, targetValue: 1),
+      xpReward: (json['xpReward'] as num?)?.toInt() ?? 50,
       isSecret: json['isSecret'] as bool? ?? false,
       earnedAt: json['earnedAt'] != null
-          ? DateTime.parse(json['earnedAt'] as String)
+          ? DateTime.tryParse(json['earnedAt'] as String)
           : null,
       progress: (json['progress'] as num?)?.toDouble(),
     );
@@ -266,8 +268,8 @@ class BadgeRequirement {
 
   factory BadgeRequirement.fromJson(Map<String, dynamic> json) {
     return BadgeRequirement(
-      type: BadgeRequirementType.fromString(json['type'] as String),
-      targetValue: json['targetValue'] as int,
+      type: BadgeRequirementType.fromString(json['type'] as String? ?? 'specificAction'),
+      targetValue: (json['targetValue'] as num?)?.toInt() ?? 1,
       targetId: json['targetId'] as String?,
       conditions: json['conditions'] as Map<String, dynamic>?,
     );
@@ -340,17 +342,17 @@ class Challenge {
 
   factory Challenge.fromJson(Map<String, dynamic> json) {
     return Challenge(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      type: ChallengeType.fromString(json['type'] as String),
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      type: ChallengeType.fromString(json['type'] as String? ?? 'daily'),
       difficulty: ChallengeDifficulty.fromString(json['difficulty'] as String? ?? 'medium'),
-      targetValue: json['targetValue'] as int,
-      currentValue: json['currentValue'] as int? ?? 0,
-      xpReward: json['xpReward'] as int,
-      tokenReward: json['tokenReward'] as int?,
-      startDate: DateTime.parse(json['startDate'] as String),
-      endDate: DateTime.parse(json['endDate'] as String),
+      targetValue: (json['targetValue'] as num?)?.toInt() ?? 1,
+      currentValue: (json['currentValue'] as num?)?.toInt() ?? 0,
+      xpReward: (json['xpReward'] as num?)?.toInt() ?? 0,
+      tokenReward: (json['tokenReward'] as num?)?.toInt(),
+      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'] as String) ?? DateTime.now() : DateTime.now(),
+      endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate'] as String) ?? DateTime.now().add(Duration(days: 1)) : DateTime.now().add(Duration(days: 1)),
       isCompleted: json['isCompleted'] as bool? ?? false,
       isExpired: json['isExpired'] as bool? ?? false,
       iconUrl: json['iconUrl'] as String?,
@@ -441,15 +443,17 @@ class UserStreak {
 
   factory UserStreak.fromJson(Map<String, dynamic> json) {
     return UserStreak(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      currentStreak: json['currentStreak'] as int? ?? 0,
-      longestStreak: json['longestStreak'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
+      userId: json['userId'] as String? ?? '',
+      currentStreak: (json['currentStreak'] as num?)?.toInt() ?? 0,
+      longestStreak: (json['longestStreak'] as num?)?.toInt() ?? 0,
       lastActivityDate: json['lastActivityDate'] != null
-          ? DateTime.parse(json['lastActivityDate'] as String)
+          ? DateTime.tryParse(json['lastActivityDate'] as String)
           : null,
       activityDates: (json['activityDates'] as List?)
-          ?.map((d) => DateTime.parse(d as String))
+          ?.map((d) => DateTime.tryParse(d as String))
+          .where((d) => d != null)
+          .cast<DateTime>()
           .toList() ?? [],
       isActiveToday: json['isActiveToday'] as bool? ?? false,
     );
@@ -487,17 +491,17 @@ class Reward {
 
   factory Reward.fromJson(Map<String, dynamic> json) {
     return Reward(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      type: RewardType.fromString(json['type'] as String),
-      value: json['value'] as int,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      type: RewardType.fromString(json['type'] as String? ?? 'xp'),
+      value: (json['value'] as num?)?.toInt() ?? 0,
       iconUrl: json['iconUrl'] as String?,
       claimedAt: json['claimedAt'] != null
-          ? DateTime.parse(json['claimedAt'] as String)
+          ? DateTime.tryParse(json['claimedAt'] as String)
           : null,
       expiresAt: json['expiresAt'] != null
-          ? DateTime.parse(json['expiresAt'] as String)
+          ? DateTime.tryParse(json['expiresAt'] as String)
           : null,
     );
   }
@@ -566,18 +570,18 @@ class Referral {
 
   factory Referral.fromJson(Map<String, dynamic> json) {
     return Referral(
-      id: json['id'] as String,
-      referrerId: json['referrerId'] as String,
-      referrerName: json['referrerName'] as String,
-      refereeId: json['refereeId'] as String,
-      refereeName: json['refereeName'] as String,
-      referralCode: json['referralCode'] as String,
-      status: ReferralStatus.fromString(json['status'] as String),
-      referrerReward: json['referrerReward'] as int? ?? 100,
-      refereeReward: json['refereeReward'] as int? ?? 50,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: json['id'] as String? ?? '',
+      referrerId: json['referrerId'] as String? ?? '',
+      referrerName: json['referrerName'] as String? ?? '',
+      refereeId: json['refereeId'] as String? ?? '',
+      refereeName: json['refereeName'] as String? ?? '',
+      referralCode: json['referralCode'] as String? ?? '',
+      status: ReferralStatus.fromString(json['status'] as String? ?? 'pending'),
+      referrerReward: (json['referrerReward'] as num?)?.toInt() ?? 100,
+      refereeReward: (json['refereeReward'] as num?)?.toInt() ?? 50,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
       completedAt: json['completedAt'] != null
-          ? DateTime.parse(json['completedAt'] as String)
+          ? DateTime.tryParse(json['completedAt'] as String)
           : null,
     );
   }
@@ -621,13 +625,13 @@ class ReferralStats {
 
   factory ReferralStats.fromJson(Map<String, dynamic> json) {
     return ReferralStats(
-      userId: json['userId'] as String,
-      referralCode: json['referralCode'] as String,
-      referralLink: json['referralLink'] as String,
-      totalReferrals: json['totalReferrals'] as int? ?? 0,
-      pendingReferrals: json['pendingReferrals'] as int? ?? 0,
-      activeReferrals: json['activeReferrals'] as int? ?? 0,
-      totalTokensEarned: json['totalTokensEarned'] as int? ?? 0,
+      userId: json['userId'] as String? ?? '',
+      referralCode: json['referralCode'] as String? ?? '',
+      referralLink: json['referralLink'] as String? ?? '',
+      totalReferrals: (json['totalReferrals'] as num?)?.toInt() ?? 0,
+      pendingReferrals: (json['pendingReferrals'] as num?)?.toInt() ?? 0,
+      activeReferrals: (json['activeReferrals'] as num?)?.toInt() ?? 0,
+      totalTokensEarned: (json['totalTokensEarned'] as num?)?.toInt() ?? 0,
       recentReferrals: (json['recentReferrals'] as List?)
           ?.map((r) => Referral.fromJson(r as Map<String, dynamic>))
           .toList() ?? [],

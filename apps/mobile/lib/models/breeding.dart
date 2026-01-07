@@ -32,21 +32,21 @@ class BreedingRecommendation {
 
   factory BreedingRecommendation.fromJson(Map<String, dynamic> json) {
     return BreedingRecommendation(
-      id: json['id'] as String,
-      mareId: json['mareId'] as String,
-      mareName: json['mareName'] as String,
+      id: json['id'] as String? ?? '',
+      mareId: json['mareId'] as String? ?? '',
+      mareName: json['mareName'] as String? ?? '',
       stallionId: json['stallionId'] as String?,
-      stallionName: json['stallionName'] as String,
+      stallionName: json['stallionName'] as String? ?? '',
       stallionStudbook: json['stallionStudbook'] as String? ?? '',
-      compatibilityScore: (json['compatibilityScore'] as num).toDouble(),
-      strengths: (json['strengths'] as List?)?.cast<String>() ?? [],
-      weaknesses: (json['weaknesses'] as List?)?.cast<String>() ?? [],
-      expectedTraits: (json['expectedTraits'] as List?)?.cast<String>() ?? [],
+      compatibilityScore: (json['compatibilityScore'] as num?)?.toDouble() ?? 0.0,
+      strengths: (json['strengths'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
+      weaknesses: (json['weaknesses'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
+      expectedTraits: (json['expectedTraits'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       disciplineScores: (json['disciplineScores'] as Map<String, dynamic>?)
-              ?.map((k, v) => MapEntry(k, (v as num).toDouble())) ??
+              ?.map((k, v) => MapEntry(k, (v as num?)?.toDouble() ?? 0.0)) ??
           {},
       reasoning: json['reasoning'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -99,8 +99,8 @@ class MareProfile {
 
   factory MareProfile.fromJson(Map<String, dynamic> json) {
     return MareProfile(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       breed: json['breed'] as String? ?? 'Inconnu',
       studbook: json['studbook'] as String?,
       sireId: json['sireId'] as String?,
@@ -109,14 +109,14 @@ class MareProfile {
       damName: json['damName'] as String?,
       damSireId: json['damSireId'] as String?,
       damSireName: json['damSireName'] as String?,
-      birthYear: json['birthYear'] as int?,
-      heightCm: json['heightCm'] as int?,
+      birthYear: (json['birthYear'] as num?)?.toInt(),
+      heightCm: (json['heightCm'] as num?)?.toInt(),
       color: json['color'] as String?,
-      conformationStrengths: (json['conformationStrengths'] as List?)?.cast<String>() ?? [],
-      conformationWeaknesses: (json['conformationWeaknesses'] as List?)?.cast<String>() ?? [],
-      performanceHistory: (json['performanceHistory'] as List?)?.cast<String>() ?? [],
+      conformationStrengths: (json['conformationStrengths'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
+      conformationWeaknesses: (json['conformationWeaknesses'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
+      performanceHistory: (json['performanceHistory'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       breedingGoal: BreedingGoal.fromString(json['breedingGoal'] as String? ?? 'sport'),
-      targetDisciplines: (json['targetDisciplines'] as List?)?.cast<String>() ?? [],
+      targetDisciplines: (json['targetDisciplines'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       geneticProfile: json['geneticProfile'] as String?,
       healthData: json['healthData'] as Map<String, dynamic>?,
     );
@@ -212,29 +212,29 @@ class Stallion {
 
   factory Stallion.fromJson(Map<String, dynamic> json) {
     return Stallion(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       breed: json['breed'] as String? ?? '',
       studbook: json['studbook'] as String? ?? '',
       sireId: json['sireId'] as String?,
       sireName: json['sireName'] as String? ?? 'Inconnu',
       damSireId: json['damSireId'] as String?,
       damSireName: json['damSireName'] as String? ?? 'Inconnu',
-      birthYear: json['birthYear'] as int?,
-      heightCm: json['heightCm'] as int?,
+      birthYear: (json['birthYear'] as num?)?.toInt(),
+      heightCm: (json['heightCm'] as num?)?.toInt(),
       color: json['color'] as String?,
       stationName: json['stationName'] as String?,
       stationLocation: json['stationLocation'] as String?,
-      studFee: json['studFee'] as int?,
+      studFee: (json['studFee'] as num?)?.toInt(),
       freshSemen: json['freshSemen'] as bool? ?? false,
       frozenSemen: json['frozenSemen'] as bool? ?? false,
       naturalService: json['naturalService'] as bool? ?? false,
-      disciplines: (json['disciplines'] as List?)?.cast<String>() ?? [],
+      disciplines: (json['disciplines'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       indices: (json['indices'] as Map<String, dynamic>?)
-              ?.map((k, v) => MapEntry(k, (v as num).toDouble())) ??
+              ?.map((k, v) => MapEntry(k, (v as num?)?.toDouble() ?? 0.0)) ??
           {},
-      offspringCount: json['offspringCount'] as int?,
-      notableOffspring: (json['notableOffspring'] as List?)?.cast<String>() ?? [],
+      offspringCount: (json['offspringCount'] as num?)?.toInt(),
+      notableOffspring: (json['notableOffspring'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       photoUrl: json['photoUrl'] as String?,
       videoUrl: json['videoUrl'] as String?,
       description: json['description'] as String?,

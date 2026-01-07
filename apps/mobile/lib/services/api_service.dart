@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mime/mime.dart';
@@ -35,9 +36,12 @@ class _TokenRefreshManager {
 
     if (refreshToken != null) {
       try {
+        debugPrint('AUTH: Attempting token refresh');
         // Create a new Dio instance to avoid interceptor loop
         final refreshDio = Dio(BaseOptions(
           baseUrl: apiBaseUrl,
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': 'application/json'},
         ));
 
@@ -54,6 +58,8 @@ class _TokenRefreshManager {
           await _secureStorage.write(key: 'refresh_token', value: newRefreshToken);
         }
 
+        debugPrint('AUTH: Token refresh successful');
+
         // Notify all waiting requests
         for (final completer in _refreshCompleters) {
           if (!completer.isCompleted) {
@@ -68,6 +74,7 @@ class _TokenRefreshManager {
         _isRefreshing = false;
         return handler.resolve(retryResponse);
       } catch (e) {
+        debugPrint('AUTH: Token refresh failed - clearing tokens');
         _isRefreshing = false;
         for (final completer in _refreshCompleters) {
           if (!completer.isCompleted) {
@@ -75,10 +82,12 @@ class _TokenRefreshManager {
           }
         }
         _refreshCompleters.clear();
-        // Clear tokens on refresh failure
-        await _secureStorage.deleteAll();
+        // SECURITY: Clear only auth tokens on refresh failure, not all secure storage
+        await _secureStorage.delete(key: 'access_token');
+        await _secureStorage.delete(key: 'refresh_token');
       }
     } else {
+      debugPrint('AUTH: No refresh token available');
       _isRefreshing = false;
     }
     return handler.next(error);
@@ -113,30 +122,34 @@ final _tokenRefreshManager = _TokenRefreshManager();
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
     baseUrl: apiBaseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(minutes: 2),
-    sendTimeout: const Duration(minutes: 2),
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(minutes: 5),
+    sendTimeout: const Duration(minutes: 5),
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
   ));
 
-  // Configure to accept Let's Encrypt certificates
-  (dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate = (client) {
-    client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-      // Only accept certificates for our API domain
-      return host == 'api.horsetempo.app';
-    };
-    return client;
-  };
+  // SECURITY: Certificate validation is handled by the system.
+  // Do NOT bypass certificate validation as it makes the app vulnerable to MITM attacks.
+  // If you have issues with Let's Encrypt certificates, ensure your device's root certificates are up to date.
 
-  // Add logging interceptor
-  dio.interceptors.add(LogInterceptor(
-    requestBody: true,
-    responseBody: true,
-    logPrint: (obj) => print('DIO: $obj'),
-  ));
+  // Add logging interceptor (only in debug mode and without sensitive data)
+  if (kDebugMode) {
+    dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestHeader: false, // Don't log headers (contains auth tokens)
+      requestBody: false, // Don't log body (may contain passwords)
+      responseHeader: false,
+      responseBody: false, // Don't log response body (may contain sensitive data)
+      error: true,
+      logPrint: (obj) {
+        // Use debugPrint which is safe and can be disabled in release mode
+        debugPrint('API: $obj');
+      },
+    ));
+  }
 
   // Add interceptor for auth token
   dio.interceptors.add(InterceptorsWrapper(
@@ -592,22 +605,98 @@ class ApiService {
   // ==================== GENERIC HTTP METHODS ====================
 
   Future<dynamic> get(String path, {Map<String, dynamic>? queryParams}) async {
-    final response = await _dio.get(path, queryParameters: queryParams);
-    return response.data;
+    try {
+      final response = await _dio.get(path, queryParameters: queryParams);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé. Vérifiez votre connexion internet.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Ressource introuvable.');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Accès refusé.');
+      } else if (e.response?.statusCode == 500) {
+        throw Exception('Erreur serveur. Veuillez réessayer plus tard.');
+      }
+      rethrow;
+    }
   }
 
   Future<dynamic> post(String path, Map<String, dynamic> data) async {
-    final response = await _dio.post(path, data: data);
-    return response.data;
+    try {
+      final response = await _dio.post(path, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé. Vérifiez votre connexion internet.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Accès refusé.');
+      } else if (e.response?.statusCode == 422) {
+        throw Exception('Données invalides. Vérifiez les informations saisies.');
+      } else if (e.response?.statusCode == 500) {
+        throw Exception('Erreur serveur. Veuillez réessayer plus tard.');
+      }
+      rethrow;
+    }
   }
 
   Future<dynamic> put(String path, Map<String, dynamic> data) async {
-    final response = await _dio.put(path, data: data);
-    return response.data;
+    try {
+      final response = await _dio.put(path, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé. Vérifiez votre connexion internet.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Accès refusé.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Ressource introuvable.');
+      } else if (e.response?.statusCode == 422) {
+        throw Exception('Données invalides. Vérifiez les informations saisies.');
+      } else if (e.response?.statusCode == 500) {
+        throw Exception('Erreur serveur. Veuillez réessayer plus tard.');
+      }
+      rethrow;
+    }
   }
 
   Future<void> delete(String path) async {
-    await _dio.delete(path);
+    try {
+      await _dio.delete(path);
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé. Vérifiez votre connexion internet.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Accès refusé.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Ressource introuvable.');
+      } else if (e.response?.statusCode == 500) {
+        throw Exception('Erreur serveur. Veuillez réessayer plus tard.');
+      }
+      rethrow;
+    }
   }
 
   // ==================== MEDIA UPLOAD ====================

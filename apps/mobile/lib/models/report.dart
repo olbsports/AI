@@ -101,33 +101,33 @@ class Report {
 
   factory Report.fromJson(Map<String, dynamic> json) {
     return Report(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      type: _parseReportType(json['type'] as String),
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      type: _parseReportType(json['type'] as String? ?? 'locomotion'),
       status: ReportStatus.values.firstWhere(
-        (e) => e.name == json['status'],
+        (e) => e.name == (json['status'] as String?),
         orElse: () => ReportStatus.draft,
       ),
       analysisId: json['analysisId'] as String?,
-      horseId: json['horseId'] as String,
+      horseId: json['horseId'] as String? ?? '',
       horseName: json['horse']?['name'] as String?,
       horsePhotoUrl: json['horse']?['photoUrl'] as String?,
       summary: json['summary'] as String?,
       content: json['content'] as Map<String, dynamic>?,
-      mediaUrls: List<String>.from(json['mediaUrls'] ?? []),
+      mediaUrls: (json['mediaUrls'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       shareToken: json['shareToken'] as String?,
       sharedAt: json['sharedAt'] != null
-          ? DateTime.parse(json['sharedAt'] as String)
+          ? DateTime.tryParse(json['sharedAt'] as String)
           : null,
       expiresAt: json['expiresAt'] != null
-          ? DateTime.parse(json['expiresAt'] as String)
+          ? DateTime.tryParse(json['expiresAt'] as String)
           : null,
       category: json['category'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'] as String) ?? DateTime.now() : DateTime.now(),
       analyses: json['analyses'] as List<dynamic>?,
       generatedAt: json['generatedAt'] != null
-          ? DateTime.parse(json['generatedAt'] as String)
+          ? DateTime.tryParse(json['generatedAt'] as String)
           : null,
       pdfUrl: json['pdfUrl'] as String?,
     );

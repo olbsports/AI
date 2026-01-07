@@ -7,7 +7,9 @@ import '../services/api_service.dart';
 final gestationsProvider = FutureProvider<List<GestationRecord>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations');
-  return (response as List).map((e) => GestationRecord.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => GestationRecord.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Active gestations
@@ -33,7 +35,9 @@ final mareGestationsProvider =
     FutureProvider.family<List<GestationRecord>, String>((ref, mareId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$mareId/gestations');
-  return (response as List).map((e) => GestationRecord.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => GestationRecord.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Gestation checkups
@@ -41,7 +45,9 @@ final gestationCheckupsProvider =
     FutureProvider.family<List<GestationCheckup>, String>((ref, gestationId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId/checkups');
-  return (response as List).map((e) => GestationCheckup.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => GestationCheckup.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Gestation milestones
@@ -49,7 +55,9 @@ final gestationMilestonesProvider =
     FutureProvider.family<List<GestationMilestone>, String>((ref, gestationId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId/milestones');
-  return (response as List).map((e) => GestationMilestone.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => GestationMilestone.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Gestation notes
@@ -57,14 +65,18 @@ final gestationNotesProvider =
     FutureProvider.family<List<GestationNote>, String>((ref, gestationId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId/notes');
-  return (response as List).map((e) => GestationNote.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => GestationNote.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// All birth records
 final birthRecordsProvider = FutureProvider<List<BirthRecord>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/births');
-  return (response as List).map((e) => BirthRecord.fromJson(e)).toList();
+  if (response == null) return [];
+  final list = response is List ? response : (response['items'] as List? ?? []);
+  return list.map((e) => BirthRecord.fromJson(e as Map<String, dynamic>)).toList();
 });
 
 /// Birth record by ID

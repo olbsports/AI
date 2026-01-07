@@ -76,9 +76,9 @@ class ServiceProvider {
 
   factory ServiceProvider.fromJson(Map<String, dynamic> json) {
     return ServiceProvider(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      type: ServiceType.fromString(json['type'] as String),
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      type: ServiceType.fromString(json['type'] as String? ?? 'other'),
       businessName: json['businessName'] as String?,
       description: json['description'] as String?,
       photoUrl: json['photoUrl'] as String?,
@@ -92,28 +92,28 @@ class ServiceProvider {
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       serviceRadius: (json['serviceRadius'] as num?)?.toDouble(),
-      specialties: (json['specialties'] as List?)?.cast<String>() ?? [],
-      certifications: (json['certifications'] as List?)?.cast<String>() ?? [],
+      specialties: (json['specialties'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
+      certifications: (json['certifications'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       workingHours: (json['workingHours'] as List?)
           ?.map((w) => WorkingHours.fromJson(w as Map<String, dynamic>))
           .toList() ?? [],
       acceptsEmergency: json['acceptsEmergency'] as bool? ?? false,
       mobileService: json['mobileService'] as bool? ?? true,
       averageRating: (json['averageRating'] as num?)?.toDouble(),
-      reviewCount: json['reviewCount'] as int? ?? 0,
+      reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
       priceRange: json['priceRange'] != null
           ? PriceRange.fromJson(json['priceRange'] as Map<String, dynamic>)
           : null,
-      paymentMethods: (json['paymentMethods'] as List?)?.cast<String>() ?? [],
-      languages: (json['languages'] as List?)?.cast<String>() ?? ['Français'],
+      paymentMethods: (json['paymentMethods'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
+      languages: (json['languages'] as List?)?.map((e) => e as String? ?? '').toList() ?? ['Français'],
       isVerified: json['isVerified'] as bool? ?? false,
       isActive: json['isActive'] as bool? ?? true,
       lastActivity: json['lastActivity'] != null
-          ? DateTime.parse(json['lastActivity'] as String)
+          ? DateTime.tryParse(json['lastActivity'] as String)
           : null,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
+          ? DateTime.tryParse(json['updatedAt'] as String)
           : null,
     );
   }
@@ -276,8 +276,8 @@ class Address {
     return Address(
       street: json['street'] as String?,
       complement: json['complement'] as String?,
-      postalCode: json['postalCode'] as String,
-      city: json['city'] as String,
+      postalCode: json['postalCode'] as String? ?? '',
+      city: json['city'] as String? ?? '',
       region: json['region'] as String?,
       country: json['country'] as String? ?? 'France',
     );
@@ -333,7 +333,7 @@ class WorkingHours {
 
   factory WorkingHours.fromJson(Map<String, dynamic> json) {
     return WorkingHours(
-      dayOfWeek: json['dayOfWeek'] as int,
+      dayOfWeek: (json['dayOfWeek'] as num?)?.toInt() ?? 1,
       isClosed: json['isClosed'] as bool? ?? false,
       openTime: json['openTime'] as String?,
       closeTime: json['closeTime'] as String?,
@@ -381,8 +381,8 @@ class PriceRange {
 
   factory PriceRange.fromJson(Map<String, dynamic> json) {
     return PriceRange(
-      minPrice: (json['minPrice'] as num).toDouble(),
-      maxPrice: (json['maxPrice'] as num).toDouble(),
+      minPrice: (json['minPrice'] as num?)?.toDouble() ?? 0.0,
+      maxPrice: (json['maxPrice'] as num?)?.toDouble() ?? 0.0,
       currency: json['currency'] as String? ?? '€',
       unit: json['unit'] as String?,
     );
@@ -444,26 +444,26 @@ class ServiceReview {
 
   factory ServiceReview.fromJson(Map<String, dynamic> json) {
     return ServiceReview(
-      id: json['id'] as String,
-      providerId: json['providerId'] as String,
-      authorId: json['authorId'] as String,
-      authorName: json['authorName'] as String,
+      id: json['id'] as String? ?? '',
+      providerId: json['providerId'] as String? ?? '',
+      authorId: json['authorId'] as String? ?? '',
+      authorName: json['authorName'] as String? ?? '',
       authorAvatarUrl: json['authorAvatarUrl'] as String?,
-      rating: json['rating'] as int,
+      rating: (json['rating'] as num?)?.toInt() ?? 0,
       title: json['title'] as String?,
       comment: json['comment'] as String?,
-      serviceDate: DateTime.parse(json['serviceDate'] as String),
+      serviceDate: json['serviceDate'] != null ? DateTime.tryParse(json['serviceDate'] as String) ?? DateTime.now() : DateTime.now(),
       serviceType: json['serviceType'] as String?,
       horseName: json['horseName'] as String?,
-      photos: (json['photos'] as List?)?.cast<String>() ?? [],
+      photos: (json['photos'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
       isVerified: json['isVerified'] as bool? ?? false,
-      helpfulCount: json['helpfulCount'] as int? ?? 0,
+      helpfulCount: (json['helpfulCount'] as num?)?.toInt() ?? 0,
       response: json['response'] != null
           ? ProviderResponse.fromJson(json['response'] as Map<String, dynamic>)
           : null,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
+          ? DateTime.tryParse(json['updatedAt'] as String)
           : null,
     );
   }
@@ -494,8 +494,8 @@ class ProviderResponse {
 
   factory ProviderResponse.fromJson(Map<String, dynamic> json) {
     return ProviderResponse(
-      content: json['content'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      content: json['content'] as String? ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -560,16 +560,16 @@ class ServiceAppointment {
 
   factory ServiceAppointment.fromJson(Map<String, dynamic> json) {
     return ServiceAppointment(
-      id: json['id'] as String,
-      providerId: json['providerId'] as String,
-      providerName: json['providerName'] as String,
-      providerType: ServiceType.fromString(json['providerType'] as String),
-      userId: json['userId'] as String,
+      id: json['id'] as String? ?? '',
+      providerId: json['providerId'] as String? ?? '',
+      providerName: json['providerName'] as String? ?? '',
+      providerType: ServiceType.fromString(json['providerType'] as String? ?? 'other'),
+      userId: json['userId'] as String? ?? '',
       horseId: json['horseId'] as String?,
       horseName: json['horseName'] as String?,
-      appointmentDate: DateTime.parse(json['appointmentDate'] as String),
+      appointmentDate: json['appointmentDate'] != null ? DateTime.tryParse(json['appointmentDate'] as String) ?? DateTime.now() : DateTime.now(),
       appointmentTime: json['appointmentTime'] as String?,
-      duration: json['duration'] as int?,
+      duration: (json['duration'] as num?)?.toInt(),
       service: json['service'] as String?,
       notes: json['notes'] as String?,
       location: json['location'] as String?,
@@ -577,10 +577,10 @@ class ServiceAppointment {
       estimatedCost: (json['estimatedCost'] as num?)?.toDouble(),
       actualCost: (json['actualCost'] as num?)?.toDouble(),
       feedback: json['feedback'] as String?,
-      rating: json['rating'] as int?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      rating: (json['rating'] as num?)?.toInt(),
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
+          ? DateTime.tryParse(json['updatedAt'] as String)
           : null,
     );
   }
@@ -671,14 +671,14 @@ class SavedProvider {
 
   factory SavedProvider.fromJson(Map<String, dynamic> json) {
     return SavedProvider(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      providerId: json['providerId'] as String,
-      providerName: json['providerName'] as String,
-      providerType: ServiceType.fromString(json['providerType'] as String),
+      id: json['id'] as String? ?? '',
+      userId: json['userId'] as String? ?? '',
+      providerId: json['providerId'] as String? ?? '',
+      providerName: json['providerName'] as String? ?? '',
+      providerType: ServiceType.fromString(json['providerType'] as String? ?? 'other'),
       providerPhotoUrl: json['providerPhotoUrl'] as String?,
       notes: json['notes'] as String?,
-      savedAt: DateTime.parse(json['savedAt'] as String),
+      savedAt: json['savedAt'] != null ? DateTime.tryParse(json['savedAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }
@@ -770,17 +770,17 @@ class EmergencyContact {
 
   factory EmergencyContact.fromJson(Map<String, dynamic> json) {
     return EmergencyContact(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      name: json['name'] as String,
-      type: ServiceType.fromString(json['type'] as String),
-      phone: json['phone'] as String,
+      id: json['id'] as String? ?? '',
+      userId: json['userId'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      type: ServiceType.fromString(json['type'] as String? ?? 'veterinarian'),
+      phone: json['phone'] as String? ?? '',
       alternatePhone: json['alternatePhone'] as String?,
       email: json['email'] as String?,
       notes: json['notes'] as String?,
       isDefault: json['isDefault'] as bool? ?? false,
-      priority: json['priority'] as int? ?? 1,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      priority: (json['priority'] as num?)?.toInt() ?? 1,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 
@@ -830,22 +830,22 @@ class ServiceStats {
 
   factory ServiceStats.fromJson(Map<String, dynamic> json) {
     return ServiceStats(
-      userId: json['userId'] as String,
-      totalAppointments: json['totalAppointments'] as int? ?? 0,
-      completedAppointments: json['completedAppointments'] as int? ?? 0,
-      cancelledAppointments: json['cancelledAppointments'] as int? ?? 0,
+      userId: json['userId'] as String? ?? '',
+      totalAppointments: (json['totalAppointments'] as num?)?.toInt() ?? 0,
+      completedAppointments: (json['completedAppointments'] as num?)?.toInt() ?? 0,
+      cancelledAppointments: (json['cancelledAppointments'] as num?)?.toInt() ?? 0,
       totalSpent: (json['totalSpent'] as num?)?.toDouble() ?? 0,
       appointmentsByType: (json['appointmentsByType'] as Map<String, dynamic>?)
-          ?.map((k, v) => MapEntry(k, v as int)) ?? {},
+          ?.map((k, v) => MapEntry(k, (v as num?)?.toInt() ?? 0)) ?? {},
       spendingByType: (json['spendingByType'] as Map<String, dynamic>?)
-          ?.map((k, v) => MapEntry(k, (v as num).toDouble())) ?? {},
+          ?.map((k, v) => MapEntry(k, (v as num?)?.toDouble() ?? 0.0)) ?? {},
       frequentProviders: (json['frequentProviders'] as List?)
           ?.map((p) => ServiceProvider.fromJson(p as Map<String, dynamic>))
           .toList() ?? [],
       lastAppointmentDate: json['lastAppointmentDate'] != null
-          ? DateTime.parse(json['lastAppointmentDate'] as String)
+          ? DateTime.tryParse(json['lastAppointmentDate'] as String)
           : null,
-      calculatedAt: DateTime.parse(json['calculatedAt'] as String),
+      calculatedAt: json['calculatedAt'] != null ? DateTime.tryParse(json['calculatedAt'] as String) ?? DateTime.now() : DateTime.now(),
     );
   }
 }

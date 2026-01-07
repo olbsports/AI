@@ -92,28 +92,28 @@ class Analysis {
 
   factory Analysis.fromJson(Map<String, dynamic> json) {
     return Analysis(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      type: _parseAnalysisType(json['type'] as String),
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      type: _parseAnalysisType(json['type'] as String? ?? 'locomotion'),
       status: AnalysisStatus.values.firstWhere(
-        (e) => e.name == json['status'],
+        (e) => e.name == (json['status'] as String?),
         orElse: () => AnalysisStatus.pending,
       ),
-      horseId: json['horseId'] as String,
+      horseId: json['horseId'] as String? ?? '',
       horseName: json['horse']?['name'] as String?,
       horsePhotoUrl: json['horse']?['photoUrl'] as String?,
       riderId: json['riderId'] as String?,
       riderName: json['rider']?['name'] as String?,
-      inputMediaUrls: List<String>.from(json['inputMediaUrls'] ?? []),
-      progress: json['progress'] as int? ?? 0,
+      inputMediaUrls: (json['inputMediaUrls'] as List?)?.map((e) => e as String? ?? '').toList() ?? [],
+      progress: (json['progress'] as num?)?.toInt() ?? 0,
       errorMessage: json['errorMessage'] as String?,
       results: json['results'] as Map<String, dynamic>?,
       reportId: json['reportId'] as String?,
-      tokensCost: json['tokensCost'] as int? ?? 0,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      tokensCost: (json['tokensCost'] as num?)?.toInt() ?? 0,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now() : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'] as String) ?? DateTime.now() : DateTime.now(),
       completedAt: json['completedAt'] != null
-          ? DateTime.parse(json['completedAt'] as String)
+          ? DateTime.tryParse(json['completedAt'] as String)
           : null,
       thumbnailUrl: json['thumbnailUrl'] as String?,
       videoUrl: json['videoUrl'] as String?,
