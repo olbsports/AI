@@ -4,8 +4,8 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, FileVideo, FileImage, File, Loader2 } from 'lucide-react';
 
-import { cn, Button } from '@horse-vision/ui';
-import { formatFileSize } from '@horse-vision/core';
+import { cn, Button } from '@horse-tempo/ui';
+import { formatFileSize } from '@horse-tempo/core';
 
 interface UploadedFile {
   id: string;

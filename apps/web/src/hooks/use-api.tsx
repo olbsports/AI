@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { createApiClient, type HorseTempoApi } from '@horse-vision/api-client';
+import { createApiClient, type HorseTempoApi } from '@horse-tempo/api-client';
 import { useAuthStore } from '@/stores/auth';
 
 const ApiContext = createContext<HorseTempoApi | null>(null);

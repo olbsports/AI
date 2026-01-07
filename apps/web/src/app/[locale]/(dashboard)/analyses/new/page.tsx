@@ -25,9 +25,9 @@ import {
   Alert,
   AlertDescription,
   Badge,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 import { FileUpload } from '@/components/upload';
-import { TOKEN_COSTS } from '@horse-vision/config';
+import { TOKEN_COSTS } from '@horse-tempo/config';
 import { useAuthStore } from '@/stores/auth';
 
 type AnalysisType = 'video_course' | 'video_performance' | 'radiological' | 'locomotion';

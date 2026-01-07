@@ -6,7 +6,7 @@ import { getMessages } from 'next-intl/server';
 
 import '../globals.css';
 import { Providers } from '@/components/providers';
-import { SUPPORTED_LOCALES } from '@horse-vision/config';
+import { SUPPORTED_LOCALES } from '@horse-tempo/config';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 

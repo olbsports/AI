@@ -21,9 +21,9 @@ import {
   CardDescription,
   Button,
   Badge,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 import { useAuthStore } from '@/stores/auth';
-import { formatTokenBalance } from '@horse-vision/core';
+import { formatTokenBalance } from '@horse-tempo/core';
 
 export default function DashboardPage() {
   const t = useTranslations('dashboard');

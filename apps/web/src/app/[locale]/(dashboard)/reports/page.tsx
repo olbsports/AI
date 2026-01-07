@@ -21,7 +21,7 @@ import {
   Card,
   CardContent,
   Badge,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 
 export default function ReportsPage() {
   const t = useTranslations('reports');

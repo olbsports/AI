@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
-import type { LoginRequest, RegisterRequest } from '@horse-vision/types';
+import type { LoginRequest, RegisterRequest } from '@horse-tempo/types';
 
 export const authKeys = {
   user: ['auth', 'user'] as const,

@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateAnalysisDto } from './dto/create-analysis.dto';
-import { calculatePagination, calculateOffset } from '@horse-vision/types';
-import { calculateTokenCost, hasEnoughTokens } from '@horse-vision/core';
+import { calculatePagination, calculateOffset } from '@horse-tempo/types';
+import { calculateTokenCost, hasEnoughTokens } from '@horse-tempo/core';
 
 @Injectable()
 export class AnalysisService {

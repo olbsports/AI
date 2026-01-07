@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { CreateRiderDto } from './dto/create-rider.dto';
 import { UpdateRiderDto } from './dto/update-rider.dto';
-import { calculatePagination, calculateOffset } from '@horse-vision/types';
+import { calculatePagination, calculateOffset } from '@horse-tempo/types';
 
 @Injectable()
 export class RidersService {

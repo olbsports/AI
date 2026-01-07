@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
-import { Button, Input, Alert, AlertDescription } from '@horse-vision/ui';
+import { Button, Input, Alert, AlertDescription } from '@horse-tempo/ui';
 import { api } from '@/lib/api';
 
 export default function ForgotPasswordPage() {

@@ -23,7 +23,7 @@ import {
   CardContent,
   CardDescription,
   Badge,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 
 export default function AnalysisDetailPage() {
   const params = useParams();

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { Button, Input, Alert, AlertDescription } from '@horse-vision/ui';
+import { Button, Input, Alert, AlertDescription } from '@horse-tempo/ui';
 import { useAuthStore } from '@/stores/auth';
 import { api } from '@/lib/api';
 

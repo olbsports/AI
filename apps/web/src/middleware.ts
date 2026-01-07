@@ -1,6 +1,6 @@
 import createMiddleware from 'next-intl/middleware';
 
-import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@horse-vision/config';
+import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@horse-tempo/config';
 
 export default createMiddleware({
   locales: SUPPORTED_LOCALES,

@@ -19,10 +19,10 @@ import {
   CardContent,
   CardDescription,
   Badge,
-} from '@horse-vision/ui';
+} from '@horse-tempo/ui';
 import { useAuthStore } from '@/stores/auth';
-import { PLANS, PLAN_LIMITS, PLAN_DETAILS, TOKEN_COSTS } from '@horse-vision/config';
-import { formatTokenBalance, calculateTokenPrice } from '@horse-vision/core';
+import { PLANS, PLAN_LIMITS, PLAN_DETAILS, TOKEN_COSTS } from '@horse-tempo/config';
+import { formatTokenBalance, calculateTokenPrice } from '@horse-tempo/core';
 
 export default function BillingSettingsPage() {
   const { organization } = useAuthStore();

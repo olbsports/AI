@@ -14,7 +14,7 @@ import {
   Sun,
 } from 'lucide-react';
 
-import { Button, Input } from '@horse-vision/ui';
+import { Button, Input } from '@horse-tempo/ui';
 import { useAuthStore } from '@/stores/auth';
 
 interface HeaderProps {
