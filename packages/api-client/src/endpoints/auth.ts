@@ -8,7 +8,7 @@ import type {
   Verify2FARequest,
   AuthResponse,
   RefreshTokenResponse,
-} from '@horse-vision/types';
+} from '@horse-tempo/types';
 
 export function createAuthEndpoints(client: ApiClient) {
   return {

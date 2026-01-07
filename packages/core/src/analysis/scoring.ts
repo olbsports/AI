@@ -1,4 +1,4 @@
-import { RADIO_CATEGORIES } from '@horse-vision/config';
+import { RADIO_CATEGORIES } from '@horse-tempo/config';
 
 /**
  * Calcule le score global à partir des scores individuels

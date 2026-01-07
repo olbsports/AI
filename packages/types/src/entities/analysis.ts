@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { ANALYSIS_TYPES, ANALYSIS_STATUS, OBSTACLE_TYPES } from '@horse-vision/config';
+import { ANALYSIS_TYPES, ANALYSIS_STATUS, OBSTACLE_TYPES } from '@horse-tempo/config';
 
 /**
  * Type d'analyse

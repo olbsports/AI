@@ -5,7 +5,7 @@ import type {
   PaginatedResponse,
   AnalysisFilters,
   PaginationParams,
-} from '@horse-vision/types';
+} from '@horse-tempo/types';
 
 export function createAnalysisEndpoints(client: ApiClient) {
   return {

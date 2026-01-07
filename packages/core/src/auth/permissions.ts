@@ -1,4 +1,4 @@
-import { type UserRole } from '@horse-vision/types';
+import { type UserRole } from '@horse-tempo/types';
 
 /**
  * Définition des permissions par ressource
