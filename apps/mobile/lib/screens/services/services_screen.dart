@@ -230,7 +230,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Color(type.defaultColor).withOpacity(0.1),
+            color: Color(type.defaultColor).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(type.icon, color: Color(type.defaultColor)),
@@ -261,7 +261,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     backgroundImage: provider.photoUrl != null
                         ? NetworkImage(provider.photoUrl!)
                         : null,
-                    backgroundColor: Color(provider.type.defaultColor).withOpacity(0.1),
+                    backgroundColor: Color(provider.type.defaultColor).withValues(alpha: 0.1),
                     child: provider.photoUrl == null
                         ? Icon(provider.type.icon, color: Color(provider.type.defaultColor))
                         : null,
@@ -385,7 +385,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -460,7 +460,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                         final contact = contacts[index];
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Color(contact.type.defaultColor).withOpacity(0.1),
+                            backgroundColor: Color(contact.type.defaultColor).withValues(alpha: 0.1),
                             child: Icon(contact.type.icon, color: Color(contact.type.defaultColor)),
                           ),
                           title: Text(

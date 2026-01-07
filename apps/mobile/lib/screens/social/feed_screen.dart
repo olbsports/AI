@@ -675,9 +675,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
   void _sharePost(PublicNote post) async {
     final notifier = ref.read(socialNotifierProvider.notifier);
     await notifier.shareNote(post.id);
-    Share.share(
-      '${post.content}\n\n- ${post.authorName}',
-      subject: 'Partage de ${post.authorName}',
+    SharePlus.instance.share(
+      ShareParams(
+        text: '${post.content}\n\n- ${post.authorName}',
+        subject: 'Partage de ${post.authorName}',
+      ),
     );
   }
 }
@@ -877,7 +879,7 @@ class _NotificationsSheet extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     subtitle: Text(_formatTimeAgo(notif.createdAt)),
-                    tileColor: notif.isRead ? null : Colors.blue.withOpacity(0.1),
+                    tileColor: notif.isRead ? null : Colors.blue.withValues(alpha: 0.1),
                   );
                 },
               );

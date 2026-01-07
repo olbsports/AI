@@ -166,10 +166,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [AppColors.primary.withOpacity(0.1), AppColors.secondary.withOpacity(0.1)],
+              colors: [AppColors.primary.withValues(alpha: 0.1), AppColors.secondary.withValues(alpha: 0.1)],
             ),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
@@ -220,7 +220,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: isTopThree ? rankColor.withOpacity(0.1) : null,
+      color: isTopThree ? rankColor.withValues(alpha: 0.1) : null,
       child: ListTile(
         leading: Stack(
           children: [
@@ -435,7 +435,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: isTopThree ? rankColor.withOpacity(0.1) : null,
+      color: isTopThree ? rankColor.withValues(alpha: 0.1) : null,
       child: ListTile(
         leading: Stack(
           children: [
@@ -504,7 +504,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withOpacity(0.1),
+                  color: AppColors.secondary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(

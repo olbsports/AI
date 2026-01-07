@@ -254,7 +254,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
             children: [
               CircleAvatar(
                 radius: 30,
-                backgroundColor: AppColors.primary.withOpacity(0.1),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 backgroundImage: club.logoUrl != null ? NetworkImage(club.logoUrl!) : null,
                 child: club.logoUrl == null
                     ? Text(
@@ -311,7 +311,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.1),
+                              color: Colors.amber.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -339,7 +339,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
   Widget _buildInvitationCard(ClubInvitation invitation) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: Colors.blue.withOpacity(0.05),
+      color: Colors.blue.withValues(alpha: 0.05),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -348,7 +348,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   backgroundImage: invitation.clubLogoUrl != null
                       ? NetworkImage(invitation.clubLogoUrl!)
                       : null,
@@ -418,15 +418,15 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
     Widget? rankWidget;
 
     if (index == 0) {
-      backgroundColor = Colors.amber.withOpacity(0.1);
+      backgroundColor = Colors.amber.withValues(alpha: 0.1);
       textColor = Colors.amber;
       rankWidget = const Text('🥇', style: TextStyle(fontSize: 24));
     } else if (index == 1) {
-      backgroundColor = Colors.grey.shade300.withOpacity(0.3);
+      backgroundColor = Colors.grey.shade300.withValues(alpha: 0.3);
       textColor = Colors.grey.shade600;
       rankWidget = const Text('🥈', style: TextStyle(fontSize: 24));
     } else if (index == 2) {
-      backgroundColor = Colors.brown.withOpacity(0.1);
+      backgroundColor = Colors.brown.withValues(alpha: 0.1);
       textColor = Colors.brown;
       rankWidget = const Text('🥉', style: TextStyle(fontSize: 24));
     } else {
@@ -469,7 +469,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
         ),
         subtitle: Text(
           '${entry.memberCount} membres',
-          style: TextStyle(color: textColor?.withOpacity(0.7)),
+          style: TextStyle(color: textColor?.withValues(alpha: 0.7)),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -543,7 +543,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(

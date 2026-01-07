@@ -166,7 +166,7 @@ class GestationScreen extends ConsumerWidget {
                             child: LinearProgressIndicator(
                               value: stats.successRate / 100,
                               minHeight: 12,
-                              backgroundColor: Colors.grey.withOpacity(0.2),
+                              backgroundColor: Colors.grey.withValues(alpha: 0.2),
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 stats.successRate >= 80 ? Colors.green : Colors.orange,
                               ),
@@ -195,7 +195,7 @@ class GestationScreen extends ConsumerWidget {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.1),
+                    color: Colors.purple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.timer, color: Colors.purple),
@@ -212,7 +212,7 @@ class GestationScreen extends ConsumerWidget {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.hourglass_empty, color: Colors.orange),
@@ -246,7 +246,7 @@ class GestationScreen extends ConsumerWidget {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: statusColor.withOpacity(0.1),
+                    backgroundColor: statusColor.withValues(alpha: 0.1),
                     child: const Icon(Icons.pregnant_woman, color: Colors.pink),
                   ),
                   const SizedBox(width: 12),
@@ -276,7 +276,7 @@ class GestationScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -317,7 +317,7 @@ class GestationScreen extends ConsumerWidget {
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 8,
-                      backgroundColor: Colors.grey.withOpacity(0.2),
+                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
                     ),
                   ),
                 ],
@@ -346,7 +346,7 @@ class GestationScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -370,8 +370,8 @@ class GestationScreen extends ConsumerWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: birth.sex == FoalSex.male
-              ? Colors.blue.withOpacity(0.1)
-              : Colors.pink.withOpacity(0.1),
+              ? Colors.blue.withValues(alpha: 0.1)
+              : Colors.pink.withValues(alpha: 0.1),
           child: Icon(
             birth.sex == FoalSex.male ? Icons.male : Icons.female,
             color: birth.sex == FoalSex.male ? Colors.blue : Colors.pink,
@@ -392,7 +392,7 @@ class GestationScreen extends ConsumerWidget {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Color(birth.initialHealth.color).withOpacity(0.1),
+            color: Color(birth.initialHealth.color).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
@@ -417,7 +417,7 @@ class GestationScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color),

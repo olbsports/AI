@@ -73,7 +73,7 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
         children: [
           // Info card
           Card(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -312,7 +312,7 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
         return FilterChip(
           label: Text(option, style: const TextStyle(fontSize: 12)),
           selected: isSelected,
-          selectedColor: color.withOpacity(0.2),
+          selectedColor: color.withValues(alpha: 0.2),
           checkmarkColor: color,
           onSelected: (sel) {
             setState(() {
@@ -408,7 +408,7 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
         // Header
         Container(
           padding: const EdgeInsets.all(16),
-          color: AppColors.primary.withOpacity(0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           child: Row(
             children: [
               CircleAvatar(
@@ -472,7 +472,7 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: compatibilityColor.withOpacity(0.1),
+              color: compatibilityColor.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
@@ -668,7 +668,7 @@ class _BreedingScreenState extends ConsumerState<BreedingScreen> {
           children: items.map((item) => Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

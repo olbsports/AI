@@ -465,6 +465,7 @@ enum LeaderboardTier {
 /// Leaderboard notifier for interactions
 class LeaderboardNotifier extends StateNotifier<AsyncValue<void>> {
   final ApiService _api;
+  // ignore: unused_field - Reserved for future use
   final Ref _ref;
 
   LeaderboardNotifier(this._api, this._ref) : super(const AsyncValue.data(null));

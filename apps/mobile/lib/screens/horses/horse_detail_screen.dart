@@ -161,7 +161,7 @@ class HorseDetailScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
@@ -193,7 +193,7 @@ class HorseDetailScreen extends ConsumerWidget {
               context,
               Icons.male,
               'Sexe',
-              horse.gender != null ? _genderLabel(horse.gender!) : '-',
+              _genderLabel(horse.gender),
             ),
             _buildInfoRow(
               context,
@@ -316,7 +316,7 @@ class HorseDetailScreen extends ConsumerWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .primary
-                              .withOpacity(0.3),
+                              .withValues(alpha: 0.3),
                         ),
                         const SizedBox(height: 8),
                         Text(

@@ -299,9 +299,7 @@ class _HorseCard extends StatelessWidget {
   String _buildSubtitle(Horse horse) {
     final parts = <String>[];
 
-    if (horse.gender != null) {
-      parts.add(_genderLabel(horse.gender!));
-    }
+    parts.add(_genderLabel(horse.gender));
 
     if (horse.birthDate != null) {
       final age = DateTime.now().year - horse.birthDate!.year;
@@ -348,7 +346,7 @@ class _HorseCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

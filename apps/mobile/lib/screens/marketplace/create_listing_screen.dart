@@ -33,6 +33,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   bool _priceOnRequest = false;
 
   // For stallion
+  // ignore: unused_field - Reserved for stallion listing feature
   String? _studFee;
   bool _frozenSemen = false;
   bool _freshSemen = true;
@@ -516,7 +517,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                         ),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
-                          value: _breedingStatus,
+                          initialValue: _breedingStatus,
                           decoration: const InputDecoration(
                             labelText: 'Statut',
                           ),

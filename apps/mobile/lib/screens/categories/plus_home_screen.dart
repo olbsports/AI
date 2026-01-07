@@ -127,7 +127,7 @@ class _ProfileCard extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 32,
-                backgroundColor: AppColors.primary.withOpacity(0.1),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 child: const Icon(
                   Icons.person,
                   size: 32,
@@ -156,7 +156,7 @@ class _ProfileCard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -281,7 +281,7 @@ class _ThemeOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : theme.colorScheme.outlineVariant,
@@ -356,7 +356,7 @@ class _SectionItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 24),
@@ -552,41 +552,34 @@ class _AppInfoCard extends StatelessWidget {
 void _showLanguageDialog(BuildContext context) {
   showDialog(
     context: context,
-    builder: (context) => SimpleDialog(
+    builder: (dialogContext) => SimpleDialog(
       title: const Text('Choisir la langue'),
       children: [
-        RadioListTile<String>(
-          value: 'fr',
+        RadioGroup<String>(
           groupValue: 'fr',
-          title: const Text('Français'),
           onChanged: (value) {
-            Navigator.pop(context);
+            Navigator.pop(dialogContext);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Langue: Français')),
+              SnackBar(content: Text('Langue: ${value == 'fr' ? 'Français' : value == 'en' ? 'English' : 'Español'}')),
             );
           },
-        ),
-        RadioListTile<String>(
-          value: 'en',
-          groupValue: 'fr',
-          title: const Text('English'),
-          onChanged: (value) {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Language: English')),
-            );
-          },
-        ),
-        RadioListTile<String>(
-          value: 'es',
-          groupValue: 'fr',
-          title: const Text('Español'),
-          onChanged: (value) {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Idioma: Español')),
-            );
-          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                value: 'fr',
+                title: const Text('Français'),
+              ),
+              RadioListTile<String>(
+                value: 'en',
+                title: const Text('English'),
+              ),
+              RadioListTile<String>(
+                value: 'es',
+                title: const Text('Español'),
+              ),
+            ],
+          ),
         ),
       ],
     ),

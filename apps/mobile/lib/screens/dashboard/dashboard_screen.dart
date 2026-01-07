@@ -120,7 +120,7 @@ class DashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -135,7 +135,7 @@ class DashboardScreen extends ConsumerWidget {
                 Text(
                   greeting,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -154,7 +154,7 @@ class DashboardScreen extends ConsumerWidget {
                 Text(
                   'Votre assistant équestre intelligent',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -165,7 +165,7 @@ class DashboardScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(
@@ -608,7 +608,7 @@ class DashboardScreen extends ConsumerWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: AppColors.categoryIA.withOpacity(0.1),
+                      backgroundColor: AppColors.categoryIA.withValues(alpha: 0.1),
                       child: Icon(Icons.analytics, color: AppColors.categoryIA),
                     ),
                     title: Text(analysis.type ?? 'Analyse'),
@@ -731,7 +731,7 @@ class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.categoryIA.withOpacity(0.1),
+                  backgroundColor: AppColors.categoryIA.withValues(alpha: 0.1),
                   child: Icon(Icons.videocam, color: AppColors.categoryIA),
                 ),
                 title: const Text('Nouvelle analyse'),
@@ -743,7 +743,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.categoryEcurie.withOpacity(0.1),
+                  backgroundColor: AppColors.categoryEcurie.withValues(alpha: 0.1),
                   child: Icon(Icons.pets, color: AppColors.categoryEcurie),
                 ),
                 title: const Text('Ajouter un cheval'),
@@ -755,7 +755,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.success.withOpacity(0.1),
+                  backgroundColor: AppColors.success.withValues(alpha: 0.1),
                   child: Icon(Icons.description, color: AppColors.success),
                 ),
                 title: const Text('Nouveau rapport'),
@@ -767,7 +767,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.tertiary.withOpacity(0.1),
+                  backgroundColor: AppColors.tertiary.withValues(alpha: 0.1),
                   child: Icon(Icons.event, color: AppColors.tertiary),
                 ),
                 title: const Text('Événement'),
@@ -806,7 +806,7 @@ class DashboardScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -852,7 +852,7 @@ class _QuickAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -903,7 +903,7 @@ class _FeatureIcon extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -998,7 +998,7 @@ class _EventCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.tertiary.withOpacity(0.1),
+                    color: AppColors.tertiary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -1058,12 +1058,12 @@ class _HorseCard extends StatelessWidget {
                         fit: BoxFit.cover,
                         width: double.infinity,
                         errorBuilder: (_, __, ___) => Container(
-                          color: AppColors.categoryEcurie.withOpacity(0.1),
+                          color: AppColors.categoryEcurie.withValues(alpha: 0.1),
                           child: Icon(Icons.pets, color: AppColors.categoryEcurie),
                         ),
                       )
                     : Container(
-                        color: AppColors.categoryEcurie.withOpacity(0.1),
+                        color: AppColors.categoryEcurie.withValues(alpha: 0.1),
                         child: Icon(Icons.pets, color: AppColors.categoryEcurie),
                       ),
               ),
@@ -1112,7 +1112,7 @@ class _CommunityCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 20),

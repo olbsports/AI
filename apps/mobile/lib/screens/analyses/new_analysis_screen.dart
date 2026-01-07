@@ -378,7 +378,7 @@ class _NewAnalysisScreenState extends ConsumerState<NewAnalysisScreen> {
                   Icon(
                     Icons.pets,
                     size: 48,
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 8),
                   const Text('Aucun cheval enregistré'),
@@ -394,7 +394,7 @@ class _NewAnalysisScreenState extends ConsumerState<NewAnalysisScreen> {
         }
 
         return DropdownButtonFormField<String>(
-          value: _selectedHorseId,
+          initialValue: _selectedHorseId,
           decoration: const InputDecoration(
             labelText: 'Cheval *',
             prefixIcon: Icon(Icons.pets),

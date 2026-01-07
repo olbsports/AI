@@ -282,32 +282,27 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Langue'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              value: 'fr',
-              groupValue: currentLanguage,
-              title: const Text('Français'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setLanguage(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-            RadioListTile<String>(
-              value: 'en',
-              groupValue: currentLanguage,
-              title: const Text('English'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setLanguage(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-          ],
+        content: RadioGroup<String>(
+          groupValue: currentLanguage,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setLanguage(value);
+              Navigator.pop(dialogContext);
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                value: 'fr',
+                title: const Text('Français'),
+              ),
+              RadioListTile<String>(
+                value: 'en',
+                title: const Text('English'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -318,44 +313,32 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Thème'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<ThemeMode>(
-              value: ThemeMode.system,
-              groupValue: currentTheme,
-              title: const Text('Automatique'),
-              subtitle: const Text('Suit les paramètres système'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              value: ThemeMode.light,
-              groupValue: currentTheme,
-              title: const Text('Clair'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              value: ThemeMode.dark,
-              groupValue: currentTheme,
-              title: const Text('Sombre'),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                  Navigator.pop(dialogContext);
-                }
-              },
-            ),
-          ],
+        content: RadioGroup<ThemeMode>(
+          groupValue: currentTheme,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setThemeMode(value);
+              Navigator.pop(dialogContext);
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.system,
+                title: const Text('Automatique'),
+                subtitle: const Text('Suit les paramètres système'),
+              ),
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.light,
+                title: const Text('Clair'),
+              ),
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.dark,
+                title: const Text('Sombre'),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -120,7 +120,7 @@ class EcurieHomeScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             ListTile(
               leading: CircleAvatar(
-                backgroundColor: AppColors.categoryEcurie.withOpacity(0.1),
+                backgroundColor: AppColors.categoryEcurie.withValues(alpha: 0.1),
                 child: const Icon(Icons.pets, color: AppColors.categoryEcurie),
               ),
               title: const Text('Nouveau cheval'),
@@ -132,7 +132,7 @@ class EcurieHomeScreen extends ConsumerWidget {
             ),
             ListTile(
               leading: CircleAvatar(
-                backgroundColor: AppColors.secondary.withOpacity(0.1),
+                backgroundColor: AppColors.secondary.withValues(alpha: 0.1),
                 child: const Icon(Icons.person_add, color: AppColors.secondary),
               ),
               title: const Text('Nouveau cavalier'),
@@ -169,7 +169,7 @@ class _QuickStats extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.categoryEcurie,
-            AppColors.categoryEcurie.withOpacity(0.8),
+            AppColors.categoryEcurie.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -202,7 +202,7 @@ class _QuickStats extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -227,7 +227,7 @@ class _QuickStats extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -305,7 +305,7 @@ class _SectionItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 22),
@@ -365,7 +365,7 @@ class _RecentActivitySection extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.categoryEcurie.withOpacity(0.1),
+                  backgroundColor: AppColors.categoryEcurie.withValues(alpha: 0.1),
                   child: const Icon(Icons.pets, color: AppColors.categoryEcurie),
                 ),
                 title: Text(horse.name ?? 'Sans nom'),

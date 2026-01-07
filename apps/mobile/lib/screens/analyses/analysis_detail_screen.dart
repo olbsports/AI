@@ -256,9 +256,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
         subtitle: const Text('Cheval analysé'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
-          if (analysis.horseId != null) {
-            context.push('/horses/${analysis.horseId}');
-          }
+          context.push('/horses/${analysis.horseId}');
         },
       ),
     );
@@ -355,7 +353,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color),
@@ -372,7 +370,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
                   const SizedBox(height: 4),
                   LinearProgressIndicator(
                     value: score,
-                    backgroundColor: color.withOpacity(0.1),
+                    backgroundColor: color.withValues(alpha: 0.1),
                     valueColor: AlwaysStoppedAnimation(color),
                   ),
                 ],
@@ -532,7 +530,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(

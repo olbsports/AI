@@ -119,7 +119,7 @@ class GamificationScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -144,7 +144,7 @@ class GamificationScreen extends ConsumerWidget {
                   Text(
                     level.title,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 18,
                     ),
                   ),
@@ -153,7 +153,7 @@ class GamificationScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -170,7 +170,7 @@ class GamificationScreen extends ConsumerWidget {
             child: LinearProgressIndicator(
               value: level.progressToNextLevel,
               minHeight: 12,
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
             ),
           ),
@@ -181,14 +181,14 @@ class GamificationScreen extends ConsumerWidget {
               Text(
                 '${level.currentXp} XP',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 14,
                 ),
               ),
               Text(
                 '${level.xpForNextLevel} XP',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 14,
                 ),
               ),
@@ -198,7 +198,7 @@ class GamificationScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -224,8 +224,8 @@ class GamificationScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: streak.currentStreak > 0
-                    ? Colors.orange.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
+                    ? Colors.orange.withValues(alpha: 0.1)
+                    : Colors.grey.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Text(
@@ -280,7 +280,7 @@ class GamificationScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getChallengeTypeColor(challenge.type).withOpacity(0.1),
+                    color: _getChallengeTypeColor(challenge.type).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -325,7 +325,7 @@ class GamificationScreen extends ConsumerWidget {
                     child: LinearProgressIndicator(
                       value: challenge.progress,
                       minHeight: 8,
-                      backgroundColor: Colors.grey.withOpacity(0.2),
+                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
                     ),
                   ),
                 ),
@@ -367,7 +367,7 @@ class GamificationScreen extends ConsumerWidget {
           onTap: () => _showBadgeDetails(context, badge),
           child: Container(
             decoration: BoxDecoration(
-              color: Color(badge.rarity.color).withOpacity(0.1),
+              color: Color(badge.rarity.color).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: Color(badge.rarity.color),
@@ -398,7 +398,7 @@ class GamificationScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.people, color: Colors.green),
@@ -492,7 +492,7 @@ class GamificationScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Color(badge.rarity.color).withOpacity(0.1),
+                color: Color(badge.rarity.color).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Text(badge.iconUrl, style: const TextStyle(fontSize: 64)),
@@ -508,7 +508,7 @@ class GamificationScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(badge.rarity.color).withOpacity(0.1),
+                color: Color(badge.rarity.color).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
