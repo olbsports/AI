@@ -120,6 +120,20 @@ model User {
   reportsMade             UserReport[]          @relation("Reporter")
   reportsReceived         UserReport[]          @relation("ReportedUser")
 
+  // Horses ownership
+  ownedHorses             Horse[]               @relation("HorseOwner")
+
+  // Support
+  supportTickets          SupportTicket[]       @relation("UserTickets")
+  assignedTickets         SupportTicket[]       @relation("AssignedTickets")
+  ticketMessages          TicketMessage[]
+
+  // Subscriptions
+  subscriptions           Subscription[]
+
+  // Audit logs
+  auditLogs               AuditLog[]            @relation("AuditActor")
+
   @@map("users")
 }
 
@@ -182,6 +196,10 @@ model Horse {
   // Organization
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Owner (User)
+  ownerId        String?
+  owner          User?    @relation("HorseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 
   // Rider
   riderId        String?
@@ -1502,16 +1520,25 @@ model AuditLog {
   action         String
   details        Json?
 
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // Resource being acted upon
+  resourceType   String?
+  resourceId     String?
+  changes        Json?
 
-  userId         String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Actor (who performed the action)
+  actorId        String?
+  actor          User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
   ipAddress      String?
   userAgent      String?
 
   createdAt      DateTime @default(now())
 
   @@index([organizationId, action, createdAt])
+  @@index([actorId, createdAt])
   @@map("audit_logs")
 }
 
@@ -1582,8 +1609,141 @@ model UserReport {
   reviewedAt      DateTime?
   reviewNotes     String?
 
+  // Admin moderation fields
+  moderatorId     String?
+  moderatorNotes  String?
+  actionTaken     String?
+  resolvedAt      DateTime?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@map("user_reports")
+}
+
+// ==================== SUPPORT TICKETS ====================
+
+model SupportTicket {
+  id              String    @id @default(uuid())
+
+  userId          String
+  user            User      @relation("UserTickets", fields: [userId], references: [id], onDelete: Cascade)
+
+  subject         String
+  description     String    @db.Text
+  category        String    @default("other") // billing, technical, account, feature, bug, other
+  priority        String    @default("normal") // low, normal, high, urgent
+  status          String    @default("open") // open, in_progress, waiting_for_user, resolved, closed
+
+  assigneeId      String?
+  assignee        User?     @relation("AssignedTickets", fields: [assigneeId], references: [id])
+
+  messages        TicketMessage[]
+
+  resolvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id          String   @id @default(uuid())
+
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  content     String   @db.Text
+  attachments Json?
+
+  createdAt   DateTime @default(now())
+
+  @@index([ticketId])
+  @@map("ticket_messages")
+}
+
+// ==================== SYSTEM SETTINGS ====================
+
+model SystemSettings {
+  id                  String   @id @default(uuid())
+
+  maintenanceMode     Boolean  @default(false)
+  maintenanceMessage  String?
+
+  registrationEnabled Boolean  @default(true)
+  freeTrialEnabled    Boolean  @default(true)
+  freeTrialDays       Int      @default(7)
+
+  analysisPrice       Float    @default(0)
+  maxAnalysesPerDay   Int      @default(100)
+
+  allowedFileTypes    Json     @default("[\"jpg\",\"jpeg\",\"png\",\"mp4\",\"mov\"]")
+  maxFileSize         Int      @default(100000000)
+
+  featureFlags        Json     @default("{}")
+
+  termsVersion        String?
+  privacyVersion      String?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// ==================== SUBSCRIPTIONS ====================
+
+model Subscription {
+  id                    String    @id @default(uuid())
+
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  planId                String
+  plan                  SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  status                String    @default("active") // active, trialing, past_due, cancelled, expired, paused
+  amount                Float?
+  interval              String    @default("monthly") // monthly, quarterly, yearly
+
+  startDate             DateTime  @default(now())
+  endDate               DateTime?
+  nextBillingDate       DateTime?
+
+  cancelledAt           DateTime?
+  cancellationReason    String?
+
+  stripeSubscriptionId  String?
+  stripeCustomerId      String?
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@map("subscriptions")
+}
+
+model SubscriptionPlan {
+  id                   String    @id @default(uuid())
+
+  name                 String
+  description          String?
+  monthlyPrice         Float
+  yearlyPrice          Float?
+  features             Json      @default("[]")
+  maxHorses            Int       @default(999)
+  maxAnalysesPerMonth  Int       @default(999)
+
+  isActive             Boolean   @default(true)
+
+  subscriptions        Subscription[]
+
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@map("subscription_plans")
 }
