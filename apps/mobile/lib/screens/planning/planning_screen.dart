@@ -1000,6 +1000,7 @@ class _AddEventFormState extends State<_AddEventForm> {
 
   void _submit() async {
     if (_titleController.text.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Le titre est requis')),
       );
@@ -1018,6 +1019,7 @@ class _AddEventFormState extends State<_AddEventForm> {
       'location': _locationController.text.isNotEmpty ? _locationController.text : null,
       'description': _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
     });
+    if (!mounted) return;
     setState(() => _isLoading = false);
   }
 }
@@ -1120,6 +1122,7 @@ class _AddGoalFormState extends State<_AddGoalForm> {
 
   void _submit() async {
     if (_titleController.text.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('L\'objectif est requis')),
       );
@@ -1134,6 +1137,7 @@ class _AddGoalFormState extends State<_AddGoalForm> {
       'startDate': DateTime.now().toIso8601String(),
       'targetDate': _targetDate.toIso8601String(),
     });
+    if (!mounted) return;
     setState(() => _isLoading = false);
   }
 }
@@ -1235,6 +1239,7 @@ class _CreateTrainingPlanFormState extends State<_CreateTrainingPlanForm> {
 
   void _submit() async {
     if (_titleController.text.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Le nom est requis')),
       );
@@ -1250,6 +1255,7 @@ class _CreateTrainingPlanFormState extends State<_CreateTrainingPlanForm> {
       'startDate': now.toIso8601String(),
       'endDate': now.add(Duration(days: _weeks * 7)).toIso8601String(),
     });
+    if (!mounted) return;
     setState(() => _isLoading = false);
   }
 }
