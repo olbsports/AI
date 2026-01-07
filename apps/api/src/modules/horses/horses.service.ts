@@ -9,7 +9,7 @@ import { calculatePagination, calculateOffset } from '@horse-vision/types';
 export class HorsesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly uploadService: UploadService,
+    private readonly uploadService: UploadService
   ) {}
 
   async findAll(
@@ -20,7 +20,7 @@ export class HorsesService {
       search?: string;
       status?: string;
       gender?: string;
-    },
+    }
   ) {
     const page = params.page ?? 1;
     const pageSize = params.pageSize ?? 20;
@@ -49,7 +49,21 @@ export class HorsesService {
         skip: offset,
         take: pageSize,
         orderBy: { createdAt: 'desc' },
-        include: { rider: true },
+        include: {
+          rider: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          _count: {
+            select: {
+              analysisSessions: true,
+              reports: true,
+            },
+          },
+        },
       }),
       this.prisma.horse.count({ where }),
     ]);
@@ -63,7 +77,21 @@ export class HorsesService {
   async findById(id: string, organizationId: string) {
     const horse = await this.prisma.horse.findFirst({
       where: { id, organizationId },
-      include: { rider: true },
+      include: {
+        rider: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        _count: {
+          select: {
+            analysisSessions: true,
+            reports: true,
+          },
+        },
+      },
     });
 
     if (!horse) {
@@ -127,7 +155,7 @@ export class HorsesService {
     const { url } = await this.uploadService.uploadFile(
       organizationId,
       'avatars', // Use avatars category for horse photos
-      file,
+      file
     );
 
     // Update horse with new photo URL
@@ -240,7 +268,12 @@ export class HorsesService {
     // Return mock data - in production you'd have a weight_records table
     return [
       { id: 'w1', weight: 550, date: new Date(), notes: null },
-      { id: 'w2', weight: 545, date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), notes: 'Après entraînement intensif' },
+      {
+        id: 'w2',
+        weight: 545,
+        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        notes: 'Après entraînement intensif',
+      },
       { id: 'w3', weight: 540, date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), notes: null },
     ];
   }

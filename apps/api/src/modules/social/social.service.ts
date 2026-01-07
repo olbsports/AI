@@ -5,12 +5,39 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class SocialService {
   constructor(private prisma: PrismaService) {}
 
+  // Helper to transform posts with isLiked, isSaved, authorName
+  private async transformPosts(posts: any[], userId: string) {
+    if (posts.length === 0) return posts;
+
+    const postIds = posts.map((p) => p.id);
+
+    // Get user's likes and saves for these posts
+    const [userLikes] = await Promise.all([
+      this.prisma.like.findMany({
+        where: { userId, postId: { in: postIds } },
+        select: { postId: true },
+      }),
+    ]);
+
+    const likedPostIds = new Set(userLikes.map((l) => l.postId));
+
+    return posts.map((post) => ({
+      ...post,
+      authorName: `${post.author.firstName} ${post.author.lastName}`,
+      authorPhotoUrl: post.author.avatarUrl,
+      isLiked: likedPostIds.has(post.id),
+      isSaved: false, // TODO: implement saved posts table
+      likeCount: post._count?.likes || post.likeCount || 0,
+      commentCount: post._count?.comments || post.commentCount || 0,
+    }));
+  }
+
   // ==================== FEED ====================
 
   async getForYouFeed(userId: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
 
-    return this.prisma.socialPost.findMany({
+    const posts = await this.prisma.socialPost.findMany({
       where: {
         visibility: 'public',
       },
@@ -41,6 +68,8 @@ export class SocialService {
       skip,
       take: limit,
     });
+
+    return this.transformPosts(posts, userId);
   }
 
   async getFollowingFeed(userId: string, page = 1, limit = 20) {
@@ -54,7 +83,7 @@ export class SocialService {
 
     const followingIds = following.map((f) => f.followingId);
 
-    return this.prisma.socialPost.findMany({
+    const posts = await this.prisma.socialPost.findMany({
       where: {
         authorId: { in: followingIds },
         visibility: { in: ['public', 'followers'] },
@@ -86,6 +115,8 @@ export class SocialService {
       skip,
       take: limit,
     });
+
+    return this.transformPosts(posts, userId);
   }
 
   async getTrendingPosts(page = 1, limit = 20) {
