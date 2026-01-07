@@ -480,7 +480,15 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> getPlans() async {
     final response = await _dio.get('/subscriptions/plans');
-    return List<Map<String, dynamic>>.from(response.data);
+    final data = response.data;
+    // API returns a map of plans keyed by plan ID, convert to list
+    if (data is Map<String, dynamic>) {
+      return data.entries.map((e) => {
+        'id': e.key,
+        ...Map<String, dynamic>.from(e.value as Map),
+      }).toList();
+    }
+    return List<Map<String, dynamic>>.from(data);
   }
 
   Future<Map<String, dynamic>> getCurrentSubscription() async {
@@ -507,7 +515,12 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> getInvoices() async {
     final response = await _dio.get('/invoices');
-    return List<Map<String, dynamic>>.from(response.data);
+    final data = response.data;
+    // API returns {invoices: [], total: 0, ...}, extract the invoices list
+    if (data is Map<String, dynamic> && data.containsKey('invoices')) {
+      return List<Map<String, dynamic>>.from(data['invoices']);
+    }
+    return List<Map<String, dynamic>>.from(data);
   }
 
   // ==================== DASHBOARD ====================

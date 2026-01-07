@@ -95,8 +95,13 @@ final todaySessionProvider = FutureProvider<TrainingSession?>((ref) async {
 /// Training recommendations
 final trainingRecommendationsProvider = FutureProvider<List<TrainingRecommendation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final response = await api.get('/training/recommendations');
-  return (response as List).map((e) => TrainingRecommendation.fromJson(e)).toList();
+  try {
+    final response = await api.get('/training/recommendations');
+    return (response as List).map((e) => TrainingRecommendation.fromJson(e)).toList();
+  } catch (e) {
+    // Return empty list if endpoint not available
+    return [];
+  }
 });
 
 /// Planning summary

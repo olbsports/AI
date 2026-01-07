@@ -55,13 +55,13 @@ class BillingScreen extends ConsumerWidget {
                               context,
                               ref,
                               plan: plan,
-                              currentPlanId: subscription['planId'],
+                              currentPlanId: subscription['planId'] ?? subscription['plan'],
                             ),
                           ))
                       .toList(),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => _buildDefaultPlans(context, ref, subscription['planId']),
+                error: (error, _) => _buildDefaultPlans(context, ref, subscription['planId'] ?? subscription['plan']),
               ),
               const SizedBox(height: 24),
 
@@ -74,7 +74,7 @@ class BillingScreen extends ConsumerWidget {
 
               // Cancel subscription button
               if (subscription['status'] == 'active' &&
-                  subscription['planId'] != 'free') ...[
+                  (subscription['planId'] ?? subscription['plan']) != 'free') ...[
                 const SizedBox(height: 24),
                 OutlinedButton(
                   onPressed: () => _confirmCancelSubscription(context, ref),
