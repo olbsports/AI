@@ -74,7 +74,7 @@ class PlusHomeScreen extends ConsumerWidget {
                   label: 'Abonnement',
                   subtitle: 'Gérer mon plan',
                   color: AppColors.primary,
-                  onTap: () => context.go('/subscription'),
+                  onTap: () => context.go('/settings/billing'),
                 ),
               ],
             ),
@@ -119,7 +119,7 @@ class _ProfileCard extends ConsumerWidget {
 
     return Card(
       child: InkWell(
-        onTap: () => context.go('/profile'),
+        onTap: () => context.go('/settings/profile'),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -408,7 +408,7 @@ class _SettingsList extends StatelessWidget {
             icon: Icons.security,
             title: 'Confidentialité',
             subtitle: 'Données & sécurité',
-            onTap: () => context.go('/settings/privacy'),
+            onTap: () => context.go('/settings/notifications'),
           ),
           const Divider(height: 1),
           _SettingsTile(
@@ -460,7 +460,7 @@ class _HelpSection extends StatelessWidget {
             icon: Icons.help_outline,
             title: 'Centre d\'aide',
             subtitle: 'FAQ et tutoriels',
-            onTap: () => context.push('/help'),
+            onTap: () => context.push('/settings'),
           ),
           const Divider(height: 1),
           _SettingsTile(
