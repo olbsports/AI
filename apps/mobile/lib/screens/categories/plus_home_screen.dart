@@ -550,38 +550,45 @@ class _AppInfoCard extends StatelessWidget {
 // ==================== HELPER FUNCTIONS ====================
 
 void _showLanguageDialog(BuildContext context) {
+  String selectedLanguage = 'fr';
   showDialog(
     context: context,
-    builder: (dialogContext) => SimpleDialog(
-      title: const Text('Choisir la langue'),
-      children: [
-        RadioGroup<String>(
-          groupValue: 'fr',
-          onChanged: (value) {
-            Navigator.pop(dialogContext);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Langue: ${value == 'fr' ? 'Français' : value == 'en' ? 'English' : 'Español'}')),
-            );
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<String>(
-                value: 'fr',
-                title: const Text('Français'),
-              ),
-              RadioListTile<String>(
-                value: 'en',
-                title: const Text('English'),
-              ),
-              RadioListTile<String>(
-                value: 'es',
-                title: const Text('Español'),
-              ),
-            ],
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setDialogState) => SimpleDialog(
+        title: const Text('Choisir la langue'),
+        children: [
+          RadioGroup<String>(
+            groupValue: selectedLanguage,
+            onChanged: (value) {
+              if (value != null) {
+                setDialogState(() => selectedLanguage = value);
+                Navigator.pop(dialogContext);
+                final langName = value == 'fr' ? 'Français' : value == 'en' ? 'English' : 'Español';
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Langue: $langName')),
+                );
+              }
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                RadioListTile<String>(
+                  value: 'fr',
+                  title: Text('Français'),
+                ),
+                RadioListTile<String>(
+                  value: 'en',
+                  title: Text('English'),
+                ),
+                RadioListTile<String>(
+                  value: 'es',
+                  title: Text('Español'),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
