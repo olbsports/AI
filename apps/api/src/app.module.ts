@@ -38,6 +38,7 @@ import { ServicesModule } from './modules/services/services.module';
 
 // Gestation/Breeding
 import { GestationModule } from './modules/gestation/gestation.module';
+import { BreedingModule } from './modules/breeding/breeding.module';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { GestationModule } from './modules/gestation/gestation.module';
 
     // Gestation/Breeding
     GestationModule,
+    BreedingModule,
   ],
 })
 export class AppModule {}

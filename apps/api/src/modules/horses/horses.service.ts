@@ -402,4 +402,160 @@ export class HorsesService {
       },
     ];
   }
+
+  // ========== HEALTH REMINDERS ==========
+
+  async getHealthReminders(organizationId: string) {
+    // Get all horses for this organization
+    const horses = await this.prisma.horse.findMany({
+      where: { organizationId },
+      select: {
+        id: true,
+        name: true,
+        photoUrl: true,
+      },
+    });
+
+    const horseIds = horses.map((h) => h.id);
+
+    // Get all health records with upcoming reminders (not dismissed)
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    const reminders = await this.prisma.healthRecord.findMany({
+      where: {
+        horseId: { in: horseIds },
+        nextDueDate: {
+          gte: now,
+          lte: thirtyDaysFromNow,
+        },
+        reminderSent: false, // Only show non-dismissed reminders
+      },
+      orderBy: { nextDueDate: 'asc' },
+      include: {
+        horse: {
+          select: {
+            id: true,
+            name: true,
+            photoUrl: true,
+          },
+        },
+      },
+    });
+
+    // Add additional info for each reminder
+    return reminders.map((reminder) => {
+      const daysUntilDue = Math.ceil(
+        (reminder.nextDueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      return {
+        id: reminder.id,
+        horseId: reminder.horseId,
+        horseName: reminder.horse.name,
+        horsePhotoUrl: reminder.horse.photoUrl,
+        type: reminder.type,
+        title: reminder.title,
+        description: reminder.description,
+        date: reminder.date,
+        nextDueDate: reminder.nextDueDate,
+        daysUntilDue,
+        priority: daysUntilDue <= 7 ? 'high' : daysUntilDue <= 14 ? 'medium' : 'low',
+        vetName: reminder.vetName,
+        cost: reminder.cost,
+        currency: reminder.currency,
+      };
+    });
+  }
+
+  async dismissReminder(id: string, organizationId: string) {
+    // First verify that the reminder belongs to a horse in this organization
+    const reminder = await this.prisma.healthRecord.findFirst({
+      where: {
+        id,
+        horse: {
+          organizationId,
+        },
+      },
+    });
+
+    if (!reminder) {
+      throw new NotFoundException('Health reminder not found');
+    }
+
+    // Mark as dismissed by setting reminderSent to true
+    return this.prisma.healthRecord.update({
+      where: { id },
+      data: { reminderSent: true },
+    });
+  }
+
+  async completeReminder(id: string, organizationId: string) {
+    // First verify that the reminder belongs to a horse in this organization
+    const reminder = await this.prisma.healthRecord.findFirst({
+      where: {
+        id,
+        horse: {
+          organizationId,
+        },
+      },
+    });
+
+    if (!reminder) {
+      throw new NotFoundException('Health reminder not found');
+    }
+
+    // Create a new health record for the completed action
+    const newRecord = await this.prisma.healthRecord.create({
+      data: {
+        horseId: reminder.horseId,
+        type: reminder.type,
+        date: new Date(),
+        title: reminder.title,
+        description: `Completed: ${reminder.description || reminder.title}`,
+        vetName: reminder.vetName,
+        cost: reminder.cost,
+        currency: reminder.currency,
+        // Set next due date based on the type (example: vaccination every 12 months)
+        nextDueDate: this.calculateNextDueDate(reminder.type, new Date()),
+        reminderSent: false,
+      },
+    });
+
+    // Mark the old reminder as sent/completed
+    await this.prisma.healthRecord.update({
+      where: { id },
+      data: { reminderSent: true },
+    });
+
+    return newRecord;
+  }
+
+  private calculateNextDueDate(type: string, fromDate: Date): Date {
+    const nextDate = new Date(fromDate);
+
+    // Define intervals for different types of health records
+    switch (type) {
+      case 'vaccination':
+        nextDate.setMonth(nextDate.getMonth() + 12); // Annual vaccination
+        break;
+      case 'deworming':
+        nextDate.setMonth(nextDate.getMonth() + 3); // Quarterly deworming
+        break;
+      case 'dental':
+        nextDate.setMonth(nextDate.getMonth() + 6); // Semi-annual dental
+        break;
+      case 'shoeing':
+        nextDate.setMonth(nextDate.getMonth() + 2); // Every 2 months
+        break;
+      case 'vet_visit':
+        nextDate.setMonth(nextDate.getMonth() + 6); // Semi-annual vet visit
+        break;
+      default:
+        nextDate.setMonth(nextDate.getMonth() + 12); // Default to annual
+        break;
+    }
+
+    return nextDate;
+  }
 }

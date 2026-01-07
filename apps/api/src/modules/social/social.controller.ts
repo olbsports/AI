@@ -282,4 +282,46 @@ export class SocialController {
       limit ? parseInt(limit) : 20
     );
   }
+
+  // ==================== BLOCK USER ====================
+
+  @Post('users/:id/block')
+  @ApiOperation({ summary: 'Block a user' })
+  async blockUser(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.socialService.blockUser(user.id, id);
+  }
+
+  @Delete('users/:id/block')
+  @ApiOperation({ summary: 'Unblock a user' })
+  async unblockUser(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.socialService.unblockUser(user.id, id);
+  }
+
+  @Get('blocked-users')
+  @ApiOperation({ summary: 'Get blocked users list' })
+  async getBlockedUsers(@CurrentUser() user: any) {
+    return this.socialService.getBlockedUsers(user.id);
+  }
+
+  // ==================== REPORT ====================
+
+  @Post('users/:id/report')
+  @ApiOperation({ summary: 'Report a user' })
+  async reportUser(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { reason: string; details?: string }
+  ) {
+    return this.socialService.reportUser(user.id, id, body);
+  }
+
+  @Post('notes/:id/report')
+  @ApiOperation({ summary: 'Report a post/note' })
+  async reportPost(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() body: { reason: string; details?: string }
+  ) {
+    return this.socialService.reportPost(user.id, id, body);
+  }
 }

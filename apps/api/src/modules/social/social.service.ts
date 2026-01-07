@@ -907,4 +907,137 @@ export class SocialService {
       take: limit,
     });
   }
+
+  // ==================== BLOCK USER ====================
+
+  async blockUser(blockerId: string, blockedId: string) {
+    if (blockerId === blockedId) {
+      throw new ForbiddenException('You cannot block yourself');
+    }
+
+    // Check if already blocked
+    const existingBlock = await this.prisma.userBlock.findUnique({
+      where: {
+        blockerId_blockedId: {
+          blockerId,
+          blockedId,
+        },
+      },
+    });
+
+    if (existingBlock) {
+      return { blocked: true, message: 'User already blocked' };
+    }
+
+    // Create block
+    await this.prisma.userBlock.create({
+      data: {
+        blockerId,
+        blockedId,
+      },
+    });
+
+    // Also unfollow in both directions if following
+    await this.prisma.follow.deleteMany({
+      where: {
+        OR: [
+          { followerId: blockerId, followingId: blockedId },
+          { followerId: blockedId, followingId: blockerId },
+        ],
+      },
+    });
+
+    return { blocked: true, message: 'User blocked successfully' };
+  }
+
+  async unblockUser(blockerId: string, blockedId: string) {
+    const existingBlock = await this.prisma.userBlock.findUnique({
+      where: {
+        blockerId_blockedId: {
+          blockerId,
+          blockedId,
+        },
+      },
+    });
+
+    if (existingBlock) {
+      await this.prisma.userBlock.delete({
+        where: { id: existingBlock.id },
+      });
+    }
+
+    return { blocked: false, message: 'User unblocked successfully' };
+  }
+
+  async getBlockedUsers(userId: string) {
+    const blocks = await this.prisma.userBlock.findMany({
+      where: { blockerId: userId },
+      include: {
+        blocked: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    return blocks.map((b) => ({
+      id: b.blocked.id,
+      name: `${b.blocked.firstName} ${b.blocked.lastName}`,
+      photoUrl: b.blocked.avatarUrl,
+      blockedAt: b.createdAt,
+    }));
+  }
+
+  // ==================== REPORT ====================
+
+  async reportUser(
+    reporterId: string,
+    reportedId: string,
+    data: { reason: string; details?: string }
+  ) {
+    if (reporterId === reportedId) {
+      throw new ForbiddenException('You cannot report yourself');
+    }
+
+    await this.prisma.userReport.create({
+      data: {
+        reporterId,
+        reportedUserId: reportedId,
+        reason: data.reason,
+        details: data.details,
+        type: 'user',
+        status: 'pending',
+      },
+    });
+
+    return { success: true, message: 'Report submitted successfully' };
+  }
+
+  async reportPost(reporterId: string, postId: string, data: { reason: string; details?: string }) {
+    const post = await this.prisma.socialPost.findUnique({
+      where: { id: postId },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    await this.prisma.userReport.create({
+      data: {
+        reporterId,
+        reportedPostId: postId,
+        reportedUserId: post.authorId,
+        reason: data.reason,
+        details: data.details,
+        type: 'post',
+        status: 'pending',
+      },
+    });
+
+    return { success: true, message: 'Report submitted successfully' };
+  }
 }

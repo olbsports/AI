@@ -14,7 +14,7 @@ export class CalendarService {
       endDate?: Date;
       type?: string;
       horseId?: string;
-    },
+    }
   ) {
     // For now, return mock events since we don't have a CalendarEvent model
     // In production, you'd query from a calendar_events table
@@ -32,7 +32,7 @@ export class CalendarService {
       mockEvents.push({
         id: `event-${index}-1`,
         title: `Entraînement - ${horse.name}`,
-        description: 'Session d\'entraînement quotidienne',
+        description: "Session d'entraînement quotidienne",
         type: 'training',
         startDate: new Date(now.getTime() + index * 24 * 60 * 60 * 1000),
         endDate: new Date(now.getTime() + index * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
@@ -58,16 +58,16 @@ export class CalendarService {
     // Filter by date range if provided
     let filtered = mockEvents;
     if (filters.startDate) {
-      filtered = filtered.filter(e => new Date(e.startDate) >= filters.startDate!);
+      filtered = filtered.filter((e) => new Date(e.startDate) >= filters.startDate!);
     }
     if (filters.endDate) {
-      filtered = filtered.filter(e => new Date(e.startDate) <= filters.endDate!);
+      filtered = filtered.filter((e) => new Date(e.startDate) <= filters.endDate!);
     }
     if (filters.type) {
-      filtered = filtered.filter(e => e.type === filters.type);
+      filtered = filtered.filter((e) => e.type === filters.type);
     }
     if (filters.horseId) {
-      filtered = filtered.filter(e => e.horseId === filters.horseId);
+      filtered = filtered.filter((e) => e.horseId === filters.horseId);
     }
 
     return filtered;
@@ -88,7 +88,7 @@ export class CalendarService {
       location?: string;
       reminder?: number;
       recurrence?: string;
-    },
+    }
   ) {
     // In production, you'd create a CalendarEvent in the database
     return {
@@ -103,11 +103,7 @@ export class CalendarService {
     };
   }
 
-  async updateEvent(
-    eventId: string,
-    organizationId: string,
-    data: any,
-  ) {
+  async updateEvent(eventId: string, organizationId: string, data: any) {
     // In production, you'd update the CalendarEvent in the database
     return {
       id: eventId,
@@ -123,10 +119,7 @@ export class CalendarService {
 
   // ========== GOALS ==========
 
-  async getGoals(
-    organizationId: string,
-    filters: { status?: string; horseId?: string },
-  ) {
+  async getGoals(organizationId: string, filters: { status?: string; horseId?: string }) {
     const where: any = {};
 
     if (filters.horseId) {
@@ -156,7 +149,7 @@ export class CalendarService {
       targetDate: string;
       horseId?: string;
       riderId?: string;
-    },
+    }
   ) {
     return this.prisma.evolutionGoal.create({
       data: {
@@ -223,7 +216,7 @@ export class CalendarService {
       {
         id: 'plan-1',
         name: 'Programme débutant',
-        description: 'Programme d\'entraînement pour débutants',
+        description: "Programme d'entraînement pour débutants",
         duration: 30,
         difficulty: 'easy',
         isActive: false,
@@ -265,19 +258,134 @@ export class CalendarService {
     return [
       {
         id: 'rec-1',
-        title: 'Améliorer l\'équilibre',
-        description: 'Travail sur l\'équilibre du cheval',
+        title: "Améliorer l'équilibre",
+        description: "Travail sur l'équilibre du cheval",
         priority: 'high',
         exercises: ['Transitions', 'Cercles', 'Serpentines'],
       },
       {
         id: 'rec-2',
-        title: 'Renforcer l\'impulsion',
-        description: 'Exercices pour améliorer l\'impulsion',
+        title: "Renforcer l'impulsion",
+        description: "Exercices pour améliorer l'impulsion",
         priority: 'medium',
         exercises: ['Extensions', 'Allongements', 'Départs au galop'],
       },
     ];
+  }
+
+  async createTrainingPlan(
+    organizationId: string,
+    data: {
+      name: string;
+      description?: string;
+      duration: number;
+      difficulty: string;
+      horseId?: string;
+      sessions: any[];
+    }
+  ) {
+    // In production, you'd create a TrainingPlan in the database
+    const planId = `plan-${Date.now()}`;
+    return {
+      id: planId,
+      ...data,
+      isActive: false,
+      progress: 0,
+      createdAt: new Date(),
+      organizationId,
+    };
+  }
+
+  async generateTrainingPlan(
+    organizationId: string,
+    data: {
+      horseId: string;
+      goalType: string;
+      duration: number;
+      currentLevel: string;
+      targetLevel: string;
+      preferences?: any;
+    }
+  ) {
+    // Mock AI-generated training plan
+    const planId = `plan-ai-${Date.now()}`;
+    const sessions = [];
+
+    // Generate mock sessions based on duration
+    const sessionsPerWeek = 5; // 5 sessions per week
+    const totalSessions = Math.floor((data.duration / 7) * sessionsPerWeek);
+
+    const sessionTypes = ['Dressage', "Saut d'obstacles", 'Cross', 'Détente', 'Travail au sol'];
+
+    for (let i = 0; i < totalSessions; i++) {
+      sessions.push({
+        id: `session-${i + 1}`,
+        day: i + 1,
+        week: Math.floor(i / sessionsPerWeek) + 1,
+        title: sessionTypes[i % sessionTypes.length],
+        description: `Session ${i + 1} - ${sessionTypes[i % sessionTypes.length]}`,
+        duration: 45 + Math.floor(Math.random() * 30), // 45-75 minutes
+        exercises: ['Échauffement', 'Exercice principal', 'Retour au calme'],
+        completed: false,
+      });
+    }
+
+    return {
+      id: planId,
+      name: `Programme ${data.goalType} - ${data.currentLevel} vers ${data.targetLevel}`,
+      description: `Plan d'entraînement généré par IA pour atteindre le niveau ${data.targetLevel}`,
+      duration: data.duration,
+      difficulty:
+        data.currentLevel === 'beginner'
+          ? 'easy'
+          : data.currentLevel === 'advanced'
+            ? 'hard'
+            : 'medium',
+      horseId: data.horseId,
+      goalType: data.goalType,
+      currentLevel: data.currentLevel,
+      targetLevel: data.targetLevel,
+      isActive: false,
+      progress: 0,
+      sessions,
+      generatedAt: new Date(),
+      organizationId,
+    };
+  }
+
+  async completeTrainingSession(
+    planId: string,
+    sessionId: string,
+    organizationId: string,
+    data?: {
+      notes?: string;
+      rating?: number;
+      duration?: number;
+    }
+  ) {
+    // In production, you'd update the session in the database
+    return {
+      success: true,
+      planId,
+      sessionId,
+      completed: true,
+      completedAt: new Date(),
+      notes: data?.notes || '',
+      rating: data?.rating || 0,
+      duration: data?.duration || 0,
+      message: 'Session marquée comme complétée',
+    };
+  }
+
+  async dismissTrainingRecommendation(recommendationId: string, organizationId: string) {
+    // In production, you'd update or delete the recommendation in the database
+    return {
+      success: true,
+      recommendationId,
+      dismissed: true,
+      dismissedAt: new Date(),
+      message: 'Recommandation ignorée',
+    };
   }
 
   async getPlanningSummary(organizationId: string) {
