@@ -35,7 +35,7 @@ class PlusHomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Theme switcher
-            _ThemeSwitcher(currentMode: themeMode, ref: ref),
+            _ThemeSwitcher(currentMode: themeMode),
 
             const SizedBox(height: 24),
 
@@ -189,14 +189,13 @@ class _ProfileCard extends ConsumerWidget {
   }
 }
 
-class _ThemeSwitcher extends StatelessWidget {
+class _ThemeSwitcher extends ConsumerWidget {
   final ThemeMode currentMode;
-  final WidgetRef ref;
 
-  const _ThemeSwitcher({required this.currentMode, required this.ref});
+  const _ThemeSwitcher({required this.currentMode});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Card(
