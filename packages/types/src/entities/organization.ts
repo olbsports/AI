@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { PLANS } from '@horse-vision/config';
+import { PLANS } from '@horse-tempo/config';
 
 /**
  * Statut d'abonnement

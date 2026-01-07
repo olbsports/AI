@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { RADIO_CATEGORIES } from '@horse-vision/config';
+import { RADIO_CATEGORIES } from '@horse-tempo/config';
 
 /**
  * Type de rapport

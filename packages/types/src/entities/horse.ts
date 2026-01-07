@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { HORSE_COLORS, HORSE_BREEDS, HORSE_GENDERS } from '@horse-vision/config';
+import { HORSE_COLORS, HORSE_BREEDS, HORSE_GENDERS } from '@horse-tempo/config';
 
 /**
  * Statut du cheval

@@ -1,4 +1,4 @@
-import type { ApiResponse, ApiError } from '@horse-vision/types';
+import type { ApiResponse, ApiError } from '@horse-tempo/types';
 
 export interface ApiClientConfig {
   baseUrl: string;

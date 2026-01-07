@@ -1,5 +1,5 @@
-import { TOKEN_COSTS, PLAN_LIMITS, type Plan } from '@horse-vision/config';
-import type { AnalysisType } from '@horse-vision/types';
+import { TOKEN_COSTS, PLAN_LIMITS, type Plan } from '@horse-tempo/config';
+import type { AnalysisType } from '@horse-tempo/types';
 
 /**
  * Calcule le coût en tokens pour une analyse

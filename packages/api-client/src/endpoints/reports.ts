@@ -5,7 +5,7 @@ import type {
   PaginatedResponse,
   ReportFilters,
   PaginationParams,
-} from '@horse-vision/types';
+} from '@horse-tempo/types';
 
 export function createReportsEndpoints(client: ApiClient) {
   return {
