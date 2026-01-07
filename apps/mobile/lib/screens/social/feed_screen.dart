@@ -244,9 +244,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
                 if (post.horseName != null) ...[
                   Icon(Icons.pets, size: 14, color: Colors.grey.shade600),
                   const SizedBox(width: 4),
-                  Text(
-                    post.horseName!,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  Flexible(
+                    child: Text(
+                      post.horseName!,
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   const SizedBox(width: 8),
                 ],
