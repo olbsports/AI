@@ -146,26 +146,15 @@ class Analysis {
     }
   }
 
-  String get typeApiValue {
-    switch (type) {
-      case AnalysisType.videoPerformance:
-        return 'video_performance';
-      case AnalysisType.videoCourse:
-        return 'video_course';
-      case AnalysisType.radiological:
-        return 'radiological';
-      case AnalysisType.locomotion:
-        return 'locomotion';
-      case AnalysisType.jump:
-        return 'jump';
-      case AnalysisType.posture:
-        return 'posture';
-      case AnalysisType.conformation:
-        return 'conformation';
-      case AnalysisType.course:
-        return 'course';
-      case AnalysisType.video:
-        return 'video';
-    }
-  }
+  String get typeApiValue => switch (type) {
+    AnalysisType.videoPerformance => 'video_performance',
+    AnalysisType.videoCourse => 'video_course',
+    AnalysisType.radiological => 'radiological',
+    AnalysisType.locomotion => 'locomotion',
+    AnalysisType.jump => 'jump',
+    AnalysisType.posture => 'posture',
+    AnalysisType.conformation => 'conformation',
+    AnalysisType.course => 'course',
+    AnalysisType.video => 'video',
+  };
 }
