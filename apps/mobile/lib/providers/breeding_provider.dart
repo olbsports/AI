@@ -53,7 +53,7 @@ final breedingSearchFiltersProvider = StateProvider<BreedingSearchFilters>((ref)
 
 /// Search stallions
 final stallionSearchProvider =
-    FutureProvider.family<List<Stallion>, BreedingSearchFilters>((ref, filters) async {
+    FutureProvider.autoDispose.family<List<Stallion>, BreedingSearchFilters>((ref, filters) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions', queryParams: filters.toQueryParams());
   if (response == null) return [];
@@ -62,7 +62,7 @@ final stallionSearchProvider =
 });
 
 /// All stallions (paginated)
-final stallionsProvider = FutureProvider<List<Stallion>>((ref) async {
+final stallionsProvider = FutureProvider.autoDispose<List<Stallion>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions');
   if (response == null) return [];
@@ -72,7 +72,7 @@ final stallionsProvider = FutureProvider<List<Stallion>>((ref) async {
 
 /// Stallion by ID
 final stallionProvider =
-    FutureProvider.family<Stallion, String>((ref, stallionId) async {
+    FutureProvider.autoDispose.family<Stallion, String>((ref, stallionId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions/$stallionId');
   return Stallion.fromJson(response);
@@ -80,7 +80,7 @@ final stallionProvider =
 
 /// Stallions by studbook
 final stallionsByStudbookProvider =
-    FutureProvider.family<List<Stallion>, String>((ref, studbook) async {
+    FutureProvider.autoDispose.family<List<Stallion>, String>((ref, studbook) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions', queryParams: {'studbook': studbook});
   if (response == null) return [];
@@ -89,7 +89,7 @@ final stallionsByStudbookProvider =
 });
 
 /// Featured stallions
-final featuredStallionsProvider = FutureProvider<List<Stallion>>((ref) async {
+final featuredStallionsProvider = FutureProvider.autoDispose<List<Stallion>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions/featured');
   if (response == null) return [];
@@ -99,14 +99,14 @@ final featuredStallionsProvider = FutureProvider<List<Stallion>>((ref) async {
 
 /// Mare profile by horse ID
 final mareProfileProvider =
-    FutureProvider.family<MareProfile, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<MareProfile, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/mares/$horseId');
   return MareProfile.fromJson(response);
 });
 
 /// User's mares (for breeding)
-final myMaresProvider = FutureProvider<List<MareProfile>>((ref) async {
+final myMaresProvider = FutureProvider.autoDispose<List<MareProfile>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/my-mares');
   if (response == null) return [];
@@ -116,7 +116,7 @@ final myMaresProvider = FutureProvider<List<MareProfile>>((ref) async {
 
 /// Breeding recommendations for a mare
 final breedingRecommendationsProvider =
-    FutureProvider.family<List<BreedingRecommendation>, String>((ref, mareId) async {
+    FutureProvider.autoDispose.family<List<BreedingRecommendation>, String>((ref, mareId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/recommendations/$mareId');
   if (response == null) return [];
@@ -126,7 +126,7 @@ final breedingRecommendationsProvider =
 
 /// Get AI-generated breeding recommendations
 final aiBreedingRecommendationsProvider =
-    FutureProvider.family<List<BreedingRecommendation>, ({String mareId, BreedingGoal goal, List<String> disciplines})>(
+    FutureProvider.autoDispose.family<List<BreedingRecommendation>, ({String mareId, BreedingGoal goal, List<String> disciplines})>(
         (ref, params) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.post('/breeding/ai-recommendations', {
@@ -141,7 +141,7 @@ final aiBreedingRecommendationsProvider =
 
 /// Stallion offspring
 final stallionOffspringProvider =
-    FutureProvider.family<List<StallionOffspring>, String>((ref, stallionId) async {
+    FutureProvider.autoDispose.family<List<StallionOffspring>, String>((ref, stallionId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions/$stallionId/offspring');
   if (response == null) return [];
@@ -186,7 +186,7 @@ class StallionOffspring {
 }
 
 /// Breeding stations
-final breedingStationsProvider = FutureProvider<List<BreedingStation>>((ref) async {
+final breedingStationsProvider = FutureProvider.autoDispose<List<BreedingStation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stations');
   if (response == null) return [];
@@ -430,7 +430,7 @@ final breedingNotifierProvider =
 });
 
 /// User's breeding reservations
-final myBreedingReservationsProvider = FutureProvider<List<BreedingReservation>>((ref) async {
+final myBreedingReservationsProvider = FutureProvider.autoDispose<List<BreedingReservation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/my-reservations');
   if (response == null) return [];

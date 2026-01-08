@@ -4,7 +4,7 @@ import '../services/api_service.dart';
 
 /// Calendar events for a date range
 final calendarEventsProvider =
-    FutureProvider.family<List<CalendarEvent>, ({DateTime start, DateTime end})>(
+    FutureProvider.autoDispose.family<List<CalendarEvent>, ({DateTime start, DateTime end})>(
         (ref, range) async {
   final api = ref.watch(apiServiceProvider);
   try {
@@ -19,7 +19,7 @@ final calendarEventsProvider =
 });
 
 /// Today's events
-final todayEventsProvider = FutureProvider<List<CalendarEvent>>((ref) async {
+final todayEventsProvider = FutureProvider.autoDispose<List<CalendarEvent>>((ref) async {
   final now = DateTime.now();
   final start = DateTime(now.year, now.month, now.day);
   final end = start.add(const Duration(days: 1));
@@ -27,7 +27,7 @@ final todayEventsProvider = FutureProvider<List<CalendarEvent>>((ref) async {
 });
 
 /// Upcoming events (next 7 days)
-final upcomingEventsProvider = FutureProvider<List<CalendarEvent>>((ref) async {
+final upcomingEventsProvider = FutureProvider.autoDispose<List<CalendarEvent>>((ref) async {
   final now = DateTime.now();
   final start = DateTime(now.year, now.month, now.day);
   final end = start.add(const Duration(days: 7));
@@ -36,7 +36,7 @@ final upcomingEventsProvider = FutureProvider<List<CalendarEvent>>((ref) async {
 
 /// Events by type
 final eventsByTypeProvider =
-    FutureProvider.family<List<CalendarEvent>, EventType>((ref, type) async {
+    FutureProvider.autoDispose.family<List<CalendarEvent>, EventType>((ref, type) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/calendar/events', queryParams: {
@@ -49,7 +49,7 @@ final eventsByTypeProvider =
 });
 
 /// Active goals
-final activeGoalsProvider = FutureProvider<List<Goal>>((ref) async {
+final activeGoalsProvider = FutureProvider.autoDispose<List<Goal>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/calendar/goals', queryParams: {'status': 'active'});
@@ -60,7 +60,7 @@ final activeGoalsProvider = FutureProvider<List<Goal>>((ref) async {
 });
 
 /// All goals
-final allGoalsProvider = FutureProvider<List<Goal>>((ref) async {
+final allGoalsProvider = FutureProvider.autoDispose<List<Goal>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/calendar/goals');
@@ -72,13 +72,13 @@ final allGoalsProvider = FutureProvider<List<Goal>>((ref) async {
 
 /// Goals by category
 final goalsByCategoryProvider =
-    FutureProvider.family<List<Goal>, GoalCategory>((ref, category) async {
+    FutureProvider.autoDispose.family<List<Goal>, GoalCategory>((ref, category) async {
   final goals = await ref.watch(allGoalsProvider.future);
   return goals.where((g) => g.category == category).toList();
 });
 
 /// Active training plan
-final activeTrainingPlanProvider = FutureProvider<TrainingPlan?>((ref) async {
+final activeTrainingPlanProvider = FutureProvider.autoDispose<TrainingPlan?>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/training/plans/active');
@@ -89,7 +89,7 @@ final activeTrainingPlanProvider = FutureProvider<TrainingPlan?>((ref) async {
 });
 
 /// All training plans
-final trainingPlansProvider = FutureProvider<List<TrainingPlan>>((ref) async {
+final trainingPlansProvider = FutureProvider.autoDispose<List<TrainingPlan>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/training/plans');
@@ -100,7 +100,7 @@ final trainingPlansProvider = FutureProvider<List<TrainingPlan>>((ref) async {
 });
 
 /// Today's training session
-final todaySessionProvider = FutureProvider<TrainingSession?>((ref) async {
+final todaySessionProvider = FutureProvider.autoDispose<TrainingSession?>((ref) async {
   final plan = await ref.watch(activeTrainingPlanProvider.future);
   if (plan == null) return null;
 
@@ -112,7 +112,7 @@ final todaySessionProvider = FutureProvider<TrainingSession?>((ref) async {
 });
 
 /// Training recommendations
-final trainingRecommendationsProvider = FutureProvider<List<TrainingRecommendation>>((ref) async {
+final trainingRecommendationsProvider = FutureProvider.autoDispose<List<TrainingRecommendation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/training/recommendations');
@@ -124,7 +124,7 @@ final trainingRecommendationsProvider = FutureProvider<List<TrainingRecommendati
 });
 
 /// Planning summary
-final planningSummaryProvider = FutureProvider<PlanningSummary>((ref) async {
+final planningSummaryProvider = FutureProvider.autoDispose<PlanningSummary>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/planning/summary');
   return PlanningSummary.fromJson(response);
@@ -308,7 +308,7 @@ final planningNotifierProvider =
 
 /// Events for a specific horse
 final horseEventsProvider =
-    FutureProvider.family<List<CalendarEvent>, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<List<CalendarEvent>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/horses/$horseId/events');

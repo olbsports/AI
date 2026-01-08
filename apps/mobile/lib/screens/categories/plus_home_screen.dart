@@ -521,8 +521,8 @@ class _AppInfoCard extends StatelessWidget {
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
               children: [
                 TextButton(
                   onPressed: () => _showLegalDocument(context, 'terms'),
@@ -550,47 +550,53 @@ class _AppInfoCard extends StatelessWidget {
 // ==================== HELPER FUNCTIONS ====================
 
 void _showLanguageDialog(BuildContext context) {
-  String selectedLanguage = 'fr';
   showDialog(
     context: context,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (dialogContext, setDialogState) => SimpleDialog(
-        title: const Text('Choisir la langue'),
-        children: [
-          RadioGroup<String>(
-            groupValue: selectedLanguage,
-            onChanged: (value) {
-              if (value != null) {
-                setDialogState(() => selectedLanguage = value);
-                Navigator.pop(dialogContext);
-                final langName = value == 'fr' ? 'Français' : value == 'en' ? 'English' : 'Español';
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Langue: $langName')),
-                );
-              }
-            },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                RadioListTile<String>(
-                  value: 'fr',
-                  title: Text('Français'),
-                ),
-                RadioListTile<String>(
-                  value: 'en',
-                  title: Text('English'),
-                ),
-                RadioListTile<String>(
-                  value: 'es',
-                  title: Text('Español'),
-                ),
-              ],
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Choisir la langue'),
+      content: RadioGroup<String>(
+        groupValue: 'fr',
+        onChanged: (value) {
+          if (value != null) {
+            Navigator.pop(dialogContext);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+            );
+          }
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            RadioListTile<String>(
+              value: 'fr',
+              title: Text('Français'),
             ),
-          ),
-        ],
+            RadioListTile<String>(
+              value: 'en',
+              title: Text('English'),
+            ),
+            RadioListTile<String>(
+              value: 'es',
+              title: Text('Español'),
+            ),
+          ],
+        ),
       ),
     ),
   );
+}
+
+String _getLanguageName(String code) {
+  switch (code) {
+    case 'fr':
+      return 'Français';
+    case 'en':
+      return 'English';
+    case 'es':
+      return 'Español';
+    default:
+      return code;
+  }
 }
 
 void _syncNow(BuildContext context) {
@@ -656,6 +662,7 @@ void _showFeedbackDialog(BuildContext context) {
       content: TextField(
         controller: controller,
         maxLines: 4,
+        textInputAction: TextInputAction.done,
         decoration: const InputDecoration(
           hintText: 'Partagez vos suggestions ou problèmes...',
           border: OutlineInputBorder(),
@@ -677,7 +684,9 @@ void _showFeedbackDialog(BuildContext context) {
         ),
       ],
     ),
-  );
+  ).then((_) {
+    controller.dispose();
+  });
 }
 
 void _showLegalDocument(BuildContext context, String type) {

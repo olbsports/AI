@@ -3,7 +3,7 @@ export 'horse.dart';
 export 'rider.dart';
 export 'analysis.dart';
 export 'report.dart';
-export 'leaderboard.dart';
+export 'leaderboard.dart' hide HorseDiscipline;
 export 'breeding.dart';
 // Hide Badge classes from social.dart to avoid conflict with gamification.dart
 export 'social.dart' hide Badge, BadgeCategory, BadgeRarity;

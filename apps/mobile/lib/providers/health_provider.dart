@@ -4,7 +4,7 @@ import '../services/api_service.dart';
 
 /// Health records for a horse
 final healthRecordsProvider =
-    FutureProvider.family<List<HealthRecord>, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<List<HealthRecord>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/health');
   return ((response as List?) ?? []).map((e) => HealthRecord.fromJson(e)).toList();
@@ -12,7 +12,7 @@ final healthRecordsProvider =
 
 /// Health records by type
 final healthRecordsByTypeProvider =
-    FutureProvider.family<List<HealthRecord>, ({String horseId, HealthRecordType type})>(
+    FutureProvider.autoDispose.family<List<HealthRecord>, ({String horseId, HealthRecordType type})>(
         (ref, params) async {
   final records = await ref.watch(healthRecordsProvider(params.horseId).future);
   return records.where((r) => r.type == params.type).toList();
@@ -20,7 +20,7 @@ final healthRecordsByTypeProvider =
 
 /// Weight records for a horse
 final weightRecordsProvider =
-    FutureProvider.family<List<WeightRecord>, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<List<WeightRecord>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/weight');
   return ((response as List?) ?? []).map((e) => WeightRecord.fromJson(e)).toList();
@@ -28,7 +28,7 @@ final weightRecordsProvider =
 
 /// Body condition records
 final bodyConditionRecordsProvider =
-    FutureProvider.family<List<BodyConditionRecord>, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<List<BodyConditionRecord>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/body-condition');
   return ((response as List?) ?? []).map((e) => BodyConditionRecord.fromJson(e)).toList();
@@ -36,7 +36,7 @@ final bodyConditionRecordsProvider =
 
 /// Active nutrition plan for a horse
 final nutritionPlanProvider =
-    FutureProvider.family<NutritionPlan?, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<NutritionPlan?, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/horses/$horseId/nutrition/active');
@@ -48,27 +48,27 @@ final nutritionPlanProvider =
 
 /// All nutrition plans for a horse
 final nutritionPlansProvider =
-    FutureProvider.family<List<NutritionPlan>, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<List<NutritionPlan>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/nutrition');
   return ((response as List?) ?? []).map((e) => NutritionPlan.fromJson(e)).toList();
 });
 
 /// Health reminders for all horses
-final healthRemindersProvider = FutureProvider<List<HealthReminder>>((ref) async {
+final healthRemindersProvider = FutureProvider.autoDispose<List<HealthReminder>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/health/reminders');
   return ((response as List?) ?? []).map((e) => HealthReminder.fromJson(e)).toList();
 });
 
 /// Overdue reminders
-final overdueRemindersProvider = FutureProvider<List<HealthReminder>>((ref) async {
+final overdueRemindersProvider = FutureProvider.autoDispose<List<HealthReminder>>((ref) async {
   final reminders = await ref.watch(healthRemindersProvider.future);
   return reminders.where((r) => r.isOverdue).toList();
 });
 
 /// Upcoming reminders (next 7 days)
-final upcomingRemindersProvider = FutureProvider<List<HealthReminder>>((ref) async {
+final upcomingRemindersProvider = FutureProvider.autoDispose<List<HealthReminder>>((ref) async {
   final reminders = await ref.watch(healthRemindersProvider.future);
   final now = DateTime.now();
   final weekFromNow = now.add(const Duration(days: 7));
@@ -79,7 +79,7 @@ final upcomingRemindersProvider = FutureProvider<List<HealthReminder>>((ref) asy
 
 /// Health summary for a horse
 final healthSummaryProvider =
-    FutureProvider.family<HealthSummary, String>((ref, horseId) async {
+    FutureProvider.autoDispose.family<HealthSummary, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$horseId/health/summary');
   return HealthSummary.fromJson(response);
@@ -87,7 +87,7 @@ final healthSummaryProvider =
 
 /// Calculate nutrition recommendation
 final nutritionRecommendationProvider =
-    FutureProvider.family<NutritionRecommendation, ({String horseId, double weight, ActivityLevel activity})>(
+    FutureProvider.autoDispose.family<NutritionRecommendation, ({String horseId, double weight, ActivityLevel activity})>(
         (ref, params) async {
   return NutritionRecommendation.calculate(
     horseId: params.horseId,

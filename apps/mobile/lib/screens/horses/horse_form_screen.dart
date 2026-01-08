@@ -30,6 +30,8 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
 
   HorseGender _gender = HorseGender.male;
   HorseStatus _status = HorseStatus.active;
+  HorseDiscipline _discipline = HorseDiscipline.none;
+  int _level = 0; // 0 = non spécifié, 1-7 = niveau
   DateTime? _birthDate;
   File? _selectedPhoto;
   bool _isLoading = false;
@@ -58,6 +60,8 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
           _notesController.text = horse.notes ?? '';
           _gender = horse.gender;
           _status = horse.status;
+          _discipline = horse.discipline;
+          _level = horse.level;
           _birthDate = horse.birthDate;
         });
       }
@@ -192,6 +196,10 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
           'birthDate': _birthDate!.toIso8601String(),
         if (_notesController.text.isNotEmpty)
           'notes': _notesController.text.trim(),
+        if (_discipline != HorseDiscipline.none)
+          'discipline': _discipline.name,
+        if (_level > 0)
+          'level': _level,
       };
 
       Horse? horse;
@@ -230,22 +238,24 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
         }
       }
 
-      if (mounted) {
-        if (horse != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_isEditing ? 'Cheval modifié' : 'Cheval ajouté'),
-            ),
-          );
+      if (!mounted) return;
+
+      if (horse != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isEditing ? 'Cheval modifié' : 'Cheval ajouté'),
+          ),
+        );
+        if (mounted) {
           context.go('/horses/${horse.id}');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Erreur lors de l\'enregistrement'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'enregistrement'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -396,6 +406,49 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
               ),
               const SizedBox(height: 16),
 
+              // Discipline
+              DropdownButtonFormField<HorseDiscipline>(
+                initialValue: _discipline,
+                decoration: const InputDecoration(
+                  labelText: 'Discipline',
+                  prefixIcon: Icon(Icons.sports),
+                ),
+                items: HorseDiscipline.values.map((discipline) {
+                  return DropdownMenuItem(
+                    value: discipline,
+                    child: Text(_disciplineLabel(discipline)),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _discipline = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Level
+              DropdownButtonFormField<int>(
+                initialValue: _level,
+                decoration: const InputDecoration(
+                  labelText: 'Niveau',
+                  prefixIcon: Icon(Icons.military_tech),
+                ),
+                items: [
+                  const DropdownMenuItem(value: 0, child: Text('Non spécifié')),
+                  ...List.generate(7, (i) => DropdownMenuItem(
+                    value: i + 1,
+                    child: Text('Niveau ${i + 1}'),
+                  )),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _level = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+
               // Status
               DropdownButtonFormField<HorseStatus>(
                 initialValue: _status,
@@ -526,6 +579,29 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
         return 'Vendu';
       case HorseStatus.deceased:
         return 'Décédé';
+    }
+  }
+
+  String _disciplineLabel(HorseDiscipline discipline) {
+    switch (discipline) {
+      case HorseDiscipline.none:
+        return 'Non spécifié';
+      case HorseDiscipline.dressage:
+        return 'Dressage';
+      case HorseDiscipline.jumping:
+        return 'Saut d\'obstacles';
+      case HorseDiscipline.eventing:
+        return 'Concours complet';
+      case HorseDiscipline.endurance:
+        return 'Endurance';
+      case HorseDiscipline.western:
+        return 'Western';
+      case HorseDiscipline.polo:
+        return 'Polo';
+      case HorseDiscipline.racing:
+        return 'Courses';
+      case HorseDiscipline.leisure:
+        return 'Loisir';
     }
   }
 }

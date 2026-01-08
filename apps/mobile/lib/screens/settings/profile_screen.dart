@@ -326,7 +326,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Changer le mot de passe'),
         content: SingleChildScrollView(
           child: Column(
@@ -335,6 +335,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextField(
                 controller: currentPasswordController,
                 obscureText: true,
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'Mot de passe actuel',
                 ),
@@ -343,6 +344,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextField(
                 controller: newPasswordController,
                 obscureText: true,
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'Nouveau mot de passe',
                 ),
@@ -351,6 +353,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextField(
                 controller: confirmPasswordController,
                 obscureText: true,
+                textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(
                   labelText: 'Confirmer le nouveau mot de passe',
                 ),
@@ -360,12 +363,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              currentPasswordController.dispose();
-              newPasswordController.dispose();
-              confirmPasswordController.dispose();
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Annuler'),
           ),
           FilledButton(
@@ -386,11 +384,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   currentPasswordController.text,
                   newPasswordController.text,
                 );
-                if (context.mounted) {
-                  currentPasswordController.dispose();
-                  newPasswordController.dispose();
-                  confirmPasswordController.dispose();
-                  Navigator.pop(context);
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Mot de passe modifié')),
                   );

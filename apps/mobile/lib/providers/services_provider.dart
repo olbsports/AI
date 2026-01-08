@@ -4,7 +4,7 @@ import '../services/api_service.dart';
 
 /// Search service providers
 final searchProvidersProvider =
-    FutureProvider.family<List<ServiceProvider>, ServiceSearchFilters>((ref, filters) async {
+    FutureProvider.autoDispose.family<List<ServiceProvider>, ServiceSearchFilters>((ref, filters) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/services/search', queryParams: filters.toQueryParams());
@@ -16,7 +16,7 @@ final searchProvidersProvider =
 
 /// Providers by type
 final providersByTypeProvider =
-    FutureProvider.family<List<ServiceProvider>, ServiceType>((ref, type) async {
+    FutureProvider.autoDispose.family<List<ServiceProvider>, ServiceType>((ref, type) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/services', queryParams: {'type': type.name});
@@ -28,7 +28,7 @@ final providersByTypeProvider =
 
 /// Provider by ID
 final providerProvider =
-    FutureProvider.family<ServiceProvider, String>((ref, providerId) async {
+    FutureProvider.autoDispose.family<ServiceProvider, String>((ref, providerId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/services/$providerId');
   return ServiceProvider.fromJson(response);
@@ -36,7 +36,7 @@ final providerProvider =
 
 /// Provider reviews
 final providerReviewsProvider =
-    FutureProvider.family<List<ServiceReview>, String>((ref, providerId) async {
+    FutureProvider.autoDispose.family<List<ServiceReview>, String>((ref, providerId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/services/$providerId/reviews');
@@ -48,7 +48,7 @@ final providerReviewsProvider =
 
 /// Nearby providers
 final nearbyProvidersProvider =
-    FutureProvider.family<List<ServiceProvider>, ({double lat, double lng, double radius, ServiceType? type})>(
+    FutureProvider.autoDispose.family<List<ServiceProvider>, ({double lat, double lng, double radius, ServiceType? type})>(
         (ref, params) async {
   final api = ref.watch(apiServiceProvider);
   final queryParams = {
@@ -68,7 +68,7 @@ final nearbyProvidersProvider =
 });
 
 /// Saved providers
-final savedProvidersProvider = FutureProvider<List<SavedProvider>>((ref) async {
+final savedProvidersProvider = FutureProvider.autoDispose<List<SavedProvider>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/services/saved');
@@ -79,7 +79,7 @@ final savedProvidersProvider = FutureProvider<List<SavedProvider>>((ref) async {
 });
 
 /// User appointments
-final appointmentsProvider = FutureProvider<List<ServiceAppointment>>((ref) async {
+final appointmentsProvider = FutureProvider.autoDispose<List<ServiceAppointment>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/appointments');
@@ -90,7 +90,7 @@ final appointmentsProvider = FutureProvider<List<ServiceAppointment>>((ref) asyn
 });
 
 /// Upcoming appointments
-final upcomingAppointmentsProvider = FutureProvider<List<ServiceAppointment>>((ref) async {
+final upcomingAppointmentsProvider = FutureProvider.autoDispose<List<ServiceAppointment>>((ref) async {
   final appointments = await ref.watch(appointmentsProvider.future);
   final now = DateTime.now();
   return appointments
@@ -102,7 +102,7 @@ final upcomingAppointmentsProvider = FutureProvider<List<ServiceAppointment>>((r
 });
 
 /// Past appointments
-final pastAppointmentsProvider = FutureProvider<List<ServiceAppointment>>((ref) async {
+final pastAppointmentsProvider = FutureProvider.autoDispose<List<ServiceAppointment>>((ref) async {
   final appointments = await ref.watch(appointmentsProvider.future);
   return appointments
       .where((a) => a.isPast || a.status == AppointmentStatus.completed)
@@ -111,7 +111,7 @@ final pastAppointmentsProvider = FutureProvider<List<ServiceAppointment>>((ref) 
 });
 
 /// Emergency contacts
-final emergencyContactsProvider = FutureProvider<List<EmergencyContact>>((ref) async {
+final emergencyContactsProvider = FutureProvider.autoDispose<List<EmergencyContact>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/services/emergency-contacts');
@@ -122,14 +122,14 @@ final emergencyContactsProvider = FutureProvider<List<EmergencyContact>>((ref) a
 });
 
 /// Service statistics
-final serviceStatsProvider = FutureProvider<ServiceStats>((ref) async {
+final serviceStatsProvider = FutureProvider.autoDispose<ServiceStats>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/services/stats');
   return ServiceStats.fromJson(response);
 });
 
 /// Featured providers
-final featuredProvidersProvider = FutureProvider<List<ServiceProvider>>((ref) async {
+final featuredProvidersProvider = FutureProvider.autoDispose<List<ServiceProvider>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/services/featured');
@@ -360,7 +360,7 @@ final servicesNotifierProvider =
 final currentLocationProvider = StateProvider<({double lat, double lng})?>((_) => null);
 
 /// Nearby emergency vets (using current location)
-final nearbyEmergencyVetsProvider = FutureProvider<List<ServiceProvider>>((ref) async {
+final nearbyEmergencyVetsProvider = FutureProvider.autoDispose<List<ServiceProvider>>((ref) async {
   final location = ref.watch(currentLocationProvider);
   if (location == null) return [];
 

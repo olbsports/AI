@@ -3,7 +3,7 @@ import '../models/gestation.dart';
 import '../services/api_service.dart';
 
 /// All gestation records
-final gestationsProvider = FutureProvider<List<GestationRecord>>((ref) async {
+final gestationsProvider = FutureProvider.autoDispose<List<GestationRecord>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations');
   if (response == null) return [];
@@ -12,7 +12,7 @@ final gestationsProvider = FutureProvider<List<GestationRecord>>((ref) async {
 });
 
 /// Active gestations
-final activeGestationsProvider = FutureProvider<List<GestationRecord>>((ref) async {
+final activeGestationsProvider = FutureProvider.autoDispose<List<GestationRecord>>((ref) async {
   final gestations = await ref.watch(gestationsProvider.future);
   return gestations.where((g) =>
     g.status == GestationStatus.confirmed ||
@@ -23,7 +23,7 @@ final activeGestationsProvider = FutureProvider<List<GestationRecord>>((ref) asy
 
 /// Gestation by ID
 final gestationProvider =
-    FutureProvider.family<GestationRecord, String>((ref, gestationId) async {
+    FutureProvider.autoDispose.family<GestationRecord, String>((ref, gestationId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId');
   return GestationRecord.fromJson(response);
@@ -31,7 +31,7 @@ final gestationProvider =
 
 /// Gestations for a mare
 final mareGestationsProvider =
-    FutureProvider.family<List<GestationRecord>, String>((ref, mareId) async {
+    FutureProvider.autoDispose.family<List<GestationRecord>, String>((ref, mareId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$mareId/gestations');
   if (response == null) return [];
@@ -41,7 +41,7 @@ final mareGestationsProvider =
 
 /// Gestation checkups
 final gestationCheckupsProvider =
-    FutureProvider.family<List<GestationCheckup>, String>((ref, gestationId) async {
+    FutureProvider.autoDispose.family<List<GestationCheckup>, String>((ref, gestationId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId/checkups');
   if (response == null) return [];
@@ -51,7 +51,7 @@ final gestationCheckupsProvider =
 
 /// Gestation milestones
 final gestationMilestonesProvider =
-    FutureProvider.family<List<GestationMilestone>, String>((ref, gestationId) async {
+    FutureProvider.autoDispose.family<List<GestationMilestone>, String>((ref, gestationId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId/milestones');
   if (response == null) return [];
@@ -61,7 +61,7 @@ final gestationMilestonesProvider =
 
 /// Gestation notes
 final gestationNotesProvider =
-    FutureProvider.family<List<GestationNote>, String>((ref, gestationId) async {
+    FutureProvider.autoDispose.family<List<GestationNote>, String>((ref, gestationId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId/notes');
   if (response == null) return [];
@@ -70,7 +70,7 @@ final gestationNotesProvider =
 });
 
 /// All birth records
-final birthRecordsProvider = FutureProvider<List<BirthRecord>>((ref) async {
+final birthRecordsProvider = FutureProvider.autoDispose<List<BirthRecord>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/births');
   if (response == null) return [];
@@ -80,7 +80,7 @@ final birthRecordsProvider = FutureProvider<List<BirthRecord>>((ref) async {
 
 /// Birth record by ID
 final birthRecordProvider =
-    FutureProvider.family<BirthRecord, String>((ref, birthId) async {
+    FutureProvider.autoDispose.family<BirthRecord, String>((ref, birthId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/births/$birthId');
   return BirthRecord.fromJson(response);
@@ -96,7 +96,7 @@ final birthRecordProvider =
 // });
 
 /// Breeding statistics
-final breedingStatsProvider = FutureProvider<BreedingStats>((ref) async {
+final breedingStatsProvider = FutureProvider.autoDispose<BreedingStats>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stats');
   return BreedingStats.fromJson(response);
@@ -111,7 +111,7 @@ final breedingStatsProvider = FutureProvider<BreedingStats>((ref) async {
 // });
 
 /// Gestations due soon (within 30 days)
-final gestationsDueSoonProvider = FutureProvider<List<GestationRecord>>((ref) async {
+final gestationsDueSoonProvider = FutureProvider.autoDispose<List<GestationRecord>>((ref) async {
   final activeGestations = await ref.watch(activeGestationsProvider.future);
   return activeGestations.where((g) => g.daysRemaining <= 30 && g.daysRemaining >= 0).toList();
 });

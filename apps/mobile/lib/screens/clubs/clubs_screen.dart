@@ -576,7 +576,113 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
   }
 
   void _showCreateClubDialog(BuildContext context) {
-    // Show create club dialog
+    final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    ClubType selectedType = ClubType.stable;
+    bool isPrivate = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Créer un club',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom du club *',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.groups),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<ClubType>(
+                  initialValue: selectedType,
+                  decoration: const InputDecoration(
+                    labelText: 'Type',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.category),
+                  ),
+                  items: ClubType.values.map((t) => DropdownMenuItem(
+                    value: t,
+                    child: Text(t.displayName),
+                  )).toList(),
+                  onChanged: (v) => setModalState(() => selectedType = v!),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  textInputAction: TextInputAction.done,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  title: const Text('Club privé'),
+                  subtitle: const Text('Seuls les membres invités peuvent rejoindre'),
+                  value: isPrivate,
+                  onChanged: (v) => setModalState(() => isPrivate = v),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () async {
+                    if (nameController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Le nom est requis')),
+                      );
+                      return;
+                    }
+
+                    final success = await ref.read(clubsNotifierProvider.notifier).createClub({
+                      'name': nameController.text.trim(),
+                      'type': selectedType.name,
+                      'description': descriptionController.text.trim(),
+                      'isPrivate': isPrivate,
+                    });
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(success != null ? 'Club créé !' : 'Erreur lors de la création'),
+                          backgroundColor: success != null ? AppColors.success : Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Créer le club'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ).then((_) {
+      nameController.dispose();
+      descriptionController.dispose();
+    });
   }
 
   void _openClubDetails(Club club) {

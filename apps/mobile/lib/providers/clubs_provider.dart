@@ -12,7 +12,7 @@ bool _is404Error(Object error) {
 }
 
 /// User's clubs
-final myClubsProvider = FutureProvider<List<Club>>((ref) async {
+final myClubsProvider = FutureProvider.autoDispose<List<Club>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/my');
@@ -24,7 +24,7 @@ final myClubsProvider = FutureProvider<List<Club>>((ref) async {
 });
 
 /// Club by ID
-final clubProvider = FutureProvider.family<Club, String>((ref, clubId) async {
+final clubProvider = FutureProvider.autoDispose.family<Club, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/clubs/$clubId');
   return Club.fromJson(response);
@@ -32,7 +32,7 @@ final clubProvider = FutureProvider.family<Club, String>((ref, clubId) async {
 
 /// Club members
 final clubMembersProvider =
-    FutureProvider.family<List<ClubMember>, String>((ref, clubId) async {
+    FutureProvider.autoDispose.family<List<ClubMember>, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/$clubId/members');
@@ -44,7 +44,7 @@ final clubMembersProvider =
 });
 
 /// Club leaderboard
-final clubLeaderboardProvider = FutureProvider<List<ClubLeaderboardEntry>>((ref) async {
+final clubLeaderboardProvider = FutureProvider.autoDispose<List<ClubLeaderboardEntry>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/leaderboard');
@@ -57,7 +57,7 @@ final clubLeaderboardProvider = FutureProvider<List<ClubLeaderboardEntry>>((ref)
 
 /// Club leaderboard by type
 final clubLeaderboardByTypeProvider =
-    FutureProvider.family<List<ClubLeaderboardEntry>, ClubType>((ref, type) async {
+    FutureProvider.autoDispose.family<List<ClubLeaderboardEntry>, ClubType>((ref, type) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/leaderboard', queryParams: {'type': type.name});
@@ -70,7 +70,7 @@ final clubLeaderboardByTypeProvider =
 
 /// Club challenges
 final clubChallengesProvider =
-    FutureProvider.family<List<ClubChallenge>, String>((ref, clubId) async {
+    FutureProvider.autoDispose.family<List<ClubChallenge>, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/$clubId/challenges');
@@ -82,7 +82,7 @@ final clubChallengesProvider =
 });
 
 /// Active club challenges
-final activeClubChallengesProvider = FutureProvider<List<ClubChallenge>>((ref) async {
+final activeClubChallengesProvider = FutureProvider.autoDispose<List<ClubChallenge>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/challenges/active');
@@ -95,7 +95,7 @@ final activeClubChallengesProvider = FutureProvider<List<ClubChallenge>>((ref) a
 
 /// Club events
 final clubEventsProvider =
-    FutureProvider.family<List<ClubEvent>, String>((ref, clubId) async {
+    FutureProvider.autoDispose.family<List<ClubEvent>, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/$clubId/events');
@@ -107,7 +107,7 @@ final clubEventsProvider =
 });
 
 /// Upcoming club events
-final upcomingClubEventsProvider = FutureProvider<List<ClubEvent>>((ref) async {
+final upcomingClubEventsProvider = FutureProvider.autoDispose<List<ClubEvent>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/events/upcoming');
@@ -120,7 +120,7 @@ final upcomingClubEventsProvider = FutureProvider<List<ClubEvent>>((ref) async {
 
 /// Club posts/feed
 final clubPostsProvider =
-    FutureProvider.family<List<ClubPost>, String>((ref, clubId) async {
+    FutureProvider.autoDispose.family<List<ClubPost>, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/$clubId/posts');
@@ -132,7 +132,7 @@ final clubPostsProvider =
 });
 
 /// Club invitations
-final clubInvitationsProvider = FutureProvider<List<ClubInvitation>>((ref) async {
+final clubInvitationsProvider = FutureProvider.autoDispose<List<ClubInvitation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/clubs/invitations');
@@ -145,7 +145,7 @@ final clubInvitationsProvider = FutureProvider<List<ClubInvitation>>((ref) async
 
 /// Club statistics
 final clubStatsProvider =
-    FutureProvider.family<ClubStats, String>((ref, clubId) async {
+    FutureProvider.autoDispose.family<ClubStats, String>((ref, clubId) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/clubs/$clubId/stats');
   return ClubStats.fromJson(response);
@@ -153,7 +153,7 @@ final clubStatsProvider =
 
 /// Search clubs
 final searchClubsProvider =
-    FutureProvider.family<List<Club>, String>((ref, query) async {
+    FutureProvider.autoDispose.family<List<Club>, String>((ref, query) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/clubs/search', queryParams: {'q': query});
   return (response as List).map((e) => Club.fromJson(e)).toList();
@@ -161,7 +161,7 @@ final searchClubsProvider =
 
 /// Nearby clubs
 final nearbyClubsProvider =
-    FutureProvider.family<List<Club>, ({double lat, double lng, double radius})>(
+    FutureProvider.autoDispose.family<List<Club>, ({double lat, double lng, double radius})>(
         (ref, params) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/clubs/nearby', queryParams: {
