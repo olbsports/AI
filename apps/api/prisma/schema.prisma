@@ -154,12 +154,17 @@ model Horse {
   heightCm       Int?
   weightKg       Int?
 
-  // Pedigree
-  sireName       String?
+  // Pedigree / Origines
+  sireName       String?  // Père
   sireUeln       String?
-  damName        String?
+  damName        String?  // Mère
   damUeln        String?
-  damSireName    String?
+  // Grands-parents paternels
+  siresSireName  String?  // Grand-père paternel
+  siresDamName   String?  // Grand-mère paternelle
+  // Grands-parents maternels
+  damsSireName   String?  // Grand-père maternel
+  damsDamName    String?  // Grand-mère maternelle
 
   // Owner info
   ownerName      String?
