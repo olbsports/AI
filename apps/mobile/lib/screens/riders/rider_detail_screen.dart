@@ -149,11 +149,20 @@ class RiderDetailScreen extends ConsumerWidget {
               final success = await ref
                   .read(ridersNotifierProvider.notifier)
                   .deleteRider(riderId);
-              if (success && context.mounted) {
-                context.pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Cavalier supprimé')),
-                );
+              if (context.mounted) {
+                if (success) {
+                  context.pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Cavalier supprimé')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Erreur lors de la suppression'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),

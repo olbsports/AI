@@ -550,34 +550,56 @@ class _AppInfoCard extends StatelessWidget {
 // ==================== HELPER FUNCTIONS ====================
 
 void _showLanguageDialog(BuildContext context) {
+  String selectedLanguage = 'fr';
   showDialog(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Choisir la langue'),
-      content: RadioGroup<String>(
-        groupValue: 'fr',
-        onChanged: (value) {
-          if (value != null) {
-            Navigator.pop(dialogContext);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
-            );
-          }
-        },
-        child: const Column(
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
+        title: const Text('Choisir la langue'),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             RadioListTile<String>(
               value: 'fr',
-              title: Text('Français'),
+              groupValue: selectedLanguage,
+              onChanged: (value) {
+                if (value != null) {
+                  setDialogState(() => selectedLanguage = value);
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+                  );
+                }
+              },
+              title: const Text('Français'),
             ),
             RadioListTile<String>(
               value: 'en',
-              title: Text('English'),
+              groupValue: selectedLanguage,
+              onChanged: (value) {
+                if (value != null) {
+                  setDialogState(() => selectedLanguage = value);
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+                  );
+                }
+              },
+              title: const Text('English'),
             ),
             RadioListTile<String>(
               value: 'es',
-              title: Text('Español'),
+              groupValue: selectedLanguage,
+              onChanged: (value) {
+                if (value != null) {
+                  setDialogState(() => selectedLanguage = value);
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+                  );
+                }
+              },
+              title: const Text('Español'),
             ),
           ],
         ),

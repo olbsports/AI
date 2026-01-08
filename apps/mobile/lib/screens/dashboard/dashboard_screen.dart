@@ -87,7 +87,7 @@ class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Recent activity
-              _buildRecentActivitySection(context, analysesAsync, reportsAsync),
+              _buildRecentActivitySection(context, ref, analysesAsync, reportsAsync),
               const SizedBox(height: 24),
 
               // Community highlights
@@ -573,6 +573,7 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _buildRecentActivitySection(
     BuildContext context,
+    WidgetRef ref,
     AsyncValue analysesAsync,
     AsyncValue reportsAsync,
   ) {
@@ -631,7 +632,9 @@ class DashboardScreen extends ConsumerWidget {
               leading: const Icon(Icons.error_outline, color: Colors.red),
               title: const Text('Erreur de chargement'),
               trailing: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  ref.invalidate(analysesNotifierProvider);
+                },
                 icon: const Icon(Icons.refresh),
               ),
             ),

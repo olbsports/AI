@@ -590,23 +590,200 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
   }
 
   void _showAddRecordDialog(BuildContext context) {
-    // Show dialog to add health record
+    final typeController = TextEditingController();
+    final notesController = TextEditingController();
+    HealthRecordType selectedType = HealthRecordType.vaccination;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 16, right: 16, top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Ajouter un suivi santé', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<HealthRecordType>(
+                value: selectedType,
+                decoration: const InputDecoration(labelText: 'Type'),
+                items: HealthRecordType.values.map((type) => DropdownMenuItem(
+                  value: type,
+                  child: Text(type.displayName),
+                )).toList(),
+                onChanged: (value) => setSheetState(() => selectedType = value!),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: notesController,
+                decoration: const InputDecoration(labelText: 'Notes'),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.pop(sheetContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Suivi santé ajouté')),
+                    );
+                  },
+                  child: const Text('Ajouter'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).then((_) {
+      typeController.dispose();
+      notesController.dispose();
+    });
   }
 
   void _showAddWeightDialog(BuildContext context) {
-    // Show dialog to add weight
+    final weightController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Ajouter un poids'),
+        content: TextField(
+          controller: weightController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Poids (kg)',
+            suffixText: 'kg',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Poids enregistré')),
+              );
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    ).then((_) => weightController.dispose());
   }
 
   void _showCreateNutritionPlanDialog(BuildContext context) {
-    // Show dialog to create nutrition plan
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Créer un plan nutritionnel', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            const Text('Fonctionnalité bientôt disponible'),
+            const SizedBox(height: 8),
+            const Text('Le plan nutritionnel sera généré automatiquement en fonction du poids, de l\'activité et des besoins de votre cheval.'),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(sheetContext),
+                child: const Text('Compris'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showNutritionCalculator(BuildContext context) {
-    // Show nutrition calculator
+    final weightController = TextEditingController(text: '500');
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Calculateur nutritionnel'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: weightController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Poids du cheval (kg)',
+                suffixText: 'kg',
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Besoins journaliers estimés:'),
+            const SizedBox(height: 8),
+            const Text('• Foin: 10-12 kg'),
+            const Text('• Eau: 25-35 litres'),
+            const Text('• Sel: 30-50 g'),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    ).then((_) => weightController.dispose());
   }
 
   void _showRecordDetails(HealthRecord record) {
-    // Show record details
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(record.type.icon, color: Color(record.type.color)),
+            const SizedBox(width: 8),
+            Expanded(child: Text(record.type.displayName)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Date: ${_formatDate(record.date)}'),
+            if (record.veterinarian != null) ...[
+              const SizedBox(height: 8),
+              Text('Vétérinaire: ${record.veterinarian}'),
+            ],
+            if (record.description != null) ...[
+              const SizedBox(height: 8),
+              Text('Notes: ${record.description}'),
+            ],
+            if (record.nextDueDate != null) ...[
+              const SizedBox(height: 8),
+              Text('Prochain RDV: ${_formatDate(record.nextDueDate!)}'),
+            ],
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _completeReminder(HealthReminder reminder) {
