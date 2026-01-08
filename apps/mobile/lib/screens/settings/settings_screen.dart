@@ -278,38 +278,28 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _showLanguageDialog(BuildContext context, WidgetRef ref, String currentLanguage) {
-    String selectedLanguage = currentLanguage;
     showDialog(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Langue'),
-          content: Column(
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Langue'),
+        content: RadioGroup<String>(
+          groupValue: currentLanguage,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setLanguage(value);
+              Navigator.pop(dialogContext);
+            }
+          },
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: const [
               RadioListTile<String>(
                 value: 'fr',
-                groupValue: selectedLanguage,
-                title: const Text('Français'),
-                onChanged: (value) {
-                  if (value != null) {
-                    setDialogState(() => selectedLanguage = value);
-                    ref.read(settingsProvider.notifier).setLanguage(value);
-                    Navigator.pop(dialogContext);
-                  }
-                },
+                title: Text('Français'),
               ),
               RadioListTile<String>(
                 value: 'en',
-                groupValue: selectedLanguage,
-                title: const Text('English'),
-                onChanged: (value) {
-                  if (value != null) {
-                    setDialogState(() => selectedLanguage = value);
-                    ref.read(settingsProvider.notifier).setLanguage(value);
-                    Navigator.pop(dialogContext);
-                  }
-                },
+                title: Text('English'),
               ),
             ],
           ),
@@ -319,51 +309,33 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _showThemeDialog(BuildContext context, WidgetRef ref, ThemeMode currentTheme) {
-    ThemeMode selectedTheme = currentTheme;
     showDialog(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Thème'),
-          content: Column(
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Thème'),
+        content: RadioGroup<ThemeMode>(
+          groupValue: currentTheme,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setThemeMode(value);
+              Navigator.pop(dialogContext);
+            }
+          },
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: const [
               RadioListTile<ThemeMode>(
                 value: ThemeMode.system,
-                groupValue: selectedTheme,
-                title: const Text('Automatique'),
-                subtitle: const Text('Suit les paramètres système'),
-                onChanged: (value) {
-                  if (value != null) {
-                    setDialogState(() => selectedTheme = value);
-                    ref.read(settingsProvider.notifier).setThemeMode(value);
-                    Navigator.pop(dialogContext);
-                  }
-                },
+                title: Text('Automatique'),
+                subtitle: Text('Suit les paramètres système'),
               ),
               RadioListTile<ThemeMode>(
                 value: ThemeMode.light,
-                groupValue: selectedTheme,
-                title: const Text('Clair'),
-                onChanged: (value) {
-                  if (value != null) {
-                    setDialogState(() => selectedTheme = value);
-                    ref.read(settingsProvider.notifier).setThemeMode(value);
-                    Navigator.pop(dialogContext);
-                  }
-                },
+                title: Text('Clair'),
               ),
               RadioListTile<ThemeMode>(
                 value: ThemeMode.dark,
-                groupValue: selectedTheme,
-                title: const Text('Sombre'),
-                onChanged: (value) {
-                  if (value != null) {
-                    setDialogState(() => selectedTheme = value);
-                    ref.read(settingsProvider.notifier).setThemeMode(value);
-                    Navigator.pop(dialogContext);
-                  }
-                },
+                title: Text('Sombre'),
               ),
             ],
           ),

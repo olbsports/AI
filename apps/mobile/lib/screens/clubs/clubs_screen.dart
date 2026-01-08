@@ -615,7 +615,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<ClubType>(
-                  value: selectedType,
+                  initialValue: selectedType,
                   decoration: const InputDecoration(
                     labelText: 'Type',
                     border: OutlineInputBorder(),

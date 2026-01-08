@@ -302,7 +302,7 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
 
               // Gender
               DropdownButtonFormField<HorseGender>(
-                value: _gender,
+                initialValue: _gender,
                 decoration: const InputDecoration(
                   labelText: 'Sexe *',
                   prefixIcon: Icon(Icons.male),
@@ -408,7 +408,7 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
 
               // Discipline
               DropdownButtonFormField<HorseDiscipline>(
-                value: _discipline,
+                initialValue: _discipline,
                 decoration: const InputDecoration(
                   labelText: 'Discipline',
                   prefixIcon: Icon(Icons.sports),
@@ -429,7 +429,7 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
 
               // Level
               DropdownButtonFormField<int>(
-                value: _level,
+                initialValue: _level,
                 decoration: const InputDecoration(
                   labelText: 'Niveau',
                   prefixIcon: Icon(Icons.military_tech),
@@ -451,7 +451,7 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
 
               // Status
               DropdownButtonFormField<HorseStatus>(
-                value: _status,
+                initialValue: _status,
                 decoration: const InputDecoration(
                   labelText: 'Statut',
                   prefixIcon: Icon(Icons.info),

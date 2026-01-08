@@ -912,7 +912,7 @@ class _AddEventFormState extends State<_AddEventForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<EventType>(
-            value: _type,
+            initialValue: _type,
             decoration: const InputDecoration(
               labelText: 'Type',
               border: OutlineInputBorder(),
@@ -1067,7 +1067,7 @@ class _AddGoalFormState extends State<_AddGoalForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<GoalCategory>(
-            value: _category,
+            initialValue: _category,
             decoration: const InputDecoration(
               labelText: 'Catégorie',
               border: OutlineInputBorder(),
@@ -1184,7 +1184,7 @@ class _CreateTrainingPlanFormState extends State<_CreateTrainingPlanForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<TrainingDiscipline>(
-            value: _discipline,
+            initialValue: _discipline,
             decoration: const InputDecoration(
               labelText: 'Discipline',
               border: OutlineInputBorder(),
@@ -1197,7 +1197,7 @@ class _CreateTrainingPlanFormState extends State<_CreateTrainingPlanForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<TrainingLevel>(
-            value: _level,
+            initialValue: _level,
             decoration: const InputDecoration(
               labelText: 'Niveau',
               border: OutlineInputBorder(),

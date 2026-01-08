@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../models/models.dart' hide HorseDiscipline;
 import '../../models/leaderboard.dart';
 import '../../providers/leaderboard_provider.dart';
 import '../../theme/app_theme.dart';

@@ -332,7 +332,7 @@ class _RiderFormScreenState extends ConsumerState<RiderFormScreen> {
 
               // Galop level
               DropdownButtonFormField<int>(
-                value: _galopLevel,
+                initialValue: _galopLevel,
                 decoration: const InputDecoration(
                   labelText: 'Niveau Galop',
                   prefixIcon: Icon(Icons.military_tech),

@@ -51,16 +51,18 @@ class StorageService {
     await saveRefreshToken(refreshToken);
   }
 
+  // SECURITY: Token expiry stored in secure storage (moved from SharedPreferences)
   Future<void> saveTokenExpiry(int expiresAt) async {
-    await _prefs.setInt(_tokenExpiryKey, expiresAt);
+    await _secureStorage.write(key: _tokenExpiryKey, value: expiresAt.toString());
   }
 
-  int? getAccessTokenExpiry() {
-    return _prefs.getInt(_tokenExpiryKey);
+  Future<int?> getAccessTokenExpiry() async {
+    final value = await _secureStorage.read(key: _tokenExpiryKey);
+    return value != null ? int.tryParse(value) : null;
   }
 
-  bool isAccessTokenExpired() {
-    final expiresAt = getAccessTokenExpiry();
+  Future<bool> isAccessTokenExpired() async {
+    final expiresAt = await getAccessTokenExpiry();
     if (expiresAt == null) return false;
 
     final currentTimestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -70,17 +72,18 @@ class StorageService {
   Future<void> clearTokens() async {
     await _secureStorage.delete(key: _accessTokenKey);
     await _secureStorage.delete(key: _refreshTokenKey);
-    await _prefs.remove(_tokenExpiryKey);
+    await _secureStorage.delete(key: _tokenExpiryKey);
   }
 
-  // ==================== Shared Preferences ====================
+  // ==================== Secure User Data ====================
 
+  // SECURITY: User ID stored in secure storage (moved from SharedPreferences)
   Future<void> saveUserId(String userId) async {
-    await _prefs.setString(_userIdKey, userId);
+    await _secureStorage.write(key: _userIdKey, value: userId);
   }
 
-  String? getUserId() {
-    return _prefs.getString(_userIdKey);
+  Future<String?> getUserId() async {
+    return await _secureStorage.read(key: _userIdKey);
   }
 
   Future<void> setThemeMode(String mode) async {
@@ -111,6 +114,6 @@ class StorageService {
 
   Future<void> clearAll() async {
     await clearTokens();
-    await _prefs.remove(_userIdKey);
+    await _secureStorage.delete(key: _userIdKey);
   }
 }
