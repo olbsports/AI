@@ -7,6 +7,8 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../models/models.dart';
 import '../../providers/horses_provider.dart';
+import '../../providers/marketplace_provider.dart';
+import '../../services/api_service.dart';
 import '../../widgets/loading_button.dart';
 
 enum CreateListingType { sale, mare, stallion }
@@ -222,19 +224,66 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Implement API call to create listing
-      // 1. Upload photos to S3
-      // 2. Create listing with photo URLs
-      await Future.delayed(const Duration(seconds: 2));
+      // Upload photos first
+      final apiService = ref.read(apiServiceProvider);
+      final List<String> photoUrls = [];
+
+      for (final photo in _photos) {
+        final url = await apiService.uploadMedia(photo, type: 'image');
+        photoUrls.add(url);
+      }
+
+      // Build listing data
+      final listingData = <String, dynamic>{
+        'horseId': _selectedHorse!.id,
+        'title': _titleController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'location': _locationController.text.trim(),
+        'mediaUrls': photoUrls,
+        'type': switch (widget.type) {
+          CreateListingType.sale => 'horseForSale',
+          CreateListingType.mare => 'mareForBreeding',
+          CreateListingType.stallion => 'stallionSemen',
+        },
+      };
+
+      // Add price info
+      if (!_priceOnRequest) {
+        listingData['price'] = int.tryParse(_priceController.text) ?? 0;
+      } else {
+        listingData['priceOnRequest'] = true;
+      }
+
+      // Add type-specific fields
+      if (widget.type == CreateListingType.stallion) {
+        listingData['freshSemen'] = _freshSemen;
+        listingData['frozenSemen'] = _frozenSemen;
+      } else if (widget.type == CreateListingType.mare) {
+        if (_breedingStatus != null) {
+          listingData['breedingStatus'] = _breedingStatus;
+        }
+      }
+
+      // Create listing via API
+      final listing = await ref.read(marketplaceNotifierProvider.notifier).createListing(listingData);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Annonce créée avec succès !'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        context.pop();
+        if (listing != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Annonce créée avec succès !'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.pop();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erreur lors de la création de l\'annonce'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

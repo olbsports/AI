@@ -559,47 +559,71 @@ void _showLanguageDialog(BuildContext context) {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            RadioListTile<String>(
-              value: 'fr',
-              groupValue: selectedLanguage,
-              onChanged: (value) {
-                if (value != null) {
-                  setDialogState(() => selectedLanguage = value);
-                  Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
-                  );
-                }
-              },
+            ListTile(
+              leading: Radio<String>(
+                value: 'fr',
+                groupValue: selectedLanguage,
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() => selectedLanguage = value);
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+                    );
+                  }
+                },
+              ),
               title: const Text('Français'),
-            ),
-            RadioListTile<String>(
-              value: 'en',
-              groupValue: selectedLanguage,
-              onChanged: (value) {
-                if (value != null) {
-                  setDialogState(() => selectedLanguage = value);
-                  Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
-                  );
-                }
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Langue: ${_getLanguageName('fr')}')),
+                );
               },
+            ),
+            ListTile(
+              leading: Radio<String>(
+                value: 'en',
+                groupValue: selectedLanguage,
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() => selectedLanguage = value);
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+                    );
+                  }
+                },
+              ),
               title: const Text('English'),
-            ),
-            RadioListTile<String>(
-              value: 'es',
-              groupValue: selectedLanguage,
-              onChanged: (value) {
-                if (value != null) {
-                  setDialogState(() => selectedLanguage = value);
-                  Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
-                  );
-                }
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Langue: ${_getLanguageName('en')}')),
+                );
               },
+            ),
+            ListTile(
+              leading: Radio<String>(
+                value: 'es',
+                groupValue: selectedLanguage,
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() => selectedLanguage = value);
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+                    );
+                  }
+                },
+              ),
               title: const Text('Español'),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Langue: ${_getLanguageName('es')}')),
+                );
+              },
             ),
           ],
         ),

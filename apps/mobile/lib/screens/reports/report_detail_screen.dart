@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:dio/dio.dart';
 
 import '../../models/report.dart';
 import '../../providers/reports_provider.dart';
@@ -47,7 +51,7 @@ class ReportDetailScreen extends ConsumerWidget {
             ),
             IconButton(
               icon: const Icon(Icons.download),
-              onPressed: () => _downloadReport(context, report),
+              onPressed: () => _downloadReport(context, ref, report),
             ),
           ],
           PopupMenuButton<String>(
@@ -609,11 +613,81 @@ class ReportDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _downloadReport(BuildContext context, Report report) {
-    // TODO: Implement PDF download
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Téléchargement en cours...')),
+  Future<void> _downloadReport(BuildContext context, WidgetRef ref, Report report) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
+
+    try {
+      // Get download directory
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = 'rapport_${report.id}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final filePath = '${directory.path}/$fileName';
+
+      // Download PDF from API
+      final dio = ref.read(dioProvider);
+      await dio.download(
+        '/reports/${report.id}/pdf',
+        filePath,
+        options: Options(
+          responseType: ResponseType.bytes,
+        ),
+      );
+
+      if (!context.mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show success and offer to open
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Téléchargement terminé'),
+          content: const Text('Le rapport a été téléchargé avec succès. Voulez-vous l\'ouvrir ?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Fermer'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Ouvrir'),
+            ),
+          ],
+        ),
+      );
+
+      // Open the PDF if requested
+      if (result == true) {
+        final openResult = await OpenFilex.open(filePath);
+        if (openResult.type != ResultType.done && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Impossible d\'ouvrir le fichier: ${openResult.message}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors du téléchargement: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   void _showDeleteDialog(BuildContext context, WidgetRef ref, Report report) {
