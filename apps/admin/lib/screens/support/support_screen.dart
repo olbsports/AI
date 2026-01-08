@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../models/admin_models.dart';
 import '../../providers/admin_providers.dart';
@@ -160,7 +161,7 @@ class SupportScreen extends ConsumerWidget {
 
   Widget _buildTicketItem(SupportTicket ticket) {
     return InkWell(
-      onTap: () {},
+      onTap: () => _showTicketDetails(ticket),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
@@ -242,14 +243,80 @@ class SupportScreen extends ConsumerWidget {
   }
 
   Widget _buildQuickReply(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: OutlinedButton(
-        onPressed: () {},
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    return Builder(
+      builder: (context) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: OutlinedButton(
+          onPressed: () => _useQuickReply(context, title),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+          child: Text(title, style: const TextStyle(fontSize: 12)),
         ),
-        child: Text(title, style: const TextStyle(fontSize: 12)),
+      ),
+    );
+  }
+
+  void _showTicketDetails(SupportTicket ticket) {
+    // This would navigate to ticket detail screen
+    // For now show a dialog with ticket info
+  }
+
+  void _useQuickReply(BuildContext context, String replyType) {
+    final templates = {
+      'Problème de connexion': '''Bonjour,
+
+Merci de nous avoir contacté. Pour résoudre votre problème de connexion, veuillez essayer les étapes suivantes :
+
+1. Vérifiez votre connexion internet
+2. Effacez le cache de l'application
+3. Essayez de vous reconnecter
+
+Si le problème persiste, n'hésitez pas à nous recontacter.
+
+Cordialement,
+L'équipe Horse Tempo''',
+      'Question facturation': '''Bonjour,
+
+Merci pour votre message concernant la facturation.
+
+Vous pouvez consulter vos factures dans l'onglet "Abonnement" de votre compte. Si vous avez une question spécifique, merci de nous préciser les détails.
+
+Cordialement,
+L'équipe Horse Tempo''',
+      'Bug signalé': '''Bonjour,
+
+Merci de nous avoir signalé ce bug. Notre équipe technique a bien pris en compte votre rapport et travaille à sa résolution.
+
+Nous vous tiendrons informé dès que le correctif sera déployé.
+
+Cordialement,
+L'équipe Horse Tempo''',
+    };
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Réponse "$replyType" copiée'),
+        action: SnackBarAction(
+          label: 'Voir',
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: Text('Modèle: $replyType'),
+                content: SingleChildScrollView(
+                  child: Text(templates[replyType] ?? ''),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Fermer'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

@@ -48,13 +48,13 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                 Row(
                   children: [
                     OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () => _exportUsers(context, ref),
                       icon: const Icon(Icons.download),
                       label: const Text('Exporter'),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () => _showAddUserDialog(context, ref),
                       icon: const Icon(Icons.person_add),
                       label: const Text('Ajouter'),
                     ),
@@ -473,6 +473,107 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                   .banUser(user.id, reasonController.text);
             },
             child: const Text('Bannir'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _exportUsers(BuildContext context, WidgetRef ref) async {
+    final format = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exporter les utilisateurs'),
+        content: const Text('Choisissez le format d\'exportation'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, 'csv'),
+            child: const Text('CSV'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, 'xlsx'),
+            child: const Text('Excel'),
+          ),
+        ],
+      ),
+    );
+
+    if (format != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export $format en cours...')),
+      );
+      await ref.read(adminActionsProvider.notifier).exportUsers(format);
+    }
+  }
+
+  void _showAddUserDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Ajouter un utilisateur'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nom complet'),
+                validator: (v) => v?.isEmpty == true ? 'Requis' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) {
+                  if (v?.isEmpty == true) return 'Requis';
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v!)) {
+                    return 'Email invalide';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState?.validate() == true) {
+                Navigator.pop(dialogContext);
+                final success = await ref.read(adminActionsProvider.notifier).createUser(
+                  name: nameController.text,
+                  email: emailController.text,
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success
+                        ? 'Utilisateur créé avec succès'
+                        : 'Erreur lors de la création'),
+                      backgroundColor: success ? AdminColors.success : AdminColors.error,
+                    ),
+                  );
+                  if (success) {
+                    ref.invalidate(usersProvider);
+                  }
+                }
+              }
+            },
+            child: const Text('Créer'),
           ),
         ],
       ),

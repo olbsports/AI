@@ -12,6 +12,13 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _registrationEnabled = true;
+  bool _freeTrialEnabled = true;
+  int _freeTrialDays = 14;
+  int _maxAnalysesPerDay = 10;
+  int _maxFileSizeMB = 100;
+  bool _hasChanges = false;
+
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(systemSettingsProvider);
@@ -148,21 +155,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     'Inscriptions actives',
                     'Permettre les nouvelles inscriptions',
                     Switch(
-                      value: settings.registrationEnabled,
-                      onChanged: (_) {},
+                      value: _registrationEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _registrationEnabled = value;
+                          _hasChanges = true;
+                        });
+                      },
                     ),
                   ),
                   _buildSettingRow(
                     'Période d\'essai',
                     'Activer la période d\'essai gratuite',
                     Switch(
-                      value: settings.freeTrialEnabled,
-                      onChanged: (_) {},
+                      value: _freeTrialEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _freeTrialEnabled = value;
+                          _hasChanges = true;
+                        });
+                      },
                     ),
                   ),
                   _buildSettingRow(
                     'Durée essai',
-                    '${settings.freeTrialDays} jours',
+                    '$_freeTrialDays jours',
                     SizedBox(
                       width: 100,
                       child: TextField(
@@ -170,7 +187,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           suffixText: 'jours',
                         ),
                         keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: settings.freeTrialDays.toString()),
+                        controller: TextEditingController(text: _freeTrialDays.toString()),
+                        onChanged: (value) {
+                          setState(() {
+                            _freeTrialDays = int.tryParse(value) ?? _freeTrialDays;
+                            _hasChanges = true;
+                          });
+                        },
                       ),
                     ),
                   ),
@@ -202,22 +225,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     SizedBox(
                       width: 100,
                       child: TextField(
-                        controller: TextEditingController(text: settings.maxAnalysesPerDay.toString()),
+                        controller: TextEditingController(text: _maxAnalysesPerDay.toString()),
                         keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          setState(() {
+                            _maxAnalysesPerDay = int.tryParse(value) ?? _maxAnalysesPerDay;
+                            _hasChanges = true;
+                          });
+                        },
                       ),
                     ),
                   ),
                   _buildSettingRow(
                     'Taille fichier max',
-                    '${(settings.maxFileSize / 1000000).round()} MB',
+                    '$_maxFileSizeMB MB',
                     SizedBox(
                       width: 100,
                       child: TextField(
-                        controller: TextEditingController(
-                          text: (settings.maxFileSize / 1000000).round().toString(),
-                        ),
+                        controller: TextEditingController(text: _maxFileSizeMB.toString()),
                         decoration: const InputDecoration(suffixText: 'MB'),
                         keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          setState(() {
+                            _maxFileSizeMB = int.tryParse(value) ?? _maxFileSizeMB;
+                            _hasChanges = true;
+                          });
+                        },
                       ),
                     ),
                   ),
@@ -231,7 +264,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: _hasChanges ? () => _saveSettings() : null,
               child: const Text('Enregistrer les modifications'),
             ),
           ),
@@ -346,5 +379,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (diff.inMinutes < 60) return '${diff.inMinutes}min';
     if (diff.inHours < 24) return '${diff.inHours}h';
     return '${diff.inDays}j';
+  }
+
+  Future<void> _saveSettings() async {
+    try {
+      await ref.read(adminActionsProvider.notifier).updateSystemSettings(
+        registrationEnabled: _registrationEnabled,
+        freeTrialEnabled: _freeTrialEnabled,
+        freeTrialDays: _freeTrialDays,
+        maxAnalysesPerDay: _maxAnalysesPerDay,
+        maxFileSize: _maxFileSizeMB * 1000000,
+      );
+      ref.invalidate(systemSettingsProvider);
+      setState(() => _hasChanges = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Paramètres enregistrés avec succès'),
+            backgroundColor: AdminColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: AdminColors.error,
+          ),
+        );
+      }
+    }
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/admin_providers.dart';
 import '../../theme/admin_theme.dart';
 
@@ -69,12 +71,12 @@ class UserDetailScreen extends ConsumerWidget {
                     ),
                   ),
                   OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _contactUser(context, user.email),
                     icon: const Icon(Icons.email),
                     label: const Text('Contacter'),
                   ),
                   const SizedBox(width: 12),
-                  PopupMenuButton(
+                  PopupMenuButton<String>(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
@@ -95,6 +97,7 @@ class UserDetailScreen extends ConsumerWidget {
                       const PopupMenuItem(value: 'ban', child: Text('Bannir')),
                       const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
                     ],
+                    onSelected: (value) => _handleUserAction(context, ref, value, user),
                   ),
                 ],
               ),
@@ -293,6 +296,162 @@ class UserDetailScreen extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _contactUser(BuildContext context, String email) async {
+    final uri = Uri.parse('mailto:$email?subject=Horse Tempo - Support Admin');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Impossible d\'ouvrir le client email pour $email')),
+      );
+    }
+  }
+
+  void _handleUserAction(BuildContext context, WidgetRef ref, String action, dynamic user) {
+    switch (action) {
+      case 'impersonate':
+        _showImpersonateDialog(context, ref, user);
+        break;
+      case 'suspend':
+        _showSuspendDialog(context, ref, user);
+        break;
+      case 'ban':
+        _showBanDialog(context, ref, user);
+        break;
+      case 'delete':
+        _showDeleteDialog(context, ref, user);
+        break;
+    }
+  }
+
+  void _showImpersonateDialog(BuildContext context, WidgetRef ref, dynamic user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Se connecter en tant que'),
+        content: Text('Voulez-vous vous connecter en tant que ${user.name} ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(adminActionsProvider.notifier).impersonateUser(user.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Connecté en tant que ${user.name}')),
+                );
+              }
+            },
+            child: const Text('Confirmer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuspendDialog(BuildContext context, WidgetRef ref, dynamic user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Suspendre l\'utilisateur'),
+        content: Text('Voulez-vous suspendre le compte de ${user.name} ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AdminColors.warning),
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(adminActionsProvider.notifier).suspendUser(user.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${user.name} a été suspendu')),
+                );
+              }
+            },
+            child: const Text('Suspendre'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBanDialog(BuildContext context, WidgetRef ref, dynamic user) {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bannir l\'utilisateur'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Êtes-vous sûr de vouloir bannir ${user.name} ?'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(labelText: 'Raison du bannissement'),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AdminColors.error),
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(adminActionsProvider.notifier).banUser(user.id, reasonController.text);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${user.name} a été banni')),
+                );
+              }
+            },
+            child: const Text('Bannir'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, WidgetRef ref, dynamic user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer l\'utilisateur'),
+        content: Text('Cette action est irréversible. Voulez-vous vraiment supprimer ${user.name} ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AdminColors.error),
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(adminActionsProvider.notifier).deleteUser(user.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${user.name} a été supprimé')),
+                );
+                context.go('/users');
+              }
+            },
+            child: const Text('Supprimer'),
           ),
         ],
       ),

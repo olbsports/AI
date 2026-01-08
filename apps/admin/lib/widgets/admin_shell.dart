@@ -16,6 +16,7 @@ class AdminShell extends ConsumerStatefulWidget {
 
 class _AdminShellState extends ConsumerState<AdminShell> {
   bool _isExpanded = true;
+  bool _isDarkMode = true;
 
   @override
   Widget build(BuildContext context) {
@@ -239,12 +240,12 @@ class _AdminShellState extends ConsumerState<AdminShell> {
                       IconButton(
                         icon: const Icon(Icons.notifications_outlined),
                         color: AdminColors.textSecondary,
-                        onPressed: () {},
+                        onPressed: () => _showNotifications(context),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.dark_mode_outlined),
+                        icon: Icon(_isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
                         color: AdminColors.textSecondary,
-                        onPressed: () {},
+                        onPressed: () => _toggleDarkMode(),
                       ),
                     ],
                   ),
@@ -345,6 +346,95 @@ class _AdminShellState extends ConsumerState<AdminShell> {
             child: const Text('Déconnexion'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showNotifications(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.notifications),
+            const SizedBox(width: 8),
+            const Text('Notifications'),
+            const Spacer(),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Toutes les notifications marquées comme lues')),
+                );
+              },
+              child: const Text('Tout marquer comme lu'),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          height: 300,
+          child: ListView(
+            children: [
+              _buildNotificationItem(
+                'Nouveau signalement',
+                'Un utilisateur a signalé un contenu inapproprié',
+                '5 min',
+                Icons.flag,
+                AdminColors.warning,
+              ),
+              _buildNotificationItem(
+                'Nouvel abonnement',
+                'jean.dupont@email.com a souscrit au plan Premium',
+                '15 min',
+                Icons.star,
+                AdminColors.success,
+              ),
+              _buildNotificationItem(
+                'Ticket support',
+                'Nouveau ticket ouvert par marie.martin@email.com',
+                '1h',
+                Icons.support_agent,
+                AdminColors.primary,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Fermer'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.go('/support');
+            },
+            child: const Text('Voir tout'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationItem(String title, String message, String time, IconData icon, Color color) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: color.withOpacity(0.1),
+        child: Icon(icon, color: color, size: 20),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      subtitle: Text(message, maxLines: 1, overflow: TextOverflow.ellipsis),
+      trailing: Text(time, style: TextStyle(color: AdminColors.textMuted, fontSize: 12)),
+    );
+  }
+
+  void _toggleDarkMode() {
+    setState(() => _isDarkMode = !_isDarkMode);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isDarkMode ? 'Mode sombre activé' : 'Mode clair activé'),
+        duration: const Duration(seconds: 1),
       ),
     );
   }
