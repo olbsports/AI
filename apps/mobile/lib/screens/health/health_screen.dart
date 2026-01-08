@@ -628,11 +628,15 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(sheetContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Suivi santé ajouté')),
-                    );
+                    // Wait for bottom sheet to close before showing snackbar
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    if (mounted) {
+                      ScaffoldMessenger.of(this.context).showSnackBar(
+                        const SnackBar(content: Text('Suivi santé ajouté')),
+                      );
+                    }
                   },
                   child: const Text('Ajouter'),
                 ),

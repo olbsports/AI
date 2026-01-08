@@ -632,14 +632,27 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getPlans() async {
     final response = await _dio.get('/subscriptions/plans');
     final data = response.data;
-    // API returns a map of plans keyed by plan ID, convert to list
+    // API might return a map of plans keyed by plan ID, convert to list
     if (data is Map<String, dynamic>) {
-      return data.entries.map((e) => {
-        'id': e.key,
-        ...Map<String, dynamic>.from(e.value as Map),
+      return data.entries.map((e) {
+        final value = e.value;
+        if (value is Map<String, dynamic>) {
+          return {'id': e.key, ...value};
+        } else if (value is Map) {
+          return {'id': e.key, ...Map<String, dynamic>.from(value)};
+        }
+        return <String, dynamic>{'id': e.key};
       }).toList();
     }
-    return List<Map<String, dynamic>>.from(data);
+    // If it's a list, safely convert each element
+    if (data is List) {
+      return data.map((e) {
+        if (e is Map<String, dynamic>) return e;
+        if (e is Map) return Map<String, dynamic>.from(e);
+        return <String, dynamic>{};
+      }).toList();
+    }
+    return <Map<String, dynamic>>[];
   }
 
   Future<Map<String, dynamic>> getCurrentSubscription() async {
