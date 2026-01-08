@@ -155,21 +155,38 @@ class HealthAIData {
 
   factory HealthAIData.fromJson(Map<String, dynamic> json) {
     return HealthAIData(
-      overallHealthScore: (json['overallHealthScore'] as num?)?.toDouble(),
+      overallHealthScore: _parseDoubleOrNull(json['overallHealthScore']),
       healthStatus: json['healthStatus'] as String?,
       conditions: (json['conditions'] as List?)
               ?.map((e) => HealthCondition.fromJson(e))
               .toList() ??
           [],
-      riskFactors: (json['riskFactors'] as List?)?.cast<String>() ?? [],
+      riskFactors: _parseStringList(json['riskFactors']),
       lastVetCheck: json['lastVetCheck'] != null
-          ? DateTime.parse(json['lastVetCheck'] as String)
+          ? DateTime.tryParse(json['lastVetCheck'].toString())
           : null,
       nextRecommendedCheck: json['nextRecommendedCheck'] != null
-          ? DateTime.parse(json['nextRecommendedCheck'] as String)
+          ? DateTime.tryParse(json['nextRecommendedCheck'].toString())
           : null,
       vetNotes: json['vetNotes'] as Map<String, dynamic>?,
     );
+  }
+
+  static double? _parseDoubleOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    return [];
   }
 
   Map<String, dynamic> toJson() {
@@ -253,20 +270,48 @@ class AnalysisAIData {
 
   factory AnalysisAIData.fromJson(Map<String, dynamic> json) {
     return AnalysisAIData(
-      locomotionScore: (json['locomotionScore'] as num?)?.toDouble(),
-      symmetryScore: (json['symmetryScore'] as num?)?.toDouble(),
-      rhythmScore: (json['rhythmScore'] as num?)?.toDouble(),
-      jumpingScore: (json['jumpingScore'] as num?)?.toDouble(),
-      postureScore: (json['postureScore'] as num?)?.toDouble(),
+      locomotionScore: _parseDoubleOrNull(json['locomotionScore']),
+      symmetryScore: _parseDoubleOrNull(json['symmetryScore']),
+      rhythmScore: _parseDoubleOrNull(json['rhythmScore']),
+      jumpingScore: _parseDoubleOrNull(json['jumpingScore']),
+      postureScore: _parseDoubleOrNull(json['postureScore']),
       gaitQuality: json['gaitQuality'] as String?,
-      strengths: (json['strengths'] as List?)?.cast<String>() ?? [],
-      areasToImprove: (json['areasToImprove'] as List?)?.cast<String>() ?? [],
-      totalAnalyses: json['totalAnalyses'] as int? ?? 0,
+      strengths: _parseStringList(json['strengths']),
+      areasToImprove: _parseStringList(json['areasToImprove']),
+      totalAnalyses: _parseInt(json['totalAnalyses']),
       lastAnalysis: json['lastAnalysis'] != null
-          ? DateTime.parse(json['lastAnalysis'] as String)
+          ? DateTime.tryParse(json['lastAnalysis'].toString())
           : null,
       detailedMetrics: json['detailedMetrics'] as Map<String, dynamic>?,
     );
+  }
+
+  static double? _parseDoubleOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static int _parseInt(dynamic value, {int defaultValue = 0}) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    return defaultValue;
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    return [];
   }
 
   Map<String, dynamic> toJson() {
@@ -314,22 +359,46 @@ class GestationAIData {
     return GestationAIData(
       isPregnant: json['isPregnant'] as bool? ?? false,
       breedingDate: json['breedingDate'] != null
-          ? DateTime.parse(json['breedingDate'] as String)
+          ? DateTime.tryParse(json['breedingDate'].toString())
           : null,
       expectedFoalingDate: json['expectedFoalingDate'] != null
-          ? DateTime.parse(json['expectedFoalingDate'] as String)
+          ? DateTime.tryParse(json['expectedFoalingDate'].toString())
           : null,
-      gestationDay: json['gestationDay'] as int?,
+      gestationDay: _parseIntOrNull(json['gestationDay']),
       gestationStage: json['gestationStage'] as String?,
-      healthRiskScore: (json['healthRiskScore'] as num?)?.toDouble(),
-      recommendations:
-          (json['recommendations'] as List?)?.cast<String>() ?? [],
+      healthRiskScore: _parseDoubleOrNull(json['healthRiskScore']),
+      recommendations: _parseStringList(json['recommendations']),
       checkups: (json['checkups'] as List?)
               ?.map((e) => GestationCheckup.fromJson(e))
               .toList() ??
           [],
       foalPredictions: json['foalPredictions'] as Map<String, dynamic>?,
     );
+  }
+
+  static double? _parseDoubleOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static int? _parseIntOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    return [];
   }
 
   Map<String, dynamic> toJson() {
@@ -405,18 +474,43 @@ class TrainingAIData {
 
   factory TrainingAIData.fromJson(Map<String, dynamic> json) {
     return TrainingAIData(
-      fitnessScore: (json['fitnessScore'] as num?)?.toDouble(),
-      performanceScore: (json['performanceScore'] as num?)?.toDouble(),
+      fitnessScore: _parseDoubleOrNull(json['fitnessScore']),
+      performanceScore: _parseDoubleOrNull(json['performanceScore']),
       currentPhase: json['currentPhase'] as String?,
-      weeklyTrainingHours: json['weeklyTrainingHours'] as int?,
-      totalSessions: json['totalSessions'] as int?,
-      skillsToWork: (json['skillsToWork'] as List?)?.cast<String>() ?? [],
-      achievements: (json['achievements'] as List?)?.cast<String>() ?? [],
+      weeklyTrainingHours: _parseIntOrNull(json['weeklyTrainingHours']),
+      totalSessions: _parseIntOrNull(json['totalSessions']),
+      skillsToWork: _parseStringList(json['skillsToWork']),
+      achievements: _parseStringList(json['achievements']),
       currentPlan: json['currentPlan'] != null
           ? TrainingPlan.fromJson(json['currentPlan'])
           : null,
       progressMetrics: json['progressMetrics'] as Map<String, dynamic>?,
     );
+  }
+
+  static double? _parseDoubleOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static int? _parseIntOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    return [];
   }
 
   Map<String, dynamic> toJson() {
@@ -508,21 +602,37 @@ class NutritionAIData {
 
   factory NutritionAIData.fromJson(Map<String, dynamic> json) {
     return NutritionAIData(
-      bodyConditionScore: (json['bodyConditionScore'] as num?)?.toDouble(),
-      idealWeight: (json['idealWeight'] as num?)?.toDouble(),
-      currentWeight: (json['currentWeight'] as num?)?.toDouble(),
+      bodyConditionScore: _parseDoubleOrNull(json['bodyConditionScore']),
+      idealWeight: _parseDoubleOrNull(json['idealWeight']),
+      currentWeight: _parseDoubleOrNull(json['currentWeight']),
       dietType: json['dietType'] as String?,
-      dailyEnergyNeeds: (json['dailyEnergyNeeds'] as num?)?.toDouble(),
-      dailyProteinNeeds: (json['dailyProteinNeeds'] as num?)?.toDouble(),
-      dietaryRestrictions:
-          (json['dietaryRestrictions'] as List?)?.cast<String>() ?? [],
-      supplements: (json['supplements'] as List?)?.cast<String>() ?? [],
+      dailyEnergyNeeds: _parseDoubleOrNull(json['dailyEnergyNeeds']),
+      dailyProteinNeeds: _parseDoubleOrNull(json['dailyProteinNeeds']),
+      dietaryRestrictions: _parseStringList(json['dietaryRestrictions']),
+      supplements: _parseStringList(json['supplements']),
       currentPlanId: json['currentPlanId'] as String?,
       lastAssessment: json['lastAssessment'] != null
-          ? DateTime.parse(json['lastAssessment'] as String)
+          ? DateTime.tryParse(json['lastAssessment'].toString())
           : null,
       feedingSchedule: json['feedingSchedule'] as Map<String, dynamic>?,
     );
+  }
+
+  static double? _parseDoubleOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    return [];
   }
 
   Map<String, dynamic> toJson() {
@@ -564,18 +674,47 @@ class ConformationAIData {
 
   factory ConformationAIData.fromJson(Map<String, dynamic> json) {
     return ConformationAIData(
-      overallScore: (json['overallScore'] as num?)?.toDouble(),
-      bodyPartScores: (json['bodyPartScores'] as Map<String, dynamic>?)?.map(
-        (key, value) => MapEntry(key, (value as num).toDouble()),
-      ),
-      positiveTraits: (json['positiveTraits'] as List?)?.cast<String>() ?? [],
-      concernAreas: (json['concernAreas'] as List?)?.cast<String>() ?? [],
+      overallScore: _parseDoubleOrNull(json['overallScore']),
+      bodyPartScores: _parseBodyPartScores(json['bodyPartScores']),
+      positiveTraits: _parseStringList(json['positiveTraits']),
+      concernAreas: _parseStringList(json['concernAreas']),
       breedTypicality: json['breedTypicality'] as String?,
       lastAssessment: json['lastAssessment'] != null
-          ? DateTime.parse(json['lastAssessment'] as String)
+          ? DateTime.tryParse(json['lastAssessment'].toString())
           : null,
-      photoUrls: (json['photoUrls'] as List?)?.cast<String>() ?? [],
+      photoUrls: _parseStringList(json['photoUrls']),
     );
+  }
+
+  static double? _parseDoubleOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    return [];
+  }
+
+  static Map<String, double>? _parseBodyPartScores(dynamic value) {
+    if (value == null) return null;
+    if (value is! Map) return null;
+    final map = value as Map<String, dynamic>;
+    final result = <String, double>{};
+    for (final entry in map.entries) {
+      final score = _parseDoubleOrNull(entry.value);
+      if (score != null) {
+        result[entry.key] = score;
+      }
+    }
+    return result.isEmpty ? null : result;
   }
 
   Map<String, dynamic> toJson() {
