@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/admin_providers.dart';
 import '../theme/admin_theme.dart';
 
@@ -41,7 +43,7 @@ class DashboardScreen extends ConsumerWidget {
                     ],
                   ),
                   ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _exportDashboardData(context, ref),
                     icon: const Icon(Icons.download),
                     label: const Text('Exporter'),
                   ),
@@ -243,7 +245,7 @@ class DashboardScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 TextButton(
-                                  onPressed: () {},
+                                  onPressed: () => context.go('/analytics'),
                                   child: const Text('Voir tout'),
                                 ),
                               ],
@@ -456,5 +458,46 @@ class DashboardScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _exportDashboardData(BuildContext context, WidgetRef ref) async {
+    final stats = ref.read(dashboardStatsProvider).valueOrNull;
+    if (stats == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aucune donnée à exporter')),
+      );
+      return;
+    }
+
+    // Show export dialog
+    final format = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exporter les données'),
+        content: const Text('Choisissez le format d\'exportation'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, 'csv'),
+            child: const Text('CSV'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, 'json'),
+            child: const Text('JSON'),
+          ),
+        ],
+      ),
+    );
+
+    if (format != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export $format en cours... Vérifiez vos téléchargements.')),
+      );
+      // In production, this would trigger actual file download via API
+      await ref.read(adminActionsProvider.notifier).exportDashboardStats(format);
+    }
   }
 }

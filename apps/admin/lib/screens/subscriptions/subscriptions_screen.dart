@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../models/admin_models.dart';
 import '../../providers/admin_providers.dart';
@@ -35,7 +36,7 @@ class SubscriptionsScreen extends ConsumerWidget {
                     ),
                   ),
                   ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _showCreatePlanDialog(context, ref),
                     icon: const Icon(Icons.add),
                     label: const Text('Nouveau plan'),
                   ),
@@ -200,7 +201,7 @@ class SubscriptionsScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              onTap: () {},
+              onTap: () => _showSubscriptionDetails(context, ref, sub),
             );
           },
         ),
@@ -242,7 +243,10 @@ class SubscriptionsScreen extends ConsumerWidget {
                           color: AdminColors.textPrimary,
                         ),
                       ),
-                      Switch(value: plan.isActive, onChanged: (_) {}),
+                      Switch(
+                        value: plan.isActive,
+                        onChanged: (value) => _togglePlanActive(context, ref, plan, value),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -293,7 +297,7 @@ class SubscriptionsScreen extends ConsumerWidget {
                     ),
                   ),
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () => _showEditPlanDialog(context, ref, plan),
                     child: const Text('Modifier'),
                   ),
                 ],
@@ -338,6 +342,180 @@ class SubscriptionsScreen extends ConsumerWidget {
       ),
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Erreur: $e')),
+    );
+  }
+
+  void _showCreatePlanDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    final monthlyPriceController = TextEditingController();
+    final yearlyPriceController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Nouveau plan'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nom du plan'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: monthlyPriceController,
+                decoration: const InputDecoration(labelText: 'Prix mensuel (€)'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: yearlyPriceController,
+                decoration: const InputDecoration(labelText: 'Prix annuel (€)'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await ref.read(adminActionsProvider.notifier).createPlan(
+                name: nameController.text,
+                monthlyPrice: double.tryParse(monthlyPriceController.text) ?? 0,
+                yearlyPrice: double.tryParse(yearlyPriceController.text) ?? 0,
+              );
+              ref.invalidate(subscriptionPlansProvider);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Plan créé avec succès')),
+                );
+              }
+            },
+            child: const Text('Créer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSubscriptionDetails(BuildContext context, WidgetRef ref, dynamic sub) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Abonnement de ${sub.userName}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Plan: ${sub.planName}'),
+            Text('Montant: ${sub.amount}€/${sub.interval.displayName}'),
+            Text('Statut: ${sub.status.displayName}'),
+            Text('Créé le: ${DateFormat('dd/MM/yyyy').format(sub.createdAt)}'),
+            if (sub.cancelledAt != null)
+              Text('Annulé le: ${DateFormat('dd/MM/yyyy').format(sub.cancelledAt)}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Fermer'),
+          ),
+          if (sub.status.name == 'active')
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AdminColors.error),
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await ref.read(adminActionsProvider.notifier).cancelSubscription(sub.id);
+                ref.invalidate(subscriptionsProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Abonnement annulé')),
+                  );
+                }
+              },
+              child: const Text('Annuler abonnement'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _togglePlanActive(BuildContext context, WidgetRef ref, SubscriptionPlan plan, bool active) async {
+    await ref.read(adminActionsProvider.notifier).updatePlan(
+      planId: plan.id,
+      isActive: active,
+    );
+    ref.invalidate(subscriptionPlansProvider);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Plan ${active ? 'activé' : 'désactivé'}')),
+      );
+    }
+  }
+
+  void _showEditPlanDialog(BuildContext context, WidgetRef ref, SubscriptionPlan plan) {
+    final nameController = TextEditingController(text: plan.name);
+    final monthlyPriceController = TextEditingController(text: plan.monthlyPrice.toStringAsFixed(0));
+    final yearlyPriceController = TextEditingController(text: plan.yearlyPrice.toStringAsFixed(0));
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Modifier ${plan.name}'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nom du plan'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: monthlyPriceController,
+                decoration: const InputDecoration(labelText: 'Prix mensuel (€)'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: yearlyPriceController,
+                decoration: const InputDecoration(labelText: 'Prix annuel (€)'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await ref.read(adminActionsProvider.notifier).updatePlan(
+                planId: plan.id,
+                name: nameController.text,
+                monthlyPrice: double.tryParse(monthlyPriceController.text),
+                yearlyPrice: double.tryParse(yearlyPriceController.text),
+              );
+              ref.invalidate(subscriptionPlansProvider);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Plan modifié avec succès')),
+                );
+              }
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
     );
   }
 }

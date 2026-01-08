@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/admin_providers.dart';
 import '../../theme/admin_theme.dart';
 
+enum DateRange { week, month, quarter, year }
+
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
 
@@ -32,13 +34,13 @@ class AnalyticsScreen extends ConsumerWidget {
                 Row(
                   children: [
                     OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () => _showDateRangeSelector(context, ref),
                       icon: const Icon(Icons.calendar_today),
                       label: const Text('30 derniers jours'),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () => _exportAnalytics(context, ref),
                       icon: const Icon(Icons.download),
                       label: const Text('Exporter'),
                     ),
@@ -342,5 +344,86 @@ class AnalyticsScreen extends ConsumerWidget {
         textAlign: TextAlign.center,
       ),
     );
+  }
+
+  void _showDateRangeSelector(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sélectionner une période'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('7 derniers jours'),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Période: 7 derniers jours')),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('30 derniers jours'),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Période: 30 derniers jours')),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('90 derniers jours'),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Période: 90 derniers jours')),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Cette année'),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Période: Cette année')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportAnalytics(BuildContext context, WidgetRef ref) async {
+    final format = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Exporter les analytics'),
+        content: const Text('Choisissez le format d\'exportation'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, 'csv'),
+            child: const Text('CSV'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, 'pdf'),
+            child: const Text('PDF'),
+          ),
+        ],
+      ),
+    );
+
+    if (format != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export $format en cours...')),
+      );
+      await ref.read(adminActionsProvider.notifier).exportAnalytics(format);
+    }
   }
 }

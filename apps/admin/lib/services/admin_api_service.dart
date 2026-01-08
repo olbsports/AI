@@ -103,22 +103,68 @@ class AdminApiService {
   }
 
   Future<dynamic> get(String path, {Map<String, String>? queryParams}) async {
-    final response = await _dio.get(path, queryParameters: queryParams);
-    return response.data;
+    try {
+      final response = await _dio.get(path, queryParameters: queryParams);
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
   }
 
   Future<dynamic> post(String path, Map<String, dynamic> data) async {
-    final response = await _dio.post(path, data: data);
-    return response.data;
+    try {
+      final response = await _dio.post(path, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
   }
 
   Future<dynamic> put(String path, Map<String, dynamic> data) async {
-    final response = await _dio.put(path, data: data);
-    return response.data;
+    try {
+      final response = await _dio.put(path, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
   }
 
   Future<void> delete(String path) async {
-    await _dio.delete(path);
+    try {
+      await _dio.delete(path);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  Exception _handleDioError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return Exception('Délai d\'attente dépassé. Veuillez réessayer.');
+      case DioExceptionType.connectionError:
+        return Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      case DioExceptionType.badResponse:
+        final statusCode = e.response?.statusCode;
+        final message = e.response?.data?['message'] ?? 'Erreur serveur';
+        if (statusCode == 401) {
+          return Exception('Session expirée. Veuillez vous reconnecter.');
+        } else if (statusCode == 403) {
+          return Exception('Accès refusé. Permissions insuffisantes.');
+        } else if (statusCode == 404) {
+          return Exception('Ressource non trouvée.');
+        } else if (statusCode == 422) {
+          return Exception('Données invalides: $message');
+        } else if (statusCode! >= 500) {
+          return Exception('Erreur serveur. Veuillez réessayer plus tard.');
+        }
+        return Exception(message);
+      case DioExceptionType.cancel:
+        return Exception('Requête annulée.');
+      default:
+        return Exception('Une erreur inattendue s\'est produite.');
+    }
   }
 }
 
