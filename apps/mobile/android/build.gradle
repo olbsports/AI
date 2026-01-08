@@ -11,21 +11,29 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+}
 
+subprojects {
     // Force all subprojects (plugins) to use Java 17
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
+    plugins.withId('com.android.library') {
+        android {
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
             }
         }
-        // Suppress Java deprecation warnings
-        tasks.withType(JavaCompile).configureEach {
-            options.compilerArgs << '-Xlint:-options' << '-Xlint:-deprecation'
+    }
+    plugins.withId('com.android.application') {
+        android {
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
         }
+    }
+    // Suppress Java deprecation warnings
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs << '-Xlint:-options' << '-Xlint:-deprecation'
     }
 }
 
