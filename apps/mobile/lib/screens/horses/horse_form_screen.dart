@@ -28,6 +28,14 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
   final _heightController = TextEditingController();
   final _notesController = TextEditingController();
 
+  // Pedigree controllers
+  final _sireNameController = TextEditingController(); // Père
+  final _damNameController = TextEditingController(); // Mère
+  final _siresSireNameController = TextEditingController(); // Grand-père paternel
+  final _siresDamNameController = TextEditingController(); // Grand-mère paternelle
+  final _damsSireNameController = TextEditingController(); // Grand-père maternel
+  final _damsDamNameController = TextEditingController(); // Grand-mère maternelle
+
   HorseGender _gender = HorseGender.male;
   HorseStatus _status = HorseStatus.active;
   HorseDiscipline _discipline = HorseDiscipline.none;
@@ -63,6 +71,13 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
           _discipline = horse.discipline;
           _level = horse.level;
           _birthDate = horse.birthDate;
+          // Pedigree
+          _sireNameController.text = horse.sireName ?? '';
+          _damNameController.text = horse.damName ?? '';
+          _siresSireNameController.text = horse.siresSireName ?? '';
+          _siresDamNameController.text = horse.siresDamName ?? '';
+          _damsSireNameController.text = horse.damsSireName ?? '';
+          _damsDamNameController.text = horse.damsDamName ?? '';
         });
       }
     } catch (e) {
@@ -86,6 +101,13 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
     _colorController.dispose();
     _heightController.dispose();
     _notesController.dispose();
+    // Pedigree
+    _sireNameController.dispose();
+    _damNameController.dispose();
+    _siresSireNameController.dispose();
+    _siresDamNameController.dispose();
+    _damsSireNameController.dispose();
+    _damsDamNameController.dispose();
     super.dispose();
   }
 
@@ -200,6 +222,19 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
           'discipline': _discipline.name,
         if (_level > 0)
           'level': _level,
+        // Pedigree / Origines
+        if (_sireNameController.text.isNotEmpty)
+          'sireName': _sireNameController.text.trim(),
+        if (_damNameController.text.isNotEmpty)
+          'damName': _damNameController.text.trim(),
+        if (_siresSireNameController.text.isNotEmpty)
+          'siresSireName': _siresSireNameController.text.trim(),
+        if (_siresDamNameController.text.isNotEmpty)
+          'siresDamName': _siresDamNameController.text.trim(),
+        if (_damsSireNameController.text.isNotEmpty)
+          'damsSireName': _damsSireNameController.text.trim(),
+        if (_damsDamNameController.text.isNotEmpty)
+          'damsDamName': _damsDamNameController.text.trim(),
       };
 
       Horse? horse;
@@ -465,6 +500,106 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
                     setState(() => _status = value);
                   }
                 },
+              ),
+              const SizedBox(height: 16),
+
+              // Origines / Pedigree section
+              const SizedBox(height: 8),
+              Card(
+                child: ExpansionTile(
+                  leading: const Icon(Icons.account_tree),
+                  title: const Text('Origines'),
+                  subtitle: const Text('Pedigree du cheval'),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Parents
+                          Text(
+                            'Parents',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _sireNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Père',
+                              prefixIcon: Icon(Icons.male),
+                              isDense: true,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _damNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Mère',
+                              prefixIcon: Icon(Icons.female),
+                              isDense: true,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Grands-parents paternels
+                          Text(
+                            'Grands-parents paternels',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _siresSireNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Grand-père paternel',
+                              prefixIcon: Icon(Icons.male),
+                              isDense: true,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _siresDamNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Grand-mère paternelle',
+                              prefixIcon: Icon(Icons.female),
+                              isDense: true,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Grands-parents maternels
+                          Text(
+                            'Grands-parents maternels',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _damsSireNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Grand-père maternel',
+                              prefixIcon: Icon(Icons.male),
+                              isDense: true,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _damsDamNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Grand-mère maternelle',
+                              prefixIcon: Icon(Icons.female),
+                              isDense: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
 
