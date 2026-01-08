@@ -255,8 +255,25 @@ class ApiService {
           contentType: mimeType != null ? MediaType.parse(mimeType) : null,
         ),
       });
-      final response = await _dio.post('/auth/profile/photo', data: formData);
-      return response.data['url'] as String;
+
+      // Use longer timeout for photo uploads
+      final options = Options(
+        sendTimeout: const Duration(minutes: 3),
+        receiveTimeout: const Duration(minutes: 3),
+      );
+
+      final response = await _dio.post(
+        '/auth/profile/photo',
+        data: formData,
+        options: options,
+      );
+
+      // Safe response handling
+      final data = response.data;
+      if (data is Map<String, dynamic> && data['url'] != null) {
+        return data['url'] as String;
+      }
+      throw Exception('Réponse invalide du serveur');
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.sendTimeout ||
@@ -266,9 +283,14 @@ class ApiService {
         throw Exception('Le fichier est trop volumineux pour le serveur.');
       } else if (e.response?.statusCode == 415) {
         throw Exception('Format de fichier non accepté par le serveur.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Fonctionnalité d\'upload non disponible sur ce serveur.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
       }
-      throw Exception('Erreur lors de l\'upload de la photo: ${e.message}');
+      throw Exception('Erreur lors de l\'upload de la photo: ${e.message ?? e.response?.statusMessage ?? "Erreur inconnue"}');
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Erreur lors de l\'upload de la photo: $e');
     }
   }
@@ -327,8 +349,25 @@ class ApiService {
           contentType: mimeType != null ? MediaType.parse(mimeType) : null,
         ),
       });
-      final response = await _dio.post('/riders/$riderId/photo', data: formData);
-      return response.data['url'] as String;
+
+      // Use longer timeout for photo uploads
+      final options = Options(
+        sendTimeout: const Duration(minutes: 3),
+        receiveTimeout: const Duration(minutes: 3),
+      );
+
+      final response = await _dio.post(
+        '/riders/$riderId/photo',
+        data: formData,
+        options: options,
+      );
+
+      // Safe response handling
+      final data = response.data;
+      if (data is Map<String, dynamic> && data['url'] != null) {
+        return data['url'] as String;
+      }
+      throw Exception('Réponse invalide du serveur');
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.sendTimeout ||
@@ -338,9 +377,14 @@ class ApiService {
         throw Exception('Le fichier est trop volumineux pour le serveur.');
       } else if (e.response?.statusCode == 415) {
         throw Exception('Format de fichier non accepté par le serveur.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Fonctionnalité d\'upload non disponible sur ce serveur.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
       }
-      throw Exception('Erreur lors de l\'upload de la photo: ${e.message}');
+      throw Exception('Erreur lors de l\'upload de la photo: ${e.message ?? e.response?.statusMessage ?? "Erreur inconnue"}');
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Erreur lors de l\'upload de la photo: $e');
     }
   }
@@ -394,8 +438,25 @@ class ApiService {
           contentType: mimeType != null ? MediaType.parse(mimeType) : null,
         ),
       });
-      final response = await _dio.post('/horses/$horseId/photo', data: formData);
-      return response.data['url'] as String;
+
+      // Use longer timeout for photo uploads
+      final options = Options(
+        sendTimeout: const Duration(minutes: 3),
+        receiveTimeout: const Duration(minutes: 3),
+      );
+
+      final response = await _dio.post(
+        '/horses/$horseId/photo',
+        data: formData,
+        options: options,
+      );
+
+      // Safe response handling
+      final data = response.data;
+      if (data is Map<String, dynamic> && data['url'] != null) {
+        return data['url'] as String;
+      }
+      throw Exception('Réponse invalide du serveur');
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.sendTimeout ||
@@ -405,9 +466,14 @@ class ApiService {
         throw Exception('Le fichier est trop volumineux pour le serveur.');
       } else if (e.response?.statusCode == 415) {
         throw Exception('Format de fichier non accepté par le serveur.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Fonctionnalité d\'upload non disponible sur ce serveur.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
       }
-      throw Exception('Erreur lors de l\'upload de la photo: ${e.message}');
+      throw Exception('Erreur lors de l\'upload de la photo: ${e.message ?? e.response?.statusMessage ?? "Erreur inconnue"}');
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Erreur lors de l\'upload de la photo: $e');
     }
   }
@@ -810,7 +876,13 @@ class ApiService {
         data: formData,
         options: options,
       );
-      return response.data['url'] as String;
+
+      // Safe response handling
+      final data = response.data;
+      if (data is Map<String, dynamic> && data['url'] != null) {
+        return data['url'] as String;
+      }
+      throw Exception('Réponse invalide du serveur');
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.sendTimeout ||
@@ -820,13 +892,16 @@ class ApiService {
         throw Exception('Le fichier est trop volumineux pour le serveur.');
       } else if (e.response?.statusCode == 415) {
         throw Exception('Format de fichier non accepté par le serveur.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Fonctionnalité d\'upload non disponible sur ce serveur.');
       } else if (e.type == DioExceptionType.badResponse) {
         throw Exception('Erreur serveur: ${e.response?.statusMessage ?? "Erreur inconnue"}');
       } else if (e.type == DioExceptionType.connectionError) {
         throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
       }
-      throw Exception('Erreur lors de l\'upload: ${e.message}');
+      throw Exception('Erreur lors de l\'upload: ${e.message ?? e.response?.statusMessage ?? "Erreur inconnue"}');
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Erreur lors de l\'upload du fichier: $e');
     }
   }
