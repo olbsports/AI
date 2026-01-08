@@ -45,12 +45,11 @@
 
 ### Services en cours d'exécution
 
-| Service           | Port   | Description                    |
-| ----------------- | ------ | ------------------------------ |
-| API NestJS        | 4000   | Backend principal Horse Vision |
-| horsetempo-api    | -      | Autre API (si applicable)      |
-| PostgreSQL        | 5432   | Base de données                |
-| Nginx (optionnel) | 80/443 | Reverse proxy                  |
+| Service        | Port   | Description                    |
+| -------------- | ------ | ------------------------------ |
+| horsetempo-api | 4000   | Backend principal Horse Vision |
+| PostgreSQL     | 5432   | Base de données                |
+| Nginx          | 80/443 | Reverse proxy                  |
 
 ---
 
@@ -223,7 +222,7 @@ Le fichier de configuration PM2 devrait être créé à
 module.exports = {
   apps: [
     {
-      name: 'api',
+      name: 'horsetempo-api',
       cwd: '/root/AI/apps/api',
       script: 'dist/main.js',
       instances: 1,
@@ -248,21 +247,21 @@ module.exports = {
 ```bash
 # ===== STATUT =====
 pm2 status                    # Voir tous les processus
-pm2 show api                  # Détails d'un processus
+pm2 show horsetempo-api                  # Détails d'un processus
 pm2 monit                     # Monitoring en temps réel (interactif)
 
 # ===== CONTRÔLE =====
-pm2 start api                 # Démarrer
-pm2 stop api                  # Arrêter
-pm2 restart api               # Redémarrer
-pm2 reload api                # Reload graceful (zero-downtime)
-pm2 delete api                # Supprimer de PM2
+pm2 start horsetempo-api                 # Démarrer
+pm2 stop horsetempo-api                  # Arrêter
+pm2 restart horsetempo-api               # Redémarrer
+pm2 reload horsetempo-api                # Reload graceful (zero-downtime)
+pm2 delete horsetempo-api                # Supprimer de PM2
 
 # ===== LOGS =====
 pm2 logs                      # Tous les logs en temps réel
-pm2 logs api                  # Logs de l'API uniquement
-pm2 logs api --lines 100      # Dernières 100 lignes
-pm2 logs api --err            # Erreurs uniquement
+pm2 logs horsetempo-api                  # Logs de l'API uniquement
+pm2 logs horsetempo-api --lines 100      # Dernières 100 lignes
+pm2 logs horsetempo-api --err            # Erreurs uniquement
 pm2 flush                     # Vider les fichiers de logs
 
 # ===== DÉMARRAGE AUTO =====
@@ -315,7 +314,7 @@ npx tsc-alias -p tsconfig.build.json
 ls -la dist/main.js
 
 # 5. Redémarrer l'API
-pm2 restart api
+pm2 restart horsetempo-api
 ```
 
 ### ❌ NE PAS UTILISER
@@ -426,7 +425,7 @@ echo -e "${GREEN}✅ Build réussi${NC}"
 
 # 11. Arrêter l'API et libérer le port
 echo -e "${YELLOW}🛑 Arrêt de l'API${NC}"
-pm2 stop api || true
+pm2 stop horsetempo-api || true
 sleep 2
 
 # Tuer les processus sur le port 4000 si nécessaire
@@ -434,7 +433,7 @@ lsof -ti :4000 | xargs -r kill -9 2>/dev/null || true
 
 # 12. Démarrer l'API
 echo -e "${YELLOW}🚀 Démarrage de l'API${NC}"
-pm2 start api
+pm2 start horsetempo-api
 
 # 13. Attendre le démarrage
 sleep 5
@@ -453,7 +452,7 @@ if echo "$HEALTH" | grep -q '"status":"ok"'; then
 else
     echo -e "${RED}⚠️  L'API ne répond pas correctement${NC}"
     echo -e "${RED}$HEALTH${NC}"
-    echo -e "${YELLOW}Vérifiez les logs: pm2 logs api --lines 50${NC}"
+    echo -e "${YELLOW}Vérifiez les logs: pm2 logs horsetempo-api --lines 50${NC}"
     exit 1
 fi
 
@@ -464,7 +463,7 @@ echo -e "${GREEN}========================================${NC}"
 echo ""
 echo -e "API: ${BLUE}http://localhost:4000/api${NC}"
 echo -e "Docs: ${BLUE}http://localhost:4000/api/docs${NC}"
-echo -e "Logs: ${BLUE}pm2 logs api${NC}"
+echo -e "Logs: ${BLUE}pm2 logs horsetempo-api${NC}"
 ```
 
 ### Rendre le script exécutable
@@ -784,10 +783,10 @@ crontab -e
 pm2 monit
 
 # Métriques
-pm2 show api
+pm2 show horsetempo-api
 
 # Historique CPU/Mémoire
-pm2 logs api --lines 1000 | grep -i "memory\|cpu"
+pm2 logs horsetempo-api --lines 1000 | grep -i "memory\|cpu"
 ```
 
 ### Script de Health Check `/root/AI/scripts/healthcheck.sh`
@@ -812,7 +811,7 @@ if [ "$RESPONSE" != "200" ]; then
     fi
 
     # Tenter un restart automatique
-    pm2 restart api
+    pm2 restart horsetempo-api
 
     exit 1
 else
@@ -868,14 +867,14 @@ journalctl -f
 
 ```bash
 # ===== PM2 =====
-pm2 logs api                          # Logs en temps réel
-pm2 logs api --lines 200              # Dernières 200 lignes
-pm2 logs api --err                    # Erreurs uniquement
-pm2 logs api --out                    # Output uniquement
+pm2 logs horsetempo-api                          # Logs en temps réel
+pm2 logs horsetempo-api --lines 200              # Dernières 200 lignes
+pm2 logs horsetempo-api --err                    # Erreurs uniquement
+pm2 logs horsetempo-api --out                    # Output uniquement
 
 # ===== Filtrer les logs =====
-pm2 logs api | grep -i error          # Filtrer les erreurs
-pm2 logs api | grep "$(date +%Y-%m-%d)"  # Logs d'aujourd'hui
+pm2 logs horsetempo-api | grep -i error          # Filtrer les erreurs
+pm2 logs horsetempo-api | grep "$(date +%Y-%m-%d)"  # Logs d'aujourd'hui
 
 # ===== Nginx =====
 tail -f /var/log/nginx/error.log      # Erreurs Nginx en temps réel
@@ -1022,7 +1021,7 @@ npx tsc-alias -p tsconfig.build.json
 
 ```bash
 lsof -ti :4000 | xargs -r kill -9
-pm2 restart api
+pm2 restart horsetempo-api
 ```
 
 ### 4. 🟡 Conflits pnpm-lock.yaml
@@ -1072,7 +1071,7 @@ npx prisma generate
 
 ```bash
 # 1. Vérifier les logs
-pm2 logs api --lines 50
+pm2 logs horsetempo-api --lines 50
 
 # 2. Vérifier que dist existe
 ls -la /root/AI/apps/api/dist/
@@ -1082,7 +1081,7 @@ cd /root/AI/apps/api
 rm -rf dist
 npx tsc --project tsconfig.build.json --outDir dist --noEmit false --incremental false
 npx tsc-alias -p tsconfig.build.json
-pm2 restart api
+pm2 restart horsetempo-api
 ```
 
 ### Module not found
@@ -1152,7 +1151,7 @@ pm2 status
 tail -50 /var/log/nginx/error.log
 
 # Redémarrer tout
-pm2 restart api
+pm2 restart horsetempo-api
 systemctl restart nginx
 ```
 
@@ -1166,7 +1165,7 @@ systemctl restart nginx
 # Déploiement rapide
 cd /root/AI && git pull && pnpm install && cd apps/api && \
 npx tsc --project tsconfig.build.json --outDir dist --noEmit false --incremental false && \
-npx tsc-alias -p tsconfig.build.json && pm2 restart api
+npx tsc-alias -p tsconfig.build.json && pm2 restart horsetempo-api
 
 # Ou utiliser le script
 /root/AI/scripts/deploy.sh
@@ -1176,8 +1175,8 @@ npx tsc-alias -p tsconfig.build.json && pm2 restart api
 
 ```bash
 pm2 status              # Statut
-pm2 logs api -f         # Logs live
-pm2 restart api         # Restart
+pm2 logs horsetempo-api -f         # Logs live
+pm2 restart horsetempo-api         # Restart
 pm2 monit               # Dashboard
 ```
 
@@ -1188,7 +1187,7 @@ pm2 monit               # Dashboard
 curl http://localhost:4000/api/health
 
 # Voir les erreurs
-pm2 logs api --err --lines 100
+pm2 logs horsetempo-api --err --lines 100
 
 # Processus sur port 4000
 lsof -i :4000
@@ -1220,7 +1219,7 @@ npx prisma generate     # Générer client
 | **Repo GitHub**        | github.com/olbsports/AI           |
 | **Branche principale** | main                              |
 | **Documentation API**  | http://IP:4000/api/docs (Swagger) |
-| **PM2 App Name**       | api                               |
+| **PM2 App Name**       | horsetempo-api                    |
 | **Port API**           | 4000                              |
 
 ---
@@ -1309,12 +1308,12 @@ echo '🔄 Transformation alias...'
 npx tsc-alias -p tsconfig.build.json
 
 echo '🛑 Arrêt API...'
-pm2 stop api || true
+pm2 stop horsetempo-api || true
 sleep 2
 lsof -ti :4000 | xargs -r kill -9 2>/dev/null || true
 
 echo '🚀 Démarrage API...'
-pm2 start api
+pm2 start horsetempo-api
 sleep 5
 
 echo '💓 Health check...'
@@ -1368,10 +1367,10 @@ $VPS = "root@VOTRE_IP"
 ssh $VPS "pm2 status"
 
 # ===== LOGS =====
-ssh $VPS "pm2 logs api --lines 50"
+ssh $VPS "pm2 logs horsetempo-api --lines 50"
 
 # ===== RESTART =====
-ssh $VPS "pm2 restart api"
+ssh $VPS "pm2 restart horsetempo-api"
 
 # ===== HEALTH CHECK =====
 ssh $VPS "curl -s http://localhost:4000/api/health"
@@ -1405,14 +1404,14 @@ function vps-status { ssh $Global:VPS "pm2 status" }
 # Logs API
 function vps-logs {
     param([int]$Lines = 50)
-    ssh $Global:VPS "pm2 logs api --lines $Lines"
+    ssh $Global:VPS "pm2 logs horsetempo-api --lines $Lines"
 }
 
 # Logs en temps réel
-function vps-logs-live { ssh $Global:VPS "pm2 logs api" }
+function vps-logs-live { ssh $Global:VPS "pm2 logs horsetempo-api" }
 
 # Restart API
-function vps-restart { ssh $Global:VPS "pm2 restart api" }
+function vps-restart { ssh $Global:VPS "pm2 restart horsetempo-api" }
 
 # Health check
 function vps-health {
