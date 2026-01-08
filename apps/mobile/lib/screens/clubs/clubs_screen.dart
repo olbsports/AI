@@ -693,19 +693,19 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen>
     // Search clubs
   }
 
-  void _acceptInvitation(ClubInvitation invitation) {
-    ref.read(clubsNotifierProvider.notifier).acceptInvitation(invitation.id);
+  Future<void> _acceptInvitation(ClubInvitation invitation) async {
+    await ref.read(clubsNotifierProvider.notifier).acceptInvitation(invitation.id);
   }
 
-  void _declineInvitation(ClubInvitation invitation) {
-    ref.read(clubsNotifierProvider.notifier).declineInvitation(invitation.id);
+  Future<void> _declineInvitation(ClubInvitation invitation) async {
+    await ref.read(clubsNotifierProvider.notifier).declineInvitation(invitation.id);
   }
 
-  void _joinClub(String clubId) {
-    ref.read(clubsNotifierProvider.notifier).joinClub(clubId);
+  Future<void> _joinClub(String clubId) async {
+    await ref.read(clubsNotifierProvider.notifier).joinClub(clubId);
   }
 
-  void _joinEvent(ClubEvent event) {
-    ref.read(clubsNotifierProvider.notifier).joinEvent(event.id);
+  Future<void> _joinEvent(ClubEvent event) async {
+    await ref.read(clubsNotifierProvider.notifier).joinEvent(event.id);
   }
 }

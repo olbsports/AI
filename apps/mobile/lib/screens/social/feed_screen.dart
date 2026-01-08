@@ -675,7 +675,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
   void _sharePost(PublicNote post) async {
     final notifier = ref.read(socialNotifierProvider.notifier);
     await notifier.shareNote(post.id);
-    SharePlus.instance.share(
+    await SharePlus.instance.share(
       ShareParams(
         text: '${post.content}\n\n- ${post.authorName}',
         subject: 'Partage de ${post.authorName}',
@@ -1192,8 +1192,8 @@ class _CreateNoteSheetState extends ConsumerState<CreateNoteSheet> {
     }
   }
 
-  void _showHorsePicker() async {
-    final horsesAsync = ref.read(horsesNotifierProvider);
+  void _showHorsePicker() {
+    final horsesAsync = ref.watch(horsesNotifierProvider);
 
     horsesAsync.when(
       data: (horses) {

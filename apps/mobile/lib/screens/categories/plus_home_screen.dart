@@ -407,7 +407,7 @@ class _SettingsList extends StatelessWidget {
             icon: Icons.security,
             title: 'Confidentialité',
             subtitle: 'Données & sécurité',
-            onTap: () => context.go('/settings/notifications'),
+            onTap: () => _showLegalDocument(context, 'privacy'),
           ),
           const Divider(height: 1),
           _SettingsTile(
@@ -459,7 +459,7 @@ class _HelpSection extends StatelessWidget {
             icon: Icons.help_outline,
             title: 'Centre d\'aide',
             subtitle: 'FAQ et tutoriels',
-            onTap: () => context.push('/settings'),
+            onTap: () => _showHelpCenter(context),
           ),
           const Divider(height: 1),
           _SettingsTile(
@@ -763,6 +763,63 @@ void _showLicensesPage(BuildContext context) {
     applicationIcon: Padding(
       padding: const EdgeInsets.all(8.0),
       child: Icon(Icons.pets, size: 48, color: AppColors.primary),
+    ),
+  );
+}
+
+void _showHelpCenter(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Centre d\'aide'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.video_library),
+              title: const Text('Tutoriels vidéo'),
+              subtitle: const Text('Apprenez à utiliser l\'application'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Tutoriels vidéo bientôt disponibles')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.question_answer),
+              title: const Text('FAQ'),
+              subtitle: const Text('Questions fréquentes'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('FAQ bientôt disponible')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.book),
+              title: const Text('Guide utilisateur'),
+              subtitle: const Text('Documentation complète'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Guide utilisateur bientôt disponible')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Fermer'),
+        ),
+      ],
     ),
   );
 }

@@ -181,7 +181,7 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
       final data = {
         'name': _nameController.text.trim(),
         'gender': _gender.name,
-        if (_isEditing) 'status': _status.name,
+        'status': _status.name,
         if (_sireIdController.text.isNotEmpty)
           'sireId': _sireIdController.text.trim(),
         if (_microchipController.text.isNotEmpty)
