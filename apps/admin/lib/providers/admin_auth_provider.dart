@@ -62,14 +62,17 @@ class AdminAuthNotifier extends StateNotifier<AdminAuthState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.login(email, password);
-      if (response != null) {
+      if (response['success'] == true) {
         state = AdminAuthState(
           user: response['user'],
           token: response['token'],
         );
         return true;
       }
-      state = state.copyWith(isLoading: false, error: 'Identifiants invalides');
+      state = state.copyWith(
+        isLoading: false,
+        error: response['error'] ?? 'Identifiants invalides',
+      );
       return false;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
