@@ -625,7 +625,7 @@ class ApiService {
     }
   }
 
-  Future<dynamic> post(String path, Map<String, dynamic> data) async {
+  Future<dynamic> post(String path, {Map<String, dynamic>? data}) async {
     try {
       final response = await _dio.post(path, data: data);
       return response.data;
@@ -652,6 +652,32 @@ class ApiService {
   Future<dynamic> put(String path, Map<String, dynamic> data) async {
     try {
       final response = await _dio.put(path, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Délai d\'attente dépassé. Vérifiez votre connexion internet.');
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Accès refusé.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Ressource introuvable.');
+      } else if (e.response?.statusCode == 422) {
+        throw Exception('Données invalides. Vérifiez les informations saisies.');
+      } else if (e.response?.statusCode == 500) {
+        throw Exception('Erreur serveur. Veuillez réessayer plus tard.');
+      }
+      rethrow;
+    }
+  }
+
+  Future<dynamic> patch(String path, {Map<String, dynamic>? data}) async {
+    try {
+      final response = await _dio.patch(path, data: data);
       return response.data;
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||

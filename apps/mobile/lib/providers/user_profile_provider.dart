@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_level.dart';
 import '../services/api_service.dart';
-import 'api_provider.dart';
 import 'auth_provider.dart';
 
 /// Provider pour le profil utilisateur actuel
@@ -22,7 +21,7 @@ final userProfileProvider = FutureProvider<UserProfile?>((ref) async {
       email: authState.user!.email,
       firstName: authState.user!.firstName,
       lastName: authState.user!.lastName,
-      photoUrl: authState.user!.photoUrl,
+      photoUrl: authState.user!.avatarUrl,
       accountType: UserAccountType.cavalier,
       createdAt: DateTime.now(),
     );
