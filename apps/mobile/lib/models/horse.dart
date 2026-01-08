@@ -118,8 +118,8 @@ class Horse {
       birthDate: json['birthDate'] != null
           ? DateTime.parse(json['birthDate'] as String)
           : null,
-      heightCm: json['heightCm'] as int?,
-      weight: json['weight'] as int?,
+      heightCm: _parseIntOrNull(json['heightCm']),
+      weight: _parseIntOrNull(json['weight']),
       photoUrl: json['photoUrl'] as String?,
       ueln: json['ueln'] as String?,
       microchip: json['microchip'] as String?,
@@ -136,13 +136,41 @@ class Horse {
         (e) => e.name == json['discipline'],
         orElse: () => HorseDiscipline.none,
       ),
-      level: json['level'] as int? ?? 0,
+      level: _parseInt(json['level']),
       organizationId: json['organizationId'] as String? ?? '',
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
-      analysisCount: json['_count']?['analyses'] as int? ?? 0,
-      reportCount: json['_count']?['reports'] as int? ?? 0,
+      analysisCount: _parseInt(json['_count']?['analyses']),
+      reportCount: _parseInt(json['_count']?['reports']),
     );
+  }
+
+  // Helper method to safely parse int from dynamic
+  static int _parseInt(dynamic value, {int defaultValue = 0}) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+      final parsedDouble = double.tryParse(value);
+      if (parsedDouble != null) return parsedDouble.toInt();
+    }
+    return defaultValue;
+  }
+
+  // Helper method to safely parse nullable int from dynamic
+  static int? _parseIntOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+      final parsedDouble = double.tryParse(value);
+      if (parsedDouble != null) return parsedDouble.toInt();
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {

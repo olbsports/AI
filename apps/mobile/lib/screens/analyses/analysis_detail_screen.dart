@@ -279,7 +279,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
             _buildScoreCard(
               context,
               'Score global',
-              (analysis.results!['globalScore'] as num).toDouble(),
+              _parseDouble(analysis.results!['globalScore']),
               Icons.star,
               AppColors.primary,
             ),
@@ -290,7 +290,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
             _buildScoreCard(
               context,
               'Symétrie',
-              (analysis.results!['symmetry'] as num).toDouble(),
+              _parseDouble(analysis.results!['symmetry']),
               Icons.balance,
               AppColors.secondary,
             ),
@@ -299,7 +299,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
             _buildScoreCard(
               context,
               'Rythme',
-              (analysis.results!['rhythm'] as num).toDouble(),
+              _parseDouble(analysis.results!['rhythm']),
               Icons.music_note,
               AppColors.success,
             ),
@@ -315,7 +315,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
                   ),
             ),
             const SizedBox(height: 12),
-            ...List<String>.from(analysis.results!['recommendations'])
+            ..._parseStringList(analysis.results!['recommendations'])
                 .map((rec) => _buildRecommendationItem(context, rec)),
           ],
         ] else
@@ -334,6 +334,28 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
           ),
       ],
     );
+  }
+
+  // Helper method to safely parse double from dynamic
+  double _parseDouble(dynamic value, {double defaultValue = 0.0}) {
+    if (value == null) return defaultValue;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is num) return value.toDouble();
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    return defaultValue;
+  }
+
+  // Helper method to safely parse list of strings
+  List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    return [];
   }
 
   Widget _buildScoreCard(
