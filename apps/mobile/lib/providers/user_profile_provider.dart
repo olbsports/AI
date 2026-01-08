@@ -102,7 +102,7 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile?>> {
 
   Future<bool> updateAccountType(UserAccountType type) async {
     try {
-      await _api.patch('/users/me/profile', data: {
+      await _api.patch('/users/me/profile', {
         'accountType': type.name,
       });
 
@@ -133,7 +133,7 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<UserProfile?>> {
       if (phone != null) data['phone'] = phone;
       if (address != null) data['address'] = address;
 
-      await _api.patch('/users/me/profile', data: data);
+      await _api.patch('/users/me/profile', data);
       await _loadProfile();
       return true;
     } catch (e) {
@@ -172,7 +172,7 @@ class EmployeesNotifier extends StateNotifier<AsyncValue<List<Employee>>> {
     String? phone,
   }) async {
     try {
-      await _api.post('/organization/employees', data: {
+      await _api.post('/organization/employees', {
         'name': name,
         'email': email,
         'role': role.name,
@@ -198,7 +198,7 @@ class EmployeesNotifier extends StateNotifier<AsyncValue<List<Employee>>> {
       if (permissions != null) data['permissions'] = permissions;
       if (isActive != null) data['isActive'] = isActive;
 
-      await _api.patch('/organization/employees/$id', data: data);
+      await _api.patch('/organization/employees/$id', data);
       await _loadEmployees();
       return true;
     } catch (e) {
