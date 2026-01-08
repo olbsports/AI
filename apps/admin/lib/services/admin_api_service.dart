@@ -57,7 +57,7 @@ class AdminApiService {
     await _storage.delete(key: _tokenKey);
   }
 
-  Future<Map<String, dynamic>?> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await _dio.post('/auth/login', data: {
         'email': email,
@@ -71,14 +71,29 @@ class AdminApiService {
           await _saveToken(token);
         }
         return {
+          'success': true,
           'user': AdminUser.fromJson(data['user']),
           'token': token,
         };
       }
+      return {
+        'success': false,
+        'error': 'Réponse inattendue du serveur',
+      };
+    } on DioException catch (e) {
+      print('Login DioException: $e');
+      final error = _handleDioError(e);
+      return {
+        'success': false,
+        'error': error.toString().replaceFirst('Exception: ', ''),
+      };
     } catch (e) {
       print('Login error: $e');
+      return {
+        'success': false,
+        'error': 'Une erreur inattendue s\'est produite',
+      };
     }
-    return null;
   }
 
   Future<void> logout() async {
