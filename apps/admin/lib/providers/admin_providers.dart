@@ -692,8 +692,9 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   // Create subscription plan
   Future<bool> createPlan({
     required String name,
-    required double price,
-    required String interval,
+    double? monthlyPrice,
+    double? yearlyPrice,
+    String? interval,
     Map<String, dynamic>? features,
     Map<String, int>? limits,
   }) async {
@@ -701,8 +702,9 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.post('/subscriptions/plans', {
         'name': name,
-        'price': price,
-        'interval': interval,
+        if (monthlyPrice != null) 'monthlyPrice': monthlyPrice,
+        if (yearlyPrice != null) 'yearlyPrice': yearlyPrice,
+        if (interval != null) 'interval': interval,
         if (features != null) 'features': features,
         if (limits != null) 'limits': limits,
       });
@@ -716,9 +718,28 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   }
 
   // Update system settings
-  Future<bool> updateSystemSettings(Map<String, dynamic> settings) async {
+  Future<bool> updateSystemSettings({
+    bool? registrationEnabled,
+    bool? freeTrialEnabled,
+    int? freeTrialDays,
+    bool? maintenanceMode,
+    String? maintenanceMessage,
+    int? maxAnalysesPerDay,
+    int? maxFileSize,
+    Map<String, dynamic>? additionalSettings,
+  }) async {
     state = const AsyncValue.loading();
     try {
+      final settings = <String, dynamic>{
+        if (registrationEnabled != null) 'registrationEnabled': registrationEnabled,
+        if (freeTrialEnabled != null) 'freeTrialEnabled': freeTrialEnabled,
+        if (freeTrialDays != null) 'freeTrialDays': freeTrialDays,
+        if (maintenanceMode != null) 'maintenanceMode': maintenanceMode,
+        if (maintenanceMessage != null) 'maintenanceMessage': maintenanceMessage,
+        if (maxAnalysesPerDay != null) 'maxAnalysesPerDay': maxAnalysesPerDay,
+        if (maxFileSize != null) 'maxFileSize': maxFileSize,
+        if (additionalSettings != null) ...additionalSettings,
+      };
       await _api.put('/settings', settings);
       _ref.invalidate(systemSettingsProvider);
       state = const AsyncValue.data(null);
@@ -732,8 +753,8 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   // Send push notification
   Future<bool> sendPushNotification({
     required String title,
-    required String body,
-    String? targetAudience,
+    required String message,
+    String? target,
     List<String>? userIds,
     Map<String, dynamic>? data,
   }) async {
@@ -741,8 +762,8 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _api.post('/notifications/push', {
         'title': title,
-        'body': body,
-        if (targetAudience != null) 'targetAudience': targetAudience,
+        'body': message,
+        if (target != null) 'targetAudience': target,
         if (userIds != null) 'userIds': userIds,
         if (data != null) 'data': data,
       });
@@ -757,17 +778,31 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   // Generate report
   Future<String?> generateReport({
     required String type,
-    required String startDate,
-    required String endDate,
+    String? startDate,
+    String? endDate,
+    int? days,
     String? format,
     Map<String, dynamic>? filters,
   }) async {
     state = const AsyncValue.loading();
     try {
+      // Calculate dates from days if provided
+      String resolvedStartDate;
+      String resolvedEndDate;
+
+      if (days != null) {
+        final now = DateTime.now();
+        resolvedEndDate = now.toIso8601String().split('T')[0];
+        resolvedStartDate = now.subtract(Duration(days: days)).toIso8601String().split('T')[0];
+      } else {
+        resolvedStartDate = startDate ?? DateTime.now().subtract(const Duration(days: 30)).toIso8601String().split('T')[0];
+        resolvedEndDate = endDate ?? DateTime.now().toIso8601String().split('T')[0];
+      }
+
       final response = await _api.post('/reports/generate', {
         'type': type,
-        'startDate': startDate,
-        'endDate': endDate,
+        'startDate': resolvedStartDate,
+        'endDate': resolvedEndDate,
         if (format != null) 'format': format,
         if (filters != null) 'filters': filters,
       });
