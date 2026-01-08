@@ -739,7 +739,7 @@ class _FeedSearchDelegate extends SearchDelegate<String> {
                         backgroundImage: CachedNetworkImageProvider(user.photoUrl!),
                       )
                     : CircleAvatar(
-                        child: Text(user.name[0]),
+                        child: Text(user.name.isNotEmpty ? user.name[0] : '?'),
                       ),
                 title: Text(
                   user.name,
@@ -881,7 +881,7 @@ class _NotificationsSheet extends ConsumerWidget {
                             backgroundImage: CachedNetworkImageProvider(notif.actorPhotoUrl!),
                           )
                         : CircleAvatar(
-                            child: Text(notif.actorName[0]),
+                            child: Text(notif.actorName.isNotEmpty ? notif.actorName[0] : '?'),
                           ),
                     title: Text(
                       notif.message,
@@ -975,7 +975,7 @@ class _CommentsSheetState extends ConsumerState<CommentsSheet> {
                               backgroundImage: CachedNetworkImageProvider(comment.authorPhotoUrl!),
                             )
                           : CircleAvatar(
-                              child: Text(comment.authorName[0]),
+                              child: Text(comment.authorName.isNotEmpty ? comment.authorName[0] : '?'),
                             ),
                       title: Text(
                         comment.authorName,
@@ -1203,99 +1203,107 @@ class _CreateNoteSheetState extends ConsumerState<CreateNoteSheet> {
   }
 
   void _showHorsePicker() {
-    final horsesAsync = ref.watch(horsesNotifierProvider);
+    showModalBottomSheet(
+      context: context,
+      builder: (sheetContext) => Consumer(
+        builder: (context, ref, child) {
+          final horsesAsync = ref.watch(horsesNotifierProvider);
 
-    horsesAsync.when(
-      data: (horses) {
-        if (horses.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Aucun cheval disponible')),
-          );
-          return;
-        }
+          return horsesAsync.when(
+            data: (horses) {
+              if (horses.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(32),
+                  child: const Center(
+                    child: Text('Aucun cheval disponible'),
+                  ),
+                );
+              }
 
-        showModalBottomSheet(
-          context: context,
-          builder: (context) => Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.5,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Sélectionner un cheval',
-                        style: Theme.of(context).textTheme.titleMedium,
+              return Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Sélectionner un cheval',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const Spacer(),
+                          if (_selectedHorse != null)
+                            TextButton(
+                              onPressed: () {
+                                setState(() => _selectedHorse = null);
+                                Navigator.pop(sheetContext);
+                              },
+                              child: const Text('Retirer'),
+                            ),
+                        ],
                       ),
-                      const Spacer(),
-                      if (_selectedHorse != null)
-                        TextButton(
-                          onPressed: () {
-                            setState(() => _selectedHorse = null);
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Retirer'),
-                        ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
-                Expanded(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: horses.length,
-                    itemBuilder: (context, index) {
-                      final horse = horses[index];
-                      final isSelected = _selectedHorse?.id == horse.id;
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: horse.photoUrl != null
-                              ? NetworkImage(horse.photoUrl!)
-                              : null,
-                          child: horse.photoUrl == null
-                              ? const Icon(Icons.pets)
-                              : null,
-                        ),
-                        title: Text(
-                          horse.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          horse.breed ?? 'Race inconnue',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: isSelected
-                            ? Icon(Icons.check, color: AppColors.primary)
-                            : null,
-                        onTap: () {
-                          setState(() => _selectedHorse = horse);
-                          Navigator.pop(context);
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: horses.length,
+                        itemBuilder: (context, index) {
+                          final horse = horses[index];
+                          final isSelected = _selectedHorse?.id == horse.id;
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: horse.photoUrl != null
+                                  ? NetworkImage(horse.photoUrl!)
+                                  : null,
+                              child: horse.photoUrl == null
+                                  ? const Icon(Icons.pets)
+                                  : null,
+                            ),
+                            title: Text(
+                              horse.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              horse.breed ?? 'Race inconnue',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: isSelected
+                                ? Icon(Icons.check, color: AppColors.primary)
+                                : null,
+                            onTap: () {
+                              setState(() => _selectedHorse = horse);
+                              Navigator.pop(sheetContext);
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              );
+            },
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: CircularProgressIndicator(),
+              ),
             ),
-          ),
-        );
-      },
-      loading: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chargement des chevaux...')),
-        );
-      },
-      error: (e, _) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: ${e.toString()}')),
-        );
-      },
+            error: (e, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Text('Erreur: ${e.toString()}'),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

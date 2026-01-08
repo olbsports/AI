@@ -42,6 +42,8 @@ import 'screens/categories/ecurie_home_screen.dart';
 import 'screens/categories/ia_home_screen.dart';
 import 'screens/categories/social_home_screen.dart';
 import 'screens/categories/plus_home_screen.dart';
+import 'screens/organization/employees_screen.dart';
+import 'screens/nutrition/nutrition_screen.dart';
 import 'theme/app_theme.dart';
 import 'widgets/main_scaffold.dart';
 
@@ -317,6 +319,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/services',
             builder: (context, state) => const ServicesScreen(),
+          ),
+          // Employees management route
+          GoRoute(
+            path: '/employees',
+            builder: (context, state) => const EmployeesScreen(),
+          ),
+          // Nutrition AI route
+          GoRoute(
+            path: '/nutrition',
+            builder: (context, state) => const NutritionScreen(),
           ),
         ],
       ),

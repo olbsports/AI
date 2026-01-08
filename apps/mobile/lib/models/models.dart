@@ -14,3 +14,6 @@ export 'planning.dart';
 export 'clubs.dart';
 export 'gestation.dart';
 export 'services.dart';
+export 'user_level.dart';
+export 'nutrition.dart';
+export 'horse_ai_data.dart';

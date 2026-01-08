@@ -55,13 +55,13 @@ class BillingScreen extends ConsumerWidget {
                               context,
                               ref,
                               plan: plan,
-                              currentPlanId: subscription['planId'] ?? subscription['plan'],
+                              currentPlanId: _extractPlanId(subscription),
                             ),
                           ))
                       .toList(),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => _buildDefaultPlans(context, ref, subscription['planId'] ?? subscription['plan']),
+                error: (error, _) => _buildDefaultPlans(context, ref, _extractPlanId(subscription)),
               ),
               const SizedBox(height: 24),
 
@@ -74,7 +74,7 @@ class BillingScreen extends ConsumerWidget {
 
               // Cancel subscription button
               if (subscription['status'] == 'active' &&
-                  (subscription['planId'] ?? subscription['plan']) != 'free') ...[
+                  _extractPlanId(subscription) != 'free') ...[
                 const SizedBox(height: 24),
                 OutlinedButton(
                   onPressed: () => _confirmCancelSubscription(context, ref),
@@ -273,7 +273,7 @@ class BillingScreen extends ConsumerWidget {
     final id = plan['id'] ?? '';
     final name = plan['name'] ?? '';
     final price = _parseNumber(plan['price']);
-    final features = (plan['features'] as List?)?.cast<String>() ?? [];
+    final features = _extractFeatures(plan['features']);
     final isCurrentPlan = id == currentPlanId;
     final isRecommended = plan['recommended'] == true || name.toLowerCase() == 'pro';
 
@@ -594,5 +594,24 @@ class BillingScreen extends ConsumerWidget {
     if (price == 0) return 'Gratuit';
     if (price < 0) return 'Sur devis';
     return '${price}€/mois';
+  }
+
+  String? _extractPlanId(Map<String, dynamic> subscription) {
+    final planId = subscription['planId'];
+    if (planId is String) return planId;
+
+    final plan = subscription['plan'];
+    if (plan is String) return plan;
+    if (plan is Map) return plan['id']?.toString();
+
+    return null;
+  }
+
+  List<String> _extractFeatures(dynamic features) {
+    if (features == null) return [];
+    if (features is List) {
+      return features.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    return [];
   }
 }

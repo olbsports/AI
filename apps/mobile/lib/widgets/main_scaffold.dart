@@ -96,14 +96,66 @@ class MainScaffold extends StatelessWidget {
     }
   }
 
+  bool _isMainCategoryRoute(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+    return location == '/dashboard' ||
+        location == '/ecurie' ||
+        location == '/ia' ||
+        location == '/social' ||
+        location == '/plus';
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentCategory = _getCurrentCategory(context);
     final selectedIndex = _categoryToIndex(currentCategory);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final location = GoRouterState.of(context).uri.path;
 
-    return Scaffold(
-      body: child,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        // Si on est sur le dashboard, ne pas quitter l'app
+        if (location == '/dashboard') {
+          // Optionnel: montrer une snackbar ou rien faire
+          return;
+        }
+
+        // Si on est sur une route de catégorie principale, aller au dashboard
+        if (_isMainCategoryRoute(context)) {
+          context.go('/dashboard');
+          return;
+        }
+
+        // Sinon, essayer de naviguer vers la page parente
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          // Retour à la catégorie home selon la route actuelle
+          final category = _getCurrentCategory(context);
+          switch (category) {
+            case NavCategory.accueil:
+              context.go('/dashboard');
+              break;
+            case NavCategory.ecurie:
+              context.go('/ecurie');
+              break;
+            case NavCategory.ia:
+              context.go('/ia');
+              break;
+            case NavCategory.social:
+              context.go('/social');
+              break;
+            case NavCategory.plus:
+              context.go('/plus');
+              break;
+          }
+        }
+      },
+      child: Scaffold(
+        body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
@@ -165,6 +217,7 @@ class MainScaffold extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

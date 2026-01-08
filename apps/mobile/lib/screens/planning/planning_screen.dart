@@ -912,7 +912,7 @@ class _AddEventFormState extends State<_AddEventForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<EventType>(
-            initialValue: _type,
+            value: _type,
             decoration: const InputDecoration(
               labelText: 'Type',
               border: OutlineInputBorder(),

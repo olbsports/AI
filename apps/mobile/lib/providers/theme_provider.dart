@@ -10,7 +10,7 @@ final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((r
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   static const String _key = 'theme_mode';
 
-  ThemeModeNotifier() : super(ThemeMode.system) {
+  ThemeModeNotifier() : super(ThemeMode.light) {
     _loadThemeMode();
   }
 
@@ -26,10 +26,14 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
         case 'dark':
           state = ThemeMode.dark;
           break;
-        default:
+        case 'system':
           state = ThemeMode.system;
+          break;
+        default:
+          state = ThemeMode.light;
       }
     }
+    // Default to light if no preference saved
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {

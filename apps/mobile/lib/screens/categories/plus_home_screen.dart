@@ -64,8 +64,8 @@ class PlusHomeScreen extends ConsumerWidget {
                 ),
                 _SectionItem(
                   icon: Icons.emoji_events,
-                  label: 'Gamification',
-                  subtitle: 'Défis & récompenses',
+                  label: 'Défis',
+                  subtitle: 'Badges & récompenses',
                   color: AppColors.tertiary,
                   onTap: () => context.go('/gamification'),
                 ),

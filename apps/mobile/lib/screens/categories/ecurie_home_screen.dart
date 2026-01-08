@@ -82,6 +82,20 @@ class EcurieHomeScreen extends ConsumerWidget {
                   color: AppColors.tertiary,
                   onTap: () => context.go('/gestation'),
                 ),
+                _SectionItem(
+                  icon: Icons.restaurant_menu,
+                  label: 'Nutrition',
+                  subtitle: 'Gestion IA',
+                  color: AppColors.success,
+                  onTap: () => context.go('/nutrition'),
+                ),
+                _SectionItem(
+                  icon: Icons.group,
+                  label: 'Employés',
+                  subtitle: 'Gestion équipe',
+                  color: AppColors.primary,
+                  onTap: () => context.go('/employees'),
+                ),
               ],
             ),
 
