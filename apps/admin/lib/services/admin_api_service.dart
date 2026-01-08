@@ -66,19 +66,42 @@ class AdminApiService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
+        print('Login response data: $data');
+
         final token = data['accessToken'] ?? data['token'];
         if (token != null) {
           await _saveToken(token);
         }
-        return {
-          'success': true,
-          'user': AdminUser.fromJson(data['user']),
-          'token': token,
-        };
+
+        // Parse user data safely
+        final userData = data['user'];
+        if (userData == null) {
+          print('Login error: user data is null in response');
+          return {
+            'success': false,
+            'error': 'Données utilisateur manquantes dans la réponse',
+          };
+        }
+
+        try {
+          final user = AdminUser.fromJson(userData as Map<String, dynamic>);
+          return {
+            'success': true,
+            'user': user,
+            'token': token,
+          };
+        } catch (parseError) {
+          print('Login parse error: $parseError');
+          print('User data was: $userData');
+          return {
+            'success': false,
+            'error': 'Erreur de parsing: $parseError',
+          };
+        }
       }
       return {
         'success': false,
-        'error': 'Réponse inattendue du serveur',
+        'error': 'Réponse inattendue du serveur (code: ${response.statusCode})',
       };
     } on DioException catch (e) {
       print('Login DioException: $e');
@@ -87,11 +110,12 @@ class AdminApiService {
         'success': false,
         'error': error.toString().replaceFirst('Exception: ', ''),
       };
-    } catch (e) {
+    } catch (e, stack) {
       print('Login error: $e');
+      print('Stack trace: $stack');
       return {
         'success': false,
-        'error': 'Une erreur inattendue s\'est produite',
+        'error': 'Erreur: $e',
       };
     }
   }

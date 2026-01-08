@@ -19,16 +19,37 @@ class AdminUser {
   });
 
   factory AdminUser.fromJson(Map<String, dynamic> json) {
+    // Handle name: either 'name' field directly or combine firstName + lastName
+    String name;
+    if (json['name'] != null) {
+      name = json['name'] as String;
+    } else {
+      final firstName = json['firstName'] as String? ?? '';
+      final lastName = json['lastName'] as String? ?? '';
+      name = '$firstName $lastName'.trim();
+      if (name.isEmpty) {
+        name = json['email'] as String? ?? 'Unknown';
+      }
+    }
+
+    // Parse createdAt safely
+    DateTime createdAt;
+    if (json['createdAt'] != null) {
+      createdAt = DateTime.parse(json['createdAt'] as String);
+    } else {
+      createdAt = DateTime.now();
+    }
+
     return AdminUser(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      name: name,
       role: AdminRole.values.firstWhere(
         (e) => e.name == json['role'],
         orElse: () => AdminRole.support,
       ),
       permissions: (json['permissions'] as List?)?.cast<String>() ?? [],
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: createdAt,
       lastLoginAt: json['lastLoginAt'] != null
           ? DateTime.parse(json['lastLoginAt'] as String)
           : null,
