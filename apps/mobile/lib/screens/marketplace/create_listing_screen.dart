@@ -287,10 +287,16 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // Extract error message from exception
+        String errorMessage = e.toString();
+        if (errorMessage.startsWith('Exception: ')) {
+          errorMessage = errorMessage.substring(11);
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: ${e.toString()}'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
