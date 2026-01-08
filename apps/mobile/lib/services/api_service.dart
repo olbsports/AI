@@ -625,7 +625,7 @@ class ApiService {
     }
   }
 
-  Future<dynamic> post(String path, {Map<String, dynamic>? data}) async {
+  Future<dynamic> post(String path, [Map<String, dynamic>? data]) async {
     try {
       final response = await _dio.post(path, data: data);
       return response.data;
@@ -675,7 +675,7 @@ class ApiService {
     }
   }
 
-  Future<dynamic> patch(String path, {Map<String, dynamic>? data}) async {
+  Future<dynamic> patch(String path, [Map<String, dynamic>? data]) async {
     try {
       final response = await _dio.patch(path, data: data);
       return response.data;
