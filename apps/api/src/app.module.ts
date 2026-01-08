@@ -12,6 +12,7 @@ import { HealthModule } from './modules/health/health.module';
 import { EmailModule } from './modules/email/email.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { MediaModule } from './modules/media/media.module';
 import { RidersModule } from './modules/riders/riders.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { BillingModule } from './modules/billing/billing.module';
@@ -72,6 +73,7 @@ import { BreedingModule } from './modules/breeding/breeding.module';
     HealthModule,
     InvitationsModule,
     UploadModule,
+    MediaModule,
     QueueModule,
 
     // Billing modules
