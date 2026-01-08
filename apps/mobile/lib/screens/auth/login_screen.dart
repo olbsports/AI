@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_provider.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/loading_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -54,10 +54,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const SizedBox(height: 48),
                 // Logo
-                Icon(
-                  Icons.pets,
-                  size: 80,
-                  color: AppColors.primary,
+                SvgPicture.asset(
+                  'assets/images/logo_horsetempo.svg',
+                  height: 120,
+                  width: 120,
                 ),
                 const SizedBox(height: 24),
                 Text(
