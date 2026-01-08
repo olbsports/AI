@@ -214,24 +214,22 @@ class _HorseFormScreenState extends ConsumerState<HorseFormScreen> {
 
       if (horse != null && _selectedPhoto != null) {
         try {
-          final photoUrl = await ref.read(horsesNotifierProvider.notifier).uploadPhoto(
+          await ref.read(horsesNotifierProvider.notifier).uploadPhoto(
             horse.id,
             _selectedPhoto!,
           );
-          if (photoUrl == null && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('La photo n\'a pas pu être téléchargée'),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          }
         } catch (e) {
           if (mounted) {
+            // Extract error message from exception
+            String errorMessage = e.toString();
+            if (errorMessage.startsWith('Exception: ')) {
+              errorMessage = errorMessage.substring(11);
+            }
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Erreur lors du téléchargement de la photo'),
+              SnackBar(
+                content: Text(errorMessage),
                 backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 5),
               ),
             );
           }

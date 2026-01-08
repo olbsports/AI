@@ -65,12 +65,11 @@ class RidersNotifier extends StateNotifier<AsyncValue<List<Rider>>> {
     }
   }
 
-  Future<String?> uploadPhoto(String riderId, File file) async {
-    try {
-      return await _api.uploadRiderPhoto(riderId, file);
-    } catch (e) {
-      return null;
-    }
+  /// Upload a photo for a rider
+  /// Returns the URL if successful
+  /// Throws an exception with error message on failure
+  Future<String> uploadPhoto(String riderId, File file) async {
+    return await _api.uploadRiderPhoto(riderId, file);
   }
 }
 
