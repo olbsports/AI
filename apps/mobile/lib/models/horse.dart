@@ -40,6 +40,14 @@ class Horse {
   final int analysisCount;
   final int reportCount;
 
+  // Pedigree / Origines
+  final String? sireName; // Père
+  final String? damName; // Mère
+  final String? siresSireName; // Grand-père paternel
+  final String? siresDamName; // Grand-mère paternelle
+  final String? damsSireName; // Grand-père maternel
+  final String? damsDamName; // Grand-mère maternelle
+
   Horse({
     required this.id,
     required this.name,
@@ -65,6 +73,13 @@ class Horse {
     required this.updatedAt,
     this.analysisCount = 0,
     this.reportCount = 0,
+    // Pedigree
+    this.sireName,
+    this.damName,
+    this.siresSireName,
+    this.siresDamName,
+    this.damsSireName,
+    this.damsDamName,
   });
 
   int? get age {
@@ -142,6 +157,13 @@ class Horse {
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
       analysisCount: _parseInt(json['_count']?['analyses']),
       reportCount: _parseInt(json['_count']?['reports']),
+      // Pedigree
+      sireName: json['sireName'] as String?,
+      damName: json['damName'] as String?,
+      siresSireName: json['siresSireName'] as String?,
+      siresDamName: json['siresDamName'] as String?,
+      damsSireName: json['damsSireName'] as String?,
+      damsDamName: json['damsDamName'] as String?,
     );
   }
 
@@ -191,6 +213,13 @@ class Horse {
       'riderId': riderId,
       'discipline': discipline.name,
       'level': level,
+      // Pedigree
+      'sireName': sireName,
+      'damName': damName,
+      'siresSireName': siresSireName,
+      'siresDamName': siresDamName,
+      'damsSireName': damsSireName,
+      'damsDamName': damsDamName,
     };
   }
 }

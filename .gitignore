@@ -81,3 +81,15 @@ service-account.json
 # Docker
 docker-compose.override.yml
 *.tsbuildinfo
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.iml
+local.properties
+*.jks
+*.lock.hcl
+**/GeneratedPluginRegistrant.java
+**/GeneratedPluginRegistrant.swift

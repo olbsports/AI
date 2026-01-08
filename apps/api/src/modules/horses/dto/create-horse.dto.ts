@@ -76,4 +76,69 @@ export class CreateHorseDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @ApiProperty({ required: false, description: 'Discipline principale' })
+  @IsOptional()
+  @IsString()
+  discipline?: string;
+
+  @ApiProperty({ required: false, description: 'Niveau (0-7)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(7)
+  level?: number;
+
+  @ApiProperty({ required: false, description: 'Notes' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  notes?: string;
+
+  @ApiProperty({ required: false, description: 'Numéro de passeport' })
+  @IsOptional()
+  @IsString()
+  passportNumber?: string;
+
+  @ApiProperty({ required: false, description: 'Statut du cheval' })
+  @IsOptional()
+  @IsEnum(['active', 'retired', 'sold', 'deceased'])
+  status?: string;
+
+  // Pedigree / Origines
+  @ApiProperty({ required: false, description: 'Père' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  sireName?: string;
+
+  @ApiProperty({ required: false, description: 'Mère' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  damName?: string;
+
+  @ApiProperty({ required: false, description: 'Grand-père paternel' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  siresSireName?: string;
+
+  @ApiProperty({ required: false, description: 'Grand-mère paternelle' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  siresDamName?: string;
+
+  @ApiProperty({ required: false, description: 'Grand-père maternel' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  damsSireName?: string;
+
+  @ApiProperty({ required: false, description: 'Grand-mère maternelle' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  damsDamName?: string;
 }
