@@ -294,11 +294,14 @@ class BillingScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Text(
-                  name,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                Flexible(
+                  child: Text(
+                    name,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 if (isRecommended) ...[
                   const SizedBox(width: 8),
