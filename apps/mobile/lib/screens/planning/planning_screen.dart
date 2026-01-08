@@ -1015,7 +1015,7 @@ class _AddEventFormState extends State<_AddEventForm> {
       'title': _titleController.text,
       'type': _type.name,
       'startDate': startDateTime.toIso8601String(),
-      'isAllDay': _isAllDay,
+      'allDay': _isAllDay,
       'location': _locationController.text.isNotEmpty ? _locationController.text : null,
       'description': _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
     });
