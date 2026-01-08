@@ -276,11 +276,19 @@ class AppTheme {
       ),
 
       // Floating Action Button
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 4,
-        shape: CircleBorder(),
+        extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
+        extendedTextStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
 
       // Divider
@@ -545,11 +553,19 @@ class AppTheme {
       ),
 
       // Floating Action Button
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primaryLight,
         foregroundColor: Colors.white,
         elevation: 4,
-        shape: CircleBorder(),
+        extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
+        extendedTextStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
 
       // Divider

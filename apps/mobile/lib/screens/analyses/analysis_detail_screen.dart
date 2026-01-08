@@ -279,7 +279,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
             _buildScoreCard(
               context,
               'Score global',
-              analysis.results!['globalScore'].toDouble(),
+              (analysis.results!['globalScore'] as num).toDouble(),
               Icons.star,
               AppColors.primary,
             ),
@@ -290,7 +290,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
             _buildScoreCard(
               context,
               'Symétrie',
-              analysis.results!['symmetry'].toDouble(),
+              (analysis.results!['symmetry'] as num).toDouble(),
               Icons.balance,
               AppColors.secondary,
             ),
@@ -299,7 +299,7 @@ class _AnalysisDetailScreenState extends ConsumerState<AnalysisDetailScreen> {
             _buildScoreCard(
               context,
               'Rythme',
-              analysis.results!['rhythm'].toDouble(),
+              (analysis.results!['rhythm'] as num).toDouble(),
               Icons.music_note,
               AppColors.success,
             ),
