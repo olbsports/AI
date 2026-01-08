@@ -440,10 +440,12 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   }
 
   // Subscription actions
-  Future<bool> cancelSubscription(String subscriptionId, String reason) async {
+  Future<bool> cancelSubscription(String subscriptionId, [String? reason]) async {
     state = const AsyncValue.loading();
     try {
-      await _api.post('/subscriptions/$subscriptionId/cancel', {'reason': reason});
+      await _api.post('/subscriptions/$subscriptionId/cancel', {
+        if (reason != null) 'reason': reason,
+      });
       _ref.invalidate(subscriptionsProvider);
       state = const AsyncValue.data(null);
       return true;
@@ -483,10 +485,25 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
   }
 
   // Plan actions
-  Future<bool> updatePlan(String planId, Map<String, dynamic> data) async {
+  Future<bool> updatePlan({
+    required String planId,
+    String? name,
+    double? monthlyPrice,
+    double? yearlyPrice,
+    bool? isActive,
+    Map<String, dynamic>? features,
+    Map<String, int>? limits,
+  }) async {
     state = const AsyncValue.loading();
     try {
-      await _api.put('/subscriptions/plans/$planId', data);
+      await _api.put('/subscriptions/plans/$planId', {
+        if (name != null) 'name': name,
+        if (monthlyPrice != null) 'monthlyPrice': monthlyPrice,
+        if (yearlyPrice != null) 'yearlyPrice': yearlyPrice,
+        if (isActive != null) 'isActive': isActive,
+        if (features != null) 'features': features,
+        if (limits != null) 'limits': limits,
+      });
       _ref.invalidate(subscriptionPlansProvider);
       state = const AsyncValue.data(null);
       return true;
@@ -618,6 +635,142 @@ class AdminActionsNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       final response = await _api.post('/export/$type', filters);
+      state = const AsyncValue.data(null);
+      return response['downloadUrl'] as String?;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return null;
+    }
+  }
+
+  // Export dashboard stats
+  Future<String?> exportDashboardStats(String format) async {
+    return exportData('dashboard', {'format': format});
+  }
+
+  // Export users
+  Future<String?> exportUsers(String format) async {
+    return exportData('users', {'format': format});
+  }
+
+  // Export analytics
+  Future<String?> exportAnalytics(String format) async {
+    return exportData('analytics', {'format': format});
+  }
+
+  // Create user
+  Future<bool> createUser({
+    required String email,
+    required String name,
+    String? password,
+    String? role,
+    String? plan,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      await _api.post('/users', {
+        'email': email,
+        'name': name,
+        if (password != null) 'password': password,
+        if (role != null) 'role': role,
+        if (plan != null) 'plan': plan,
+      });
+      _ref.invalidate(usersProvider);
+      state = const AsyncValue.data(null);
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
+  // Suspend user
+  Future<bool> suspendUser(String userId) async {
+    return updateUserStatus(userId, UserStatus.suspended);
+  }
+
+  // Create subscription plan
+  Future<bool> createPlan({
+    required String name,
+    required double price,
+    required String interval,
+    Map<String, dynamic>? features,
+    Map<String, int>? limits,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      await _api.post('/subscriptions/plans', {
+        'name': name,
+        'price': price,
+        'interval': interval,
+        if (features != null) 'features': features,
+        if (limits != null) 'limits': limits,
+      });
+      _ref.invalidate(subscriptionPlansProvider);
+      state = const AsyncValue.data(null);
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
+  // Update system settings
+  Future<bool> updateSystemSettings(Map<String, dynamic> settings) async {
+    state = const AsyncValue.loading();
+    try {
+      await _api.put('/settings', settings);
+      _ref.invalidate(systemSettingsProvider);
+      state = const AsyncValue.data(null);
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
+  // Send push notification
+  Future<bool> sendPushNotification({
+    required String title,
+    required String body,
+    String? targetAudience,
+    List<String>? userIds,
+    Map<String, dynamic>? data,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      await _api.post('/notifications/push', {
+        'title': title,
+        'body': body,
+        if (targetAudience != null) 'targetAudience': targetAudience,
+        if (userIds != null) 'userIds': userIds,
+        if (data != null) 'data': data,
+      });
+      state = const AsyncValue.data(null);
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
+  // Generate report
+  Future<String?> generateReport({
+    required String type,
+    required String startDate,
+    required String endDate,
+    String? format,
+    Map<String, dynamic>? filters,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final response = await _api.post('/reports/generate', {
+        'type': type,
+        'startDate': startDate,
+        'endDate': endDate,
+        if (format != null) 'format': format,
+        if (filters != null) 'filters': filters,
+      });
       state = const AsyncValue.data(null);
       return response['downloadUrl'] as String?;
     } catch (e, st) {
