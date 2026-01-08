@@ -290,9 +290,9 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.pop(dialogContext);
             }
           },
-          child: Column(
+          child: const Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               RadioListTile<String>(
                 value: 'fr',
                 title: Text('Français'),
@@ -321,9 +321,9 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.pop(dialogContext);
             }
           },
-          child: Column(
+          child: const Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               RadioListTile<ThemeMode>(
                 value: ThemeMode.system,
                 title: Text('Automatique'),

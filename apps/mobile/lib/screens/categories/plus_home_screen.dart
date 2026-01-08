@@ -521,19 +521,19 @@ class _AppInfoCard extends StatelessWidget {
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
-            Wrap(
-              alignment: WrapAlignment.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
                   onPressed: () => _showLegalDocument(context, 'terms'),
                   child: const Text('CGU'),
                 ),
-                const Text('•'),
+                Text('•', style: theme.textTheme.bodyMedium),
                 TextButton(
                   onPressed: () => _showLegalDocument(context, 'privacy'),
                   child: const Text('Confidentialité'),
                 ),
-                const Text('•'),
+                Text('•', style: theme.textTheme.bodyMedium),
                 TextButton(
                   onPressed: () => _showLicensesPage(context),
                   child: const Text('Licences'),
@@ -564,9 +564,9 @@ void _showLanguageDialog(BuildContext context) {
             );
           }
         },
-        child: Column(
+        child: const Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             RadioListTile<String>(
               value: 'fr',
               title: Text('Français'),
