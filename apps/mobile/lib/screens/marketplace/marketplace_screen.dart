@@ -20,6 +20,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
   ListingType? _selectedSaleType;
   ListingType? _selectedBreedingType;
   RangeValues _priceRange = const RangeValues(0, 100000);
+  Set<String> _selectedBreeds = {};
 
   @override
   void initState() {
@@ -718,6 +719,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                     onPressed: () {
                       setState(() {
                         _priceRange = const RangeValues(0, 100000);
+                        _selectedBreeds.clear();
                       });
                     },
                     child: const Text('Réinitialiser'),
@@ -755,8 +757,16 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
                   'Anglo-Arabe',
                 ].map((breed) => FilterChip(
                       label: Text(breed),
-                      selected: false,
-                      onSelected: (selected) {},
+                      selected: _selectedBreeds.contains(breed),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedBreeds.add(breed);
+                          } else {
+                            _selectedBreeds.remove(breed);
+                          }
+                        });
+                      },
                     )).toList(),
               ),
               const SizedBox(height: 24),

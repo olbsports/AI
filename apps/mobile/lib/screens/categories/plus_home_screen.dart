@@ -407,7 +407,7 @@ class _SettingsList extends StatelessWidget {
             icon: Icons.security,
             title: 'Confidentialité',
             subtitle: 'Données & sécurité',
-            onTap: () => context.go('/settings/notifications'),
+            onTap: () => _showLegalDocument(context, 'privacy'),
           ),
           const Divider(height: 1),
           _SettingsTile(
@@ -459,7 +459,7 @@ class _HelpSection extends StatelessWidget {
             icon: Icons.help_outline,
             title: 'Centre d\'aide',
             subtitle: 'FAQ et tutoriels',
-            onTap: () => context.push('/settings'),
+            onTap: () => _showHelpCenter(context),
           ),
           const Divider(height: 1),
           _SettingsTile(
@@ -521,19 +521,19 @@ class _AppInfoCard extends StatelessWidget {
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
-            Wrap(
-              alignment: WrapAlignment.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
                   onPressed: () => _showLegalDocument(context, 'terms'),
                   child: const Text('CGU'),
                 ),
-                const Text('•'),
+                Text('•', style: theme.textTheme.bodyMedium),
                 TextButton(
                   onPressed: () => _showLegalDocument(context, 'privacy'),
                   child: const Text('Confidentialité'),
                 ),
-                const Text('•'),
+                Text('•', style: theme.textTheme.bodyMedium),
                 TextButton(
                   onPressed: () => _showLicensesPage(context),
                   child: const Text('Licences'),
@@ -550,34 +550,80 @@ class _AppInfoCard extends StatelessWidget {
 // ==================== HELPER FUNCTIONS ====================
 
 void _showLanguageDialog(BuildContext context) {
+  String selectedLanguage = 'fr';
   showDialog(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Choisir la langue'),
-      content: RadioGroup<String>(
-        groupValue: 'fr',
-        onChanged: (value) {
-          if (value != null) {
-            Navigator.pop(dialogContext);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
-            );
-          }
-        },
-        child: Column(
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
+        title: const Text('Choisir la langue'),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            RadioListTile<String>(
-              value: 'fr',
-              title: Text('Français'),
+          children: [
+            ListTile(
+              leading: Radio<String>(
+                value: 'fr',
+                groupValue: selectedLanguage,
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() => selectedLanguage = value);
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+                    );
+                  }
+                },
+              ),
+              title: const Text('Français'),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Langue: ${_getLanguageName('fr')}')),
+                );
+              },
             ),
-            RadioListTile<String>(
-              value: 'en',
-              title: Text('English'),
+            ListTile(
+              leading: Radio<String>(
+                value: 'en',
+                groupValue: selectedLanguage,
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() => selectedLanguage = value);
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+                    );
+                  }
+                },
+              ),
+              title: const Text('English'),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Langue: ${_getLanguageName('en')}')),
+                );
+              },
             ),
-            RadioListTile<String>(
-              value: 'es',
-              title: Text('Español'),
+            ListTile(
+              leading: Radio<String>(
+                value: 'es',
+                groupValue: selectedLanguage,
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() => selectedLanguage = value);
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Langue: ${_getLanguageName(value)}')),
+                    );
+                  }
+                },
+              ),
+              title: const Text('Español'),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Langue: ${_getLanguageName('es')}')),
+                );
+              },
             ),
           ],
         ),
@@ -763,6 +809,63 @@ void _showLicensesPage(BuildContext context) {
     applicationIcon: Padding(
       padding: const EdgeInsets.all(8.0),
       child: Icon(Icons.pets, size: 48, color: AppColors.primary),
+    ),
+  );
+}
+
+void _showHelpCenter(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Centre d\'aide'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.video_library),
+              title: const Text('Tutoriels vidéo'),
+              subtitle: const Text('Apprenez à utiliser l\'application'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Tutoriels vidéo bientôt disponibles')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.question_answer),
+              title: const Text('FAQ'),
+              subtitle: const Text('Questions fréquentes'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('FAQ bientôt disponible')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.book),
+              title: const Text('Guide utilisateur'),
+              subtitle: const Text('Documentation complète'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Guide utilisateur bientôt disponible')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Fermer'),
+        ),
+      ],
     ),
   );
 }

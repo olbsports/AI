@@ -310,7 +310,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: List.generate(7, (index) {
         final day = startOfWeek.add(Duration(days: index));
-        final isSelected = day.day == _selectedDate.day;
+        final isSelected = _isSameDay(day, _selectedDate);
         final isToday = _isSameDay(day, DateTime.now());
 
         return GestureDetector(

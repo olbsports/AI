@@ -445,6 +445,13 @@ class HorseDetailScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Cheval supprimé')),
                   );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Erreur lors de la suppression'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               }
             },

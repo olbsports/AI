@@ -316,6 +316,15 @@ class _RiderFormScreenState extends ConsumerState<RiderFormScreen> {
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email),
                 ),
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Veuillez entrer une adresse email valide';
+                    }
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
 
@@ -327,6 +336,16 @@ class _RiderFormScreenState extends ConsumerState<RiderFormScreen> {
                   labelText: 'Téléphone',
                   prefixIcon: Icon(Icons.phone),
                 ),
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    // Allow digits, spaces, dots, dashes, parentheses and + (for international)
+                    final phoneRegex = RegExp(r'^[\d\s\.\-\(\)\+]{6,20}$');
+                    if (!phoneRegex.hasMatch(value)) {
+                      return 'Veuillez entrer un numéro de téléphone valide';
+                    }
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
 

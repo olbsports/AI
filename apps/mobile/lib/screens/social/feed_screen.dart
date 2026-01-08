@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
@@ -531,7 +533,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
             title: const Text('Copier le lien'),
             onTap: () {
               Navigator.pop(context);
-              // Copy link functionality
+              final postLink = 'https://horsetempo.app/posts/${post.id}';
+              Clipboard.setData(ClipboardData(text: postLink));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Lien copié dans le presse-papiers'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
             },
           ),
           if (isOwnPost) ...[
@@ -675,7 +684,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
   void _sharePost(PublicNote post) async {
     final notifier = ref.read(socialNotifierProvider.notifier);
     await notifier.shareNote(post.id);
-    SharePlus.instance.share(
+    await SharePlus.instance.share(
       ShareParams(
         text: '${post.content}\n\n- ${post.authorName}',
         subject: 'Partage de ${post.authorName}',
@@ -738,7 +747,8 @@ class _FeedSearchDelegate extends SearchDelegate<String> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 onTap: () {
-                  // Navigate to user profile
+                  close(context, '');
+                  context.push('/profile/${user.id}');
                 },
               );
             },
@@ -1192,8 +1202,8 @@ class _CreateNoteSheetState extends ConsumerState<CreateNoteSheet> {
     }
   }
 
-  void _showHorsePicker() async {
-    final horsesAsync = ref.read(horsesNotifierProvider);
+  void _showHorsePicker() {
+    final horsesAsync = ref.watch(horsesNotifierProvider);
 
     horsesAsync.when(
       data: (horses) {
