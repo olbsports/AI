@@ -9,6 +9,10 @@ import 'providers/theme_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
+import 'screens/auth/two_factor_screen.dart';
+import 'screens/auth/two_factor_setup_screen.dart';
+import 'screens/auth/two_factor_disable_screen.dart';
+import 'screens/auth/backup_codes_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/horses/horses_screen.dart';
 import 'screens/horses/horse_detail_screen.dart';
@@ -27,6 +31,8 @@ import 'screens/settings/profile_screen.dart';
 import 'screens/settings/billing_screen.dart';
 import 'screens/settings/organization_screen.dart';
 import 'screens/settings/notifications_screen.dart';
+import 'screens/settings/active_sessions_screen.dart';
+import 'screens/settings/trusted_devices_screen.dart';
 import 'screens/marketplace/create_listing_screen.dart';
 import 'screens/leaderboard/leaderboard_screen.dart';
 import 'screens/breeding/breeding_screen.dart';
@@ -84,11 +90,23 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/login',
     redirect: (context, state) {
       final isLoggedIn = authState.isAuthenticated;
+      final is2FARequired = authState.twoFactorState == TwoFactorState.required;
       final isAuthRoute = state.matchedLocation.startsWith('/login') ||
           state.matchedLocation.startsWith('/register') ||
           state.matchedLocation.startsWith('/forgot-password');
+      final is2FARoute = state.matchedLocation.startsWith('/two-factor');
 
-      if (!isLoggedIn && !isAuthRoute) {
+      // Allow 2FA verification route when 2FA is required
+      if (is2FARequired && is2FARoute) {
+        return null;
+      }
+
+      // Redirect to 2FA verification if required
+      if (is2FARequired && !is2FARoute && !isAuthRoute) {
+        return '/two-factor';
+      }
+
+      if (!isLoggedIn && !isAuthRoute && !is2FARoute) {
         return '/login';
       }
 
@@ -111,6 +129,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/two-factor',
+        builder: (context, state) => const TwoFactorScreen(),
       ),
 
       // Main app routes with bottom navigation
@@ -243,6 +265,26 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'notifications',
                 builder: (context, state) => const NotificationsScreen(),
+              ),
+              GoRoute(
+                path: 'two-factor-setup',
+                builder: (context, state) => const TwoFactorSetupScreen(),
+              ),
+              GoRoute(
+                path: 'two-factor-disable',
+                builder: (context, state) => const TwoFactorDisableScreen(),
+              ),
+              GoRoute(
+                path: 'backup-codes',
+                builder: (context, state) => const BackupCodesScreen(),
+              ),
+              GoRoute(
+                path: 'trusted-devices',
+                builder: (context, state) => const TrustedDevicesScreen(),
+              ),
+              GoRoute(
+                path: 'sessions',
+                builder: (context, state) => const ActiveSessionsScreen(),
               ),
             ],
           ),

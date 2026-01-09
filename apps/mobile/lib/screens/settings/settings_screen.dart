@@ -59,6 +59,47 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
+          // Security section
+          _buildSectionHeader(context, 'Securite'),
+          const SizedBox(height: 8),
+          _buildSettingsTile(
+            context,
+            icon: Icons.security,
+            title: 'Authentification 2FA',
+            subtitle: authState.user?.mfaEnabled == true ? 'Activee' : 'Desactivee',
+            onTap: () {
+              if (authState.user?.mfaEnabled == true) {
+                context.push('/settings/two-factor-disable');
+              } else {
+                context.push('/settings/two-factor-setup');
+              }
+            },
+          ),
+          if (authState.user?.mfaEnabled == true) ...[
+            _buildSettingsTile(
+              context,
+              icon: Icons.vpn_key_outlined,
+              title: 'Codes de secours',
+              subtitle: 'Voir et regenerer vos codes',
+              onTap: () => context.push('/settings/backup-codes'),
+            ),
+            _buildSettingsTile(
+              context,
+              icon: Icons.devices,
+              title: 'Appareils fiables',
+              subtitle: 'Gerer les appareils de confiance',
+              onTap: () => context.push('/settings/trusted-devices'),
+            ),
+          ],
+          _buildSettingsTile(
+            context,
+            icon: Icons.smartphone,
+            title: 'Sessions actives',
+            subtitle: 'Voir et gerer vos sessions',
+            onTap: () => context.push('/settings/sessions'),
+          ),
+          const SizedBox(height: 24),
+
           // Preferences section
           _buildSectionHeader(context, 'Préférences'),
           const SizedBox(height: 8),

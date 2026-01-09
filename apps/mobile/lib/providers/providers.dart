@@ -16,3 +16,4 @@ export 'social_provider.dart';
 export 'leaderboard_provider.dart' hide clubLeaderboardProvider;
 export 'theme_provider.dart';
 export 'settings_provider.dart';
+export 'tokens_provider.dart';

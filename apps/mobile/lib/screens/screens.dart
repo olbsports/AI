@@ -2,6 +2,10 @@
 export 'auth/login_screen.dart';
 export 'auth/register_screen.dart';
 export 'auth/forgot_password_screen.dart';
+export 'auth/two_factor_screen.dart';
+export 'auth/two_factor_setup_screen.dart';
+export 'auth/two_factor_disable_screen.dart';
+export 'auth/backup_codes_screen.dart';
 
 // Dashboard
 export 'dashboard/dashboard_screen.dart';
@@ -25,3 +29,5 @@ export 'reports/new_report_screen.dart';
 export 'settings/settings_screen.dart';
 export 'settings/profile_screen.dart';
 export 'settings/billing_screen.dart';
+export 'settings/active_sessions_screen.dart';
+export 'settings/trusted_devices_screen.dart';

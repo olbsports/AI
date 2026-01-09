@@ -316,3 +316,229 @@ class Follow {
     );
   }
 }
+
+/// Story type
+enum StoryType {
+  image,
+  video;
+
+  static StoryType fromString(String value) {
+    return StoryType.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => StoryType.image,
+    );
+  }
+}
+
+/// Story model for 24-hour ephemeral content
+class Story {
+  final String id;
+  final String authorId;
+  final String authorName;
+  final String? authorPhotoUrl;
+  final String mediaUrl;
+  final String? thumbnailUrl;
+  final StoryType mediaType;
+  final int? duration; // in seconds for video
+  final int viewsCount;
+  final bool isViewed; // by current user
+  final DateTime expiresAt;
+  final DateTime createdAt;
+
+  Story({
+    required this.id,
+    required this.authorId,
+    required this.authorName,
+    this.authorPhotoUrl,
+    required this.mediaUrl,
+    this.thumbnailUrl,
+    required this.mediaType,
+    this.duration,
+    this.viewsCount = 0,
+    this.isViewed = false,
+    required this.expiresAt,
+    required this.createdAt,
+  });
+
+  /// Check if story is expired (24h)
+  bool get isExpired => DateTime.now().isAfter(expiresAt);
+
+  /// Time remaining until expiry
+  Duration get timeRemaining {
+    final remaining = expiresAt.difference(DateTime.now());
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
+
+  factory Story.fromJson(Map<String, dynamic> json) {
+    return Story(
+      id: json['id'] as String? ?? '',
+      authorId: json['authorId'] as String? ?? '',
+      authorName: json['authorName'] as String? ?? '',
+      authorPhotoUrl: json['authorPhotoUrl'] as String?,
+      mediaUrl: json['mediaUrl'] as String? ?? '',
+      thumbnailUrl: json['thumbnailUrl'] as String?,
+      mediaType: StoryType.fromString(json['mediaType'] as String? ?? 'image'),
+      duration: json['duration'] as int?,
+      viewsCount: (json['viewsCount'] as num?)?.toInt() ?? 0,
+      isViewed: json['isViewed'] as bool? ?? false,
+      expiresAt: json['expiresAt'] != null
+          ? DateTime.tryParse(json['expiresAt'] as String) ?? DateTime.now().add(const Duration(hours: 24))
+          : DateTime.now().add(const Duration(hours: 24)),
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'mediaUrl': mediaUrl,
+      'thumbnailUrl': thumbnailUrl,
+      'mediaType': mediaType.name,
+      'duration': duration,
+    };
+  }
+}
+
+/// Group of stories by user
+class StoryGroup {
+  final String userId;
+  final String userName;
+  final String? userPhotoUrl;
+  final List<Story> stories;
+  final bool hasUnviewed;
+
+  StoryGroup({
+    required this.userId,
+    required this.userName,
+    this.userPhotoUrl,
+    required this.stories,
+  }) : hasUnviewed = stories.any((s) => !s.isViewed);
+
+  factory StoryGroup.fromJson(Map<String, dynamic> json) {
+    return StoryGroup(
+      userId: json['userId'] as String? ?? '',
+      userName: json['userName'] as String? ?? '',
+      userPhotoUrl: json['userPhotoUrl'] as String?,
+      stories: (json['stories'] as List?)
+          ?.map((e) => Story.fromJson(e as Map<String, dynamic>))
+          .where((s) => !s.isExpired)
+          .toList() ?? [],
+    );
+  }
+}
+
+/// Hashtag with details
+class Hashtag {
+  final String tag;
+  final int postCount;
+  final int weeklyPostCount;
+  final double trendScore;
+  final bool isFollowing;
+  final DateTime? lastUsedAt;
+
+  Hashtag({
+    required this.tag,
+    required this.postCount,
+    this.weeklyPostCount = 0,
+    this.trendScore = 0.0,
+    this.isFollowing = false,
+    this.lastUsedAt,
+  });
+
+  factory Hashtag.fromJson(Map<String, dynamic> json) {
+    return Hashtag(
+      tag: json['tag'] as String? ?? '',
+      postCount: (json['postCount'] as num?)?.toInt() ?? 0,
+      weeklyPostCount: (json['weeklyPostCount'] as num?)?.toInt() ?? 0,
+      trendScore: (json['trendScore'] as num?)?.toDouble() ?? 0.0,
+      isFollowing: json['isFollowing'] as bool? ?? false,
+      lastUsedAt: json['lastUsedAt'] != null
+          ? DateTime.tryParse(json['lastUsedAt'] as String)
+          : null,
+    );
+  }
+}
+
+/// Follow status for profiles
+enum FollowStatus {
+  notFollowing,
+  following,
+  pending,   // Request sent, waiting for approval
+  blocked;
+
+  static FollowStatus fromString(String value) {
+    return FollowStatus.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => FollowStatus.notFollowing,
+    );
+  }
+}
+
+/// Extended user profile for profile screen
+class ExtendedUserProfile {
+  final String id;
+  final String name;
+  final String? photoUrl;
+  final String? bio;
+  final String? location;
+  final int followerCount;
+  final int followingCount;
+  final int postCount;
+  final int horseCount;
+  final FollowStatus followStatus;
+  final bool isFollowedBy;
+  final bool isPrivate;
+  final bool canMessage;
+  final List<Badge> badges;
+  final List<String> featuredHorseIds;
+  final DateTime joinedAt;
+
+  ExtendedUserProfile({
+    required this.id,
+    required this.name,
+    this.photoUrl,
+    this.bio,
+    this.location,
+    this.followerCount = 0,
+    this.followingCount = 0,
+    this.postCount = 0,
+    this.horseCount = 0,
+    this.followStatus = FollowStatus.notFollowing,
+    this.isFollowedBy = false,
+    this.isPrivate = false,
+    this.canMessage = true,
+    this.badges = const [],
+    this.featuredHorseIds = const [],
+    required this.joinedAt,
+  });
+
+  bool get isFollowing => followStatus == FollowStatus.following;
+
+  factory ExtendedUserProfile.fromJson(Map<String, dynamic> json) {
+    return ExtendedUserProfile(
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      photoUrl: json['photoUrl'] as String?,
+      bio: json['bio'] as String?,
+      location: json['location'] as String?,
+      followerCount: (json['followerCount'] as num?)?.toInt() ??
+          (json['_count']?['followers'] as num?)?.toInt() ?? 0,
+      followingCount: (json['followingCount'] as num?)?.toInt() ??
+          (json['_count']?['following'] as num?)?.toInt() ?? 0,
+      postCount: (json['postCount'] as num?)?.toInt() ??
+          (json['_count']?['notes'] as num?)?.toInt() ?? 0,
+      horseCount: (json['horseCount'] as num?)?.toInt() ??
+          (json['_count']?['horses'] as num?)?.toInt() ?? 0,
+      followStatus: FollowStatus.fromString(json['followStatus'] as String? ?? 'notFollowing'),
+      isFollowedBy: json['isFollowedBy'] as bool? ?? false,
+      isPrivate: json['isPrivate'] as bool? ?? false,
+      canMessage: json['canMessage'] as bool? ?? true,
+      badges: (json['badges'] as List?)?.map((b) => Badge.fromJson(b as Map<String, dynamic>)).toList() ?? [],
+      featuredHorseIds: (json['featuredHorseIds'] as List?)?.cast<String>() ?? [],
+      joinedAt: json['joinedAt'] != null
+          ? DateTime.tryParse(json['joinedAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
+    );
+  }
+}

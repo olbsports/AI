@@ -15,6 +15,8 @@ export 'clubs.dart';
 export 'gestation.dart';
 export 'services.dart';
 export 'user_level.dart';
+export 'performance.dart';
+export 'tokens.dart';
 // Hide conflicting classes from nutrition.dart (already defined in health.dart and planning.dart)
 export 'nutrition.dart' hide NutritionPlan, ActivityLevel, NutritionRecommendation, RecommendationType, RecommendationPriority;
 // Hide conflicting classes from horse_ai_data.dart (already defined in gestation.dart and planning.dart)
