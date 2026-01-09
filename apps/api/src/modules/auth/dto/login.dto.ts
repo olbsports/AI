@@ -1,5 +1,5 @@
 import { IsEmail, IsString, MinLength, IsOptional, IsBoolean } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginDto {
   @ApiProperty({ example: 'user@example.com' })
@@ -15,4 +15,19 @@ export class LoginDto {
   @IsOptional()
   @IsBoolean()
   rememberMe?: boolean;
+
+  @ApiPropertyOptional({ description: 'Device ID for session tracking' })
+  @IsOptional()
+  @IsString()
+  deviceId?: string;
+
+  @ApiPropertyOptional({ description: 'Device name for session tracking' })
+  @IsOptional()
+  @IsString()
+  deviceName?: string;
+
+  @ApiPropertyOptional({ description: 'Platform (ios, android, web, desktop)' })
+  @IsOptional()
+  @IsString()
+  platform?: string;
 }
