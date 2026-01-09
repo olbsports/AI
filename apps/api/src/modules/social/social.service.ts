@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { HashtagsService } from './hashtags.service';
 
 @Injectable()
 export class SocialService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => HashtagsService))
+    private hashtagsService: HashtagsService
+  ) {}
 
   // Helper to transform posts with isLiked, isSaved, authorName
   private async transformPosts(posts: any[], userId: string) {
@@ -428,7 +433,7 @@ export class SocialService {
   ) {
     // Note: allowComments and allowSharing are accepted from the mobile app
     // but not stored in DB (could be added to schema later)
-    return this.prisma.socialPost.create({
+    const post = await this.prisma.socialPost.create({
       data: {
         content: data.content,
         type: data.type || 'post',
@@ -457,6 +462,11 @@ export class SocialService {
         },
       },
     });
+
+    // Extract and process hashtags from the post content
+    await this.hashtagsService.processHashtagsForPost(post.id, data.content);
+
+    return post;
   }
 
   async getPost(postId: string, userId?: string) {
@@ -622,6 +632,9 @@ export class SocialService {
     if (post.authorId !== userId) {
       throw new ForbiddenException('You can only delete your own posts');
     }
+
+    // Remove hashtag associations before deleting the post
+    await this.hashtagsService.removeHashtagsFromPost(postId);
 
     return this.prisma.socialPost.delete({
       where: { id: postId },
