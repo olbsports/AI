@@ -44,6 +44,9 @@ import { BreedingModule } from './modules/breeding/breeding.module';
 // Radiology (AI Medical Imaging)
 import { RadiologyModule } from './modules/radiology/radiology.module';
 
+// WebSocket (Real-time)
+import { WebSocketModule } from './modules/websocket/websocket.module';
+
 @Module({
   imports: [
     // Configuration
@@ -110,6 +113,9 @@ import { RadiologyModule } from './modules/radiology/radiology.module';
 
     // Radiology (AI Medical Imaging)
     RadiologyModule,
+
+    // WebSocket (Real-time)
+    WebSocketModule,
   ],
 })
 export class AppModule {}

@@ -134,6 +134,10 @@ model User {
   // Audit logs
   auditLogs               AuditLog[]            @relation("AuditActor")
 
+  // Push Notifications
+  pushSubscriptions       PushSubscription[]
+  notificationPreferences NotificationPreference?
+
   @@map("users")
 }
 
@@ -890,6 +894,75 @@ model Notification {
 
   @@index([userId, isRead, createdAt])
   @@map("notifications")
+}
+
+// ==================== PUSH SUBSCRIPTIONS ====================
+
+model PushSubscription {
+  id              String   @id @default(uuid())
+
+  // User
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Device info
+  platform        String   // ios, android, web
+  token           String   // FCM/APNs token
+  deviceId        String
+  deviceName      String?
+  appVersion      String?
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastUsedAt      DateTime @default(now())
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, deviceId])
+  @@index([userId, isActive])
+  @@index([token])
+  @@map("push_subscriptions")
+}
+
+model NotificationPreference {
+  id              String   @id @default(uuid())
+
+  // User
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Global settings
+  pushEnabled     Boolean  @default(true)
+  emailEnabled    Boolean  @default(true)
+  inAppEnabled    Boolean  @default(true)
+
+  // Quiet hours
+  quietHoursEnabled Boolean @default(false)
+  quietHoursStart  String   @default("22:00") // HH:mm format
+  quietHoursEnd    String   @default("07:00")
+  timezone         String   @default("Europe/Paris")
+
+  // Per-category settings (JSON for flexibility)
+  // { analyses: { push: true, email: true }, social: { push: false } }
+  categorySettings Json     @default("{}")
+
+  // Digest settings
+  digestEnabled   Boolean  @default(false)
+  digestFrequency String   @default("daily") // daily, weekly, never
+  digestTime      String   @default("09:00")
+
+  // Social settings
+  likesFromFollowersOnly Boolean @default(false)
+  mentionsFromFollowersOnly Boolean @default(false)
+  messagesFromFollowersOnly Boolean @default(false)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("notification_preferences")
 }
 
 // ==================== ACHIEVEMENTS ====================
