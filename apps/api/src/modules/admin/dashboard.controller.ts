@@ -6,10 +6,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-@ApiTags('dashboard')
-@Controller('dashboard')
+@ApiTags('admin')
+@Controller('admin/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('owner')
+@Roles('admin', 'owner')
 @ApiBearerAuth()
 export class DashboardController {
   constructor(private readonly prisma: PrismaService) {}
