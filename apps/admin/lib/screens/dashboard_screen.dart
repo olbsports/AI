@@ -7,7 +7,8 @@ import '../theme/admin_theme.dart';
 // Provider pour les stats du dashboard
 final dashboardStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final api = ref.watch(adminApiServiceProvider);
-  return api.get('/admin/dashboard/stats');
+  final response = await api.get('/admin/dashboard/stats');
+  return response as Map<String, dynamic>;
 });
 
 class DashboardScreen extends ConsumerWidget {
