@@ -21,6 +21,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { Verify2FADto, Disable2FADto, Login2FADto } from './dto/two-factor.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
@@ -138,5 +139,54 @@ export class AuthController {
       throw new BadRequestException('No file uploaded');
     }
     return this.authService.uploadProfilePhoto(user.id, user.organizationId, file);
+  }
+
+  // ========== TWO-FACTOR AUTHENTICATION ==========
+
+  @Post('login/2fa')
+  @Public()
+  @ApiOperation({ summary: 'Login with two-factor authentication' })
+  async loginWith2FA(@Body() dto: Login2FADto) {
+    return this.authService.loginWith2FA(dto.email, dto.password, dto.twoFactorCode);
+  }
+
+  @Get('2fa/status')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get 2FA status for current user' })
+  async get2FAStatus(@CurrentUser() user: any) {
+    return this.authService.get2FAStatus(user.id);
+  }
+
+  @Post('2fa/enable')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Enable two-factor authentication - returns secret and QR code' })
+  async enable2FA(@CurrentUser() user: any) {
+    return this.authService.enable2FA(user.id);
+  }
+
+  @Post('2fa/verify')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Verify and complete 2FA setup' })
+  async verify2FASetup(@CurrentUser() user: any, @Body() dto: Verify2FADto) {
+    return this.authService.verify2FASetup(user.id, dto.code);
+  }
+
+  @Post('2fa/disable')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Disable two-factor authentication' })
+  async disable2FA(@CurrentUser() user: any, @Body() dto: Disable2FADto) {
+    return this.authService.disable2FA(user.id, dto.code);
+  }
+
+  @Post('2fa/backup-codes')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Regenerate backup codes' })
+  async regenerateBackupCodes(@CurrentUser() user: any, @Body() dto: Verify2FADto) {
+    return this.authService.regenerateBackupCodes(user.id, dto.code);
   }
 }

@@ -41,6 +41,9 @@ import { ServicesModule } from './modules/services/services.module';
 import { GestationModule } from './modules/gestation/gestation.module';
 import { BreedingModule } from './modules/breeding/breeding.module';
 
+// Radiology (AI Medical Imaging)
+import { RadiologyModule } from './modules/radiology/radiology.module';
+
 @Module({
   imports: [
     // Configuration
@@ -104,6 +107,9 @@ import { BreedingModule } from './modules/breeding/breeding.module';
     // Gestation/Breeding
     GestationModule,
     BreedingModule,
+
+    // Radiology (AI Medical Imaging)
+    RadiologyModule,
   ],
 })
 export class AppModule {}

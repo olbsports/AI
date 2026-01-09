@@ -4,21 +4,32 @@ import {
   Post,
   Body,
   Query,
+  Param,
   UseGuards,
+  Headers,
+  RawBodyRequest,
+  Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { Request } from 'express';
 
 import { TokensService } from './tokens.service';
 import {
   DebitTokensDto,
   TransferTokensDto,
   TokenTransactionQueryDto,
+  PurchaseTokensDto,
+  CheckTokensDto,
+  PurchaseHistoryQueryDto,
 } from './dto/token.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { OrganizationGuard } from '../auth/guards/organization.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentOrganization } from '../auth/decorators/organization.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Public } from '../auth/decorators/public.decorator';
+import Stripe from 'stripe';
 
 @ApiTags('tokens')
 @Controller('tokens')
@@ -74,5 +85,74 @@ export class TokensController {
     @Body() dto: TransferTokensDto,
   ) {
     return this.tokensService.transferTokens(organizationId, dto);
+  }
+
+  // ==================== TOKEN PACKS & PURCHASE ====================
+
+  @Get('packs')
+  @ApiOperation({ summary: 'Get available token packs' })
+  async getTokenPacks() {
+    return this.tokensService.getTokenPacks();
+  }
+
+  @Post('check')
+  @ApiOperation({ summary: 'Check if tokens are available for an operation' })
+  async checkTokens(
+    @CurrentOrganization() organizationId: string,
+    @Body() dto: CheckTokensDto,
+  ) {
+    return this.tokensService.checkTokenAvailability(organizationId, dto);
+  }
+
+  @Get('estimate/:serviceType')
+  @ApiOperation({ summary: 'Estimate token cost for a service' })
+  @ApiParam({ name: 'serviceType', description: 'Service type (e.g., radiologySimple, videoAnalysis)' })
+  async estimateCost(@Param('serviceType') serviceType: string) {
+    return this.tokensService.estimateCost(serviceType);
+  }
+
+  @Post('purchase')
+  @ApiOperation({ summary: 'Create a checkout session to purchase tokens' })
+  async purchaseTokens(
+    @CurrentOrganization() organizationId: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: PurchaseTokensDto,
+  ) {
+    return this.tokensService.createPurchaseSession(organizationId, userId, dto);
+  }
+
+  @Get('purchases')
+  @ApiOperation({ summary: 'Get purchase history' })
+  async getPurchaseHistory(
+    @CurrentOrganization() organizationId: string,
+    @Query() query: PurchaseHistoryQueryDto,
+  ) {
+    return this.tokensService.getPurchaseHistory(organizationId, query);
+  }
+
+  @Post('webhook')
+  @Public()
+  @ApiOperation({ summary: 'Stripe webhook for payment events' })
+  async handleStripeWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('stripe-signature') signature: string,
+  ) {
+    const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!stripeWebhookSecret) {
+      throw new Error('STRIPE_WEBHOOK_SECRET not configured');
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2024-06-20',
+    });
+
+    const event = stripe.webhooks.constructEvent(
+      req.rawBody!,
+      signature,
+      stripeWebhookSecret,
+    );
+
+    await this.tokensService.handleStripeWebhook(event);
+    return { received: true };
   }
 }

@@ -215,17 +215,18 @@ model Horse {
   updatedAt      DateTime @updatedAt
 
   // Relations
-  analysisSessions   AnalysisSession[]
-  reports            Report[]
-  equiCoteValuations EquiCoteValuation[]
-  equiTraceHistory   EquiTraceEntry[]
-  competitionResults CompetitionResult[]
-  healthRecords      HealthRecord[]
-  gestations         Gestation[]
-  breedingRecords    BreedingRecord[]
+  analysisSessions    AnalysisSession[]
+  reports             Report[]
+  equiCoteValuations  EquiCoteValuation[]
+  equiTraceHistory    EquiTraceEntry[]
+  competitionResults  CompetitionResult[]
+  healthRecords       HealthRecord[]
+  gestations          Gestation[]
+  breedingRecords     BreedingRecord[]
   marketplaceListings MarketplaceListing[]
-  externalDataCache  ExternalDataCache[]
-  socialPosts        SocialPost[]
+  externalDataCache   ExternalDataCache[]
+  socialPosts         SocialPost[]
+  radiologyAnalyses   RadiologyAnalysis[]
 
   @@index([sireId])
   @@index([ueln])
@@ -975,6 +976,103 @@ model ClubMembership {
   @@map("club_memberships")
 }
 
+// ==================== RADIOLOGY ANALYSIS ====================
+
+model RadiologyAnalysis {
+  id                String   @id @default(uuid())
+
+  // Subject
+  horseId           String
+  horse             Horse    @relation(fields: [horseId], references: [id], onDelete: Cascade)
+  organizationId    String
+
+  // Exam info
+  examDate          DateTime @default(now())
+  examType          String   @default("standard") // standard, complete, expert
+  indication        String?  // Reason for exam
+  clinicalHistory   String?
+
+  // Status
+  status            String   @default("pending") // pending, uploading, processing, completed, failed, cancelled
+
+  // AI Analysis
+  aiModel           String?
+  aiConfidence      Float?
+  processingTimeMs  Int?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  errorMessage      String?
+
+  // Results
+  globalScore       Float?   // 0-100 overall health score
+  category          String?  // A, A-, B+, B, B-, C, D (purchase exam)
+  findings          Json     @default("[]") // Array of findings
+  recommendations   Json     @default("[]")
+  conclusion        String?
+
+  // Veterinarian validation
+  validatedById     String?
+  validatedAt       DateTime?
+  vetNotes          String?
+  vetSignature      String?
+
+  // Billing
+  tokensConsumed    Int      @default(0)
+  createdById       String
+
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  images            RadioImage[]
+  report            Report?
+
+  @@index([horseId, createdAt])
+  @@index([organizationId, status])
+  @@map("radiology_analyses")
+}
+
+model RadioImage {
+  id                String   @id @default(uuid())
+
+  // Analysis reference
+  analysisId        String
+  analysis          RadiologyAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  // Image info
+  filename          String
+  originalFilename  String
+  mimeType          String   // image/jpeg, image/png, application/dicom
+  fileSize          Int      // bytes
+  url               String
+  thumbnailUrl      String?
+
+  // Anatomical region
+  region            String   // boulet_ad, boulet_ag, jarret, genou, dos, pied, etc.
+  regionLabel       String   // Human readable: "Boulet Antérieur Droit"
+  view              String?  // face, profil, oblique
+
+  // DICOM metadata (if applicable)
+  dicomData         Json?
+
+  // AI Analysis results for this image
+  aiAnalyzed        Boolean  @default(false)
+  aiScore           Float?   // 0-100
+  detections        Json     @default("[]") // Array of RadioDetection
+
+  // Order for display
+  sortOrder         Int      @default(0)
+
+  // Upload status
+  uploadStatus      String   @default("pending") // pending, uploaded, processed, error
+
+  createdAt         DateTime @default(now())
+
+  @@index([analysisId])
+  @@map("radio_images")
+}
+
 // ==================== AI ANALYSIS CACHE ====================
 
 model AIAnalysisCache {
@@ -1489,6 +1587,77 @@ model TokenReservation {
 
   @@index([organizationId, expiresAt])
   @@map("token_reservations")
+}
+
+// ==================== TOKEN PACKS (PURCHASE) ====================
+
+model TokenPack {
+  id              String   @id @default(uuid())
+
+  name            String   // "Starter", "Standard", "Pro", etc.
+  description     String?
+
+  // Tokens
+  baseTokens      Int      // Base tokens in pack
+  bonusPercent    Int      @default(0) // Bonus percentage
+  totalTokens     Int      // Computed: baseTokens * (1 + bonusPercent/100)
+
+  // Pricing
+  price           Int      // Price in cents (e.g., 999 = 9.99€)
+  currency        String   @default("EUR")
+  stripePriceId   String?  // Stripe Price ID for checkout
+
+  // Display
+  isActive        Boolean  @default(true)
+  isPopular       Boolean  @default(false) // "Best Value" badge
+  sortOrder       Int      @default(0)
+
+  // Limits
+  minQuantity     Int      @default(1)
+  maxQuantity     Int      @default(10)
+  limitPerMonth   Int?     // Max purchases per org per month
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  purchases       TokenPurchase[]
+
+  @@map("token_packs")
+}
+
+model TokenPurchase {
+  id                    String   @id @default(uuid())
+
+  // Pack purchased
+  packId                String
+  pack                  TokenPack @relation(fields: [packId], references: [id])
+  quantity              Int      @default(1)
+
+  // Tokens delivered
+  baseTokens            Int
+  bonusTokens           Int
+  totalTokens           Int
+
+  // Payment
+  amount                Int      // Amount paid in cents
+  currency              String   @default("EUR")
+  stripePaymentIntentId String?
+  stripeSessionId       String?
+
+  // Status
+  status                String   @default("pending") // pending, completed, failed, refunded
+
+  // Organization
+  organizationId        String
+  purchasedById         String   // User who made the purchase
+
+  createdAt             DateTime @default(now())
+  completedAt           DateTime?
+
+  @@index([organizationId, createdAt])
+  @@index([status])
+  @@map("token_purchases")
 }
 
 model Invoice {

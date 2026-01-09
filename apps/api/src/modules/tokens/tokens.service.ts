@@ -11,7 +11,12 @@ import {
   TransferTokensDto,
   TokenTransactionQueryDto,
   TransactionType,
+  PurchaseTokensDto,
+  CheckTokensDto,
+  TokenPackResponseDto,
+  PurchaseHistoryQueryDto,
 } from './dto/token.dto';
+import Stripe from 'stripe';
 
 export interface TokenBalance {
   balance: number;
@@ -33,6 +38,7 @@ export interface TokenTransaction {
 @Injectable()
 export class TokensService {
   private readonly logger = new Logger(TokensService.name);
+  private stripe: Stripe | null = null;
 
   // Token costs per operation
   private readonly tokenCosts = {
@@ -41,9 +47,26 @@ export class TokensService {
     videoAnalysis: 5,
     reportGeneration: 2,
     aiRecommendation: 1,
+    radiologySimple: 150,
+    radiologyComplete: 300,
+    radiologyExpert: 500,
+    equicoteStandard: 100,
+    equicotePremium: 200,
+    breedingRecommendation: 200,
+    breedingMatch: 50,
   };
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {
+    // Initialize Stripe if key is available
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (stripeKey) {
+      this.stripe = new Stripe(stripeKey, {
+        apiVersion: '2024-06-20',
+      });
+    } else {
+      this.logger.warn('STRIPE_SECRET_KEY not set - token purchases disabled');
+    }
+  }
 
   async getBalance(organizationId: string): Promise<TokenBalance> {
     const organization = await this.prisma.organization.findUnique({
@@ -401,5 +424,406 @@ export class TokensService {
     });
 
     return reservations._sum.amount || 0;
+  }
+
+  // ==================== TOKEN PACKS & PURCHASE ====================
+
+  async getTokenPacks(): Promise<TokenPackResponseDto[]> {
+    const packs = await this.prisma.tokenPack.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' },
+    });
+
+    if (packs.length === 0) {
+      // Return default packs if none exist in DB
+      return this.getDefaultPacks();
+    }
+
+    // Calculate price per token and savings
+    const basePricePerToken = packs[0].price / packs[0].totalTokens;
+
+    return packs.map((pack) => {
+      const pricePerToken = pack.price / pack.totalTokens;
+      const savingsPercent = Math.round(
+        ((basePricePerToken - pricePerToken) / basePricePerToken) * 100,
+      );
+
+      return {
+        id: pack.id,
+        name: pack.name,
+        description: pack.description,
+        baseTokens: pack.baseTokens,
+        bonusPercent: pack.bonusPercent,
+        totalTokens: pack.totalTokens,
+        price: pack.price,
+        currency: pack.currency,
+        pricePerToken: Math.round(pricePerToken * 100) / 100,
+        isPopular: pack.isPopular,
+        savingsPercent: Math.max(0, savingsPercent),
+      };
+    });
+  }
+
+  private getDefaultPacks(): TokenPackResponseDto[] {
+    // Default packs as specified in specs
+    const packs = [
+      { id: 'starter', name: 'Starter', baseTokens: 100, bonusPercent: 0, price: 999 },
+      { id: 'standard', name: 'Standard', baseTokens: 300, bonusPercent: 10, price: 2499, isPopular: true },
+      { id: 'pro', name: 'Pro', baseTokens: 600, bonusPercent: 20, price: 4499 },
+      { id: 'business', name: 'Business', baseTokens: 1500, bonusPercent: 30, price: 9999 },
+      { id: 'enterprise', name: 'Enterprise', baseTokens: 5000, bonusPercent: 40, price: 29999 },
+    ];
+
+    const basePricePerToken = packs[0].price / packs[0].baseTokens;
+
+    return packs.map((pack) => {
+      const totalTokens = Math.floor(pack.baseTokens * (1 + pack.bonusPercent / 100));
+      const pricePerToken = pack.price / totalTokens;
+      const savingsPercent = Math.round(
+        ((basePricePerToken - pricePerToken) / basePricePerToken) * 100,
+      );
+
+      return {
+        id: pack.id,
+        name: pack.name,
+        description: `${pack.baseTokens} tokens${pack.bonusPercent > 0 ? ` +${pack.bonusPercent}% bonus` : ''}`,
+        baseTokens: pack.baseTokens,
+        bonusPercent: pack.bonusPercent,
+        totalTokens,
+        price: pack.price,
+        currency: 'EUR',
+        pricePerToken: Math.round(pricePerToken * 100) / 100,
+        isPopular: pack.isPopular || false,
+        savingsPercent: Math.max(0, savingsPercent),
+      };
+    });
+  }
+
+  async checkTokenAvailability(
+    organizationId: string,
+    dto: CheckTokensDto,
+  ): Promise<{
+    available: boolean;
+    currentBalance: number;
+    required: number;
+    shortfall: number;
+    suggestedPack: TokenPackResponseDto | null;
+  }> {
+    const balance = await this.getBalance(organizationId);
+    const required = dto.serviceType
+      ? this.tokenCosts[dto.serviceType] || dto.amount
+      : dto.amount;
+
+    const available = balance.availableTokens >= required;
+    const shortfall = Math.max(0, required - balance.availableTokens);
+
+    // Suggest a pack if tokens are insufficient
+    let suggestedPack: TokenPackResponseDto | null = null;
+    if (!available) {
+      const packs = await this.getTokenPacks();
+      suggestedPack = packs.find((p) => p.totalTokens >= shortfall) || packs[packs.length - 1];
+    }
+
+    return {
+      available,
+      currentBalance: balance.availableTokens,
+      required,
+      shortfall,
+      suggestedPack,
+    };
+  }
+
+  async estimateCost(
+    serviceType: string,
+  ): Promise<{ tokens: number; priceEstimate: number; currency: string }> {
+    const tokens = this.tokenCosts[serviceType] || 0;
+    const packs = await this.getTokenPacks();
+    const avgPricePerToken = packs.length > 0
+      ? packs.reduce((sum, p) => sum + p.pricePerToken, 0) / packs.length
+      : 0.10;
+
+    return {
+      tokens,
+      priceEstimate: Math.round(tokens * avgPricePerToken * 100) / 100,
+      currency: 'EUR',
+    };
+  }
+
+  async createPurchaseSession(
+    organizationId: string,
+    userId: string,
+    dto: PurchaseTokensDto,
+  ): Promise<{ sessionId: string; checkoutUrl: string }> {
+    if (!this.stripe) {
+      throw new BadRequestException('Payment system not configured');
+    }
+
+    // Get pack details
+    let pack = await this.prisma.tokenPack.findUnique({
+      where: { id: dto.packId },
+    });
+
+    // If no pack in DB, use defaults
+    if (!pack) {
+      const defaultPacks = this.getDefaultPacks();
+      const defaultPack = defaultPacks.find((p) => p.id === dto.packId);
+      if (!defaultPack) {
+        throw new NotFoundException('Token pack not found');
+      }
+      // Create pack in DB for reference
+      pack = await this.prisma.tokenPack.create({
+        data: {
+          id: dto.packId,
+          name: defaultPack.name,
+          description: defaultPack.description,
+          baseTokens: defaultPack.baseTokens,
+          bonusPercent: defaultPack.bonusPercent,
+          totalTokens: defaultPack.totalTokens,
+          price: defaultPack.price,
+          currency: 'EUR',
+          isPopular: defaultPack.isPopular,
+        },
+      });
+    }
+
+    const quantity = dto.quantity || 1;
+    const totalAmount = pack.price * quantity;
+    const totalTokens = pack.totalTokens * quantity;
+
+    // Get organization for Stripe customer
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+    });
+
+    // Create or get Stripe customer
+    let stripeCustomerId = org?.stripeCustomerId;
+    if (!stripeCustomerId) {
+      const customer = await this.stripe.customers.create({
+        metadata: {
+          organizationId,
+        },
+      });
+      stripeCustomerId = customer.id;
+      await this.prisma.organization.update({
+        where: { id: organizationId },
+        data: { stripeCustomerId },
+      });
+    }
+
+    // Create purchase record
+    const purchase = await this.prisma.tokenPurchase.create({
+      data: {
+        packId: pack.id,
+        quantity,
+        baseTokens: pack.baseTokens * quantity,
+        bonusTokens: (pack.totalTokens - pack.baseTokens) * quantity,
+        totalTokens,
+        amount: totalAmount,
+        currency: pack.currency,
+        status: 'pending',
+        organizationId,
+        purchasedById: userId,
+      },
+    });
+
+    // Create Stripe checkout session
+    const session = await this.stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: pack.currency.toLowerCase(),
+            product_data: {
+              name: `${pack.name} - ${totalTokens} Tokens`,
+              description: `Pack ${pack.name}: ${pack.baseTokens} tokens${pack.bonusPercent > 0 ? ` + ${pack.bonusPercent}% bonus` : ''}`,
+            },
+            unit_amount: pack.price,
+          },
+          quantity,
+        },
+      ],
+      mode: 'payment',
+      success_url: dto.successUrl || `${process.env.FRONTEND_URL}/tokens/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: dto.cancelUrl || `${process.env.FRONTEND_URL}/tokens/cancel`,
+      metadata: {
+        purchaseId: purchase.id,
+        organizationId,
+        userId,
+        packId: pack.id,
+        totalTokens: totalTokens.toString(),
+      },
+    });
+
+    // Update purchase with session ID
+    await this.prisma.tokenPurchase.update({
+      where: { id: purchase.id },
+      data: { stripeSessionId: session.id },
+    });
+
+    this.logger.log(
+      `Created checkout session ${session.id} for ${totalTokens} tokens (org: ${organizationId})`,
+    );
+
+    return {
+      sessionId: session.id,
+      checkoutUrl: session.url || '',
+    };
+  }
+
+  async handleStripeWebhook(event: Stripe.Event): Promise<void> {
+    this.logger.log(`Processing Stripe webhook: ${event.type}`);
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      await this.completePurchase(session);
+    } else if (event.type === 'checkout.session.expired') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      await this.expirePurchase(session.metadata?.purchaseId);
+    }
+  }
+
+  private async completePurchase(session: Stripe.Checkout.Session): Promise<void> {
+    const purchaseId = session.metadata?.purchaseId;
+    if (!purchaseId) {
+      this.logger.error('No purchaseId in session metadata');
+      return;
+    }
+
+    const purchase = await this.prisma.tokenPurchase.findUnique({
+      where: { id: purchaseId },
+      include: { pack: true },
+    });
+
+    if (!purchase) {
+      this.logger.error(`Purchase ${purchaseId} not found`);
+      return;
+    }
+
+    if (purchase.status === 'completed') {
+      this.logger.warn(`Purchase ${purchaseId} already completed`);
+      return;
+    }
+
+    // Complete purchase and credit tokens
+    await this.prisma.$transaction(async (tx) => {
+      // Update purchase status
+      await tx.tokenPurchase.update({
+        where: { id: purchaseId },
+        data: {
+          status: 'completed',
+          stripePaymentIntentId: session.payment_intent as string,
+          completedAt: new Date(),
+        },
+      });
+
+      // Credit tokens to organization
+      await tx.organization.update({
+        where: { id: purchase.organizationId },
+        data: {
+          tokenBalance: { increment: purchase.totalTokens },
+        },
+      });
+
+      // Create transaction record
+      await tx.tokenTransaction.create({
+        data: {
+          organizationId: purchase.organizationId,
+          amount: purchase.totalTokens,
+          type: 'credit',
+          description: `Achat pack ${purchase.pack?.name || 'tokens'}: ${purchase.totalTokens} tokens`,
+          metadata: {
+            purchaseId,
+            packId: purchase.packId,
+            stripeSessionId: session.id,
+          },
+        },
+      });
+    });
+
+    this.logger.log(
+      `Completed purchase ${purchaseId}: credited ${purchase.totalTokens} tokens to org ${purchase.organizationId}`,
+    );
+  }
+
+  private async expirePurchase(purchaseId: string | undefined): Promise<void> {
+    if (!purchaseId) return;
+
+    await this.prisma.tokenPurchase.update({
+      where: { id: purchaseId },
+      data: { status: 'failed' },
+    });
+
+    this.logger.log(`Purchase ${purchaseId} expired/failed`);
+  }
+
+  async getPurchaseHistory(
+    organizationId: string,
+    query: PurchaseHistoryQueryDto,
+  ): Promise<{
+    purchases: any[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const [purchases, total] = await Promise.all([
+      this.prisma.tokenPurchase.findMany({
+        where: { organizationId },
+        include: { pack: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.tokenPurchase.count({ where: { organizationId } }),
+    ]);
+
+    return {
+      purchases: purchases.map((p) => ({
+        id: p.id,
+        packName: p.pack?.name || 'Unknown',
+        quantity: p.quantity,
+        totalTokens: p.totalTokens,
+        amount: p.amount,
+        currency: p.currency,
+        status: p.status,
+        createdAt: p.createdAt,
+        completedAt: p.completedAt,
+      })),
+      total,
+      page,
+      limit,
+    };
+  }
+
+  // Seed default packs if needed
+  async seedDefaultPacks(): Promise<void> {
+    const existingPacks = await this.prisma.tokenPack.count();
+    if (existingPacks > 0) return;
+
+    const defaultPacks = [
+      { name: 'Starter', baseTokens: 100, bonusPercent: 0, price: 999, sortOrder: 1 },
+      { name: 'Standard', baseTokens: 300, bonusPercent: 10, price: 2499, sortOrder: 2, isPopular: true },
+      { name: 'Pro', baseTokens: 600, bonusPercent: 20, price: 4499, sortOrder: 3 },
+      { name: 'Business', baseTokens: 1500, bonusPercent: 30, price: 9999, sortOrder: 4 },
+      { name: 'Enterprise', baseTokens: 5000, bonusPercent: 40, price: 29999, sortOrder: 5 },
+    ];
+
+    for (const pack of defaultPacks) {
+      const totalTokens = Math.floor(pack.baseTokens * (1 + pack.bonusPercent / 100));
+      await this.prisma.tokenPack.create({
+        data: {
+          ...pack,
+          totalTokens,
+          currency: 'EUR',
+          description: `${pack.baseTokens} tokens${pack.bonusPercent > 0 ? ` +${pack.bonusPercent}% bonus` : ''}`,
+        },
+      });
+    }
+
+    this.logger.log('Seeded default token packs');
   }
 }
