@@ -491,12 +491,16 @@ class MarketplaceNotifier extends StateNotifier<AsyncValue<void>> {
   }
 
   /// Promote listing (premium)
-  Future<bool> promoteListing(String listingId, int days) async {
+  Future<bool> promoteListing(String listingId, int days, {int boostLevel = 1}) async {
     state = const AsyncValue.loading();
     try {
-      await _api.post('/marketplace/$listingId/promote', {'days': days});
+      await _api.post('/marketplace/$listingId/promote', {
+        'boostLevel': boostLevel,
+        'duration': days,
+      });
       _ref.invalidate(listingDetailProvider(listingId));
       _ref.invalidate(myListingsProvider);
+      _ref.invalidate(featuredListingsProvider);
       state = const AsyncValue.data(null);
       return true;
     } catch (e, st) {
