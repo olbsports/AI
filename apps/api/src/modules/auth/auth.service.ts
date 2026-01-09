@@ -3,7 +3,8 @@ import {
   UnauthorizedException,
   BadRequestException,
   NotFoundException,
-  TooManyRequestsException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -185,8 +186,9 @@ export class AuthService {
     });
 
     if (emailAttempts >= MAX_LOGIN_ATTEMPTS) {
-      throw new TooManyRequestsException(
-        `Too many login attempts. Please try again in ${LOCKOUT_DURATION_MINUTES} minutes.`
+      throw new HttpException(
+        `Too many login attempts. Please try again in ${LOCKOUT_DURATION_MINUTES} minutes.`,
+        HttpStatus.TOO_MANY_REQUESTS
       );
     }
 
@@ -201,8 +203,9 @@ export class AuthService {
       });
 
       if (ipAttempts >= MAX_LOGIN_ATTEMPTS * 2) {
-        throw new TooManyRequestsException(
-          `Too many login attempts from this IP. Please try again later.`
+        throw new HttpException(
+          `Too many login attempts from this IP. Please try again later.`,
+          HttpStatus.TOO_MANY_REQUESTS
         );
       }
     }
@@ -635,7 +638,7 @@ export class AuthService {
         twoFactorSecret: secret.base32,
         // Store backup codes hashed
         preferences: {
-          ...(user.preferences as any || {}),
+          ...((user.preferences as any) || {}),
           pendingBackupCodes: backupCodes.map((code) => this.hashCode(code)),
         },
       },
@@ -648,7 +651,10 @@ export class AuthService {
     };
   }
 
-  async verify2FASetup(userId: string, code: string): Promise<{ success: boolean; backupCodes: string[] }> {
+  async verify2FASetup(
+    userId: string,
+    code: string
+  ): Promise<{ success: boolean; backupCodes: string[] }> {
     const user = await this.usersService.findById(userId);
 
     if (!user) {
@@ -676,7 +682,7 @@ export class AuthService {
     }
 
     // Get backup codes from preferences
-    const preferences = user.preferences as any || {};
+    const preferences = (user.preferences as any) || {};
     const backupCodes = preferences.pendingBackupCodes || [];
 
     // Enable 2FA
@@ -728,7 +734,7 @@ export class AuthService {
         twoFactorEnabled: false,
         twoFactorSecret: null,
         preferences: {
-          ...(user.preferences as any || {}),
+          ...((user.preferences as any) || {}),
           backupCodes: undefined,
         },
       },
@@ -778,7 +784,7 @@ export class AuthService {
       where: { id: userId },
       data: {
         preferences: {
-          ...(user.preferences as any || {}),
+          ...((user.preferences as any) || {}),
           backupCodes: backupCodes.map((c) => this.hashCode(c)),
         },
       },
@@ -791,11 +797,7 @@ export class AuthService {
     const codes: string[] = [];
     for (let i = 0; i < count; i++) {
       // Generate 8-character alphanumeric codes
-      const code = randomBytes(4)
-        .toString('hex')
-        .toUpperCase()
-        .match(/.{4}/g)
-        ?.join('-') || '';
+      const code = randomBytes(4).toString('hex').toUpperCase().match(/.{4}/g)?.join('-') || '';
       codes.push(code);
     }
     return codes;
