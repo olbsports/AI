@@ -675,12 +675,24 @@ class ApiService {
       final data = response.data;
       // Handle case where API returns a list or non-map response
       if (data is Map<String, dynamic>) {
-        return {
-          'status': data['status'] ?? 'active',
-          'planId': data['plan'] ?? data['planId'] ?? 'free',
-          'planName': data['planName'] ?? _getPlanName(data['plan']),
-          'plan': data['plan'] is Map ? data['plan'] : {'id': data['plan'] ?? 'free', 'name': _getPlanName(data['plan']), 'price': 0},
+        // Build the plan object - API returns 'plan' as a string enum (e.g., 'FREE', 'STARTER')
+        final planValue = data['plan'];
+        final planObject = planValue is Map
+            ? Map<String, dynamic>.from(planValue)
+            : <String, dynamic>{
+                'id': planValue ?? 'free',
+                'name': _getPlanName(planValue),
+                'price': _getPlanPrice(planValue),
+              };
+
+        // Spread data first, then override with our processed values
+        // This ensures 'plan' is always a Map, not a String
+        return <String, dynamic>{
           ...data,
+          'status': data['status'] ?? 'active',
+          'planId': planValue ?? data['planId'] ?? 'free',
+          'planName': data['planName'] ?? _getPlanName(planValue),
+          'plan': planObject,
         };
       }
     } on DioException catch (e) {
@@ -704,6 +716,18 @@ class ApiService {
       case 'professional': return 'Professional';
       case 'enterprise': return 'Enterprise';
       default: return 'Starter';
+    }
+  }
+
+  int _getPlanPrice(dynamic plan) {
+    if (plan == null) return 0;
+    final planStr = plan.toString().toLowerCase();
+    switch (planStr) {
+      case 'free': return 0;
+      case 'starter': return 49;
+      case 'professional': return 149;
+      case 'enterprise': return 499;
+      default: return 0;
     }
   }
 
