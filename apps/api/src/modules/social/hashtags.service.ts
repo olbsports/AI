@@ -111,9 +111,7 @@ export class HashtagsService {
 
     // Find hashtags to add and remove
     const toAdd = newHashtags.filter((name) => !existingNames.includes(name));
-    const toRemove = existingAssociations.filter(
-      (a) => !newHashtags.includes(a.hashtag.name)
-    );
+    const toRemove = existingAssociations.filter((a) => !newHashtags.includes(a.hashtag.name));
 
     // Remove old hashtags
     for (const association of toRemove) {
@@ -171,8 +169,7 @@ export class HashtagsService {
 
     // Calculate trend score based on recency and usage
     return trendingHashtags.map((hashtag) => {
-      const daysSinceLastUsed =
-        (Date.now() - hashtag.lastUsedAt.getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceLastUsed = (Date.now() - hashtag.lastUsedAt.getTime()) / (1000 * 60 * 60 * 24);
       const recencyScore = Math.max(0, 1 - daysSinceLastUsed / days);
       const trendScore = hashtag.usageCount * (0.5 + 0.5 * recencyScore);
 
@@ -190,12 +187,7 @@ export class HashtagsService {
   /**
    * Get posts by hashtag
    */
-  async getPostsByHashtag(
-    hashtagName: string,
-    userId?: string,
-    page = 1,
-    limit = 20
-  ) {
+  async getPostsByHashtag(hashtagName: string, userId?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const normalizedName = hashtagName.toLowerCase().replace(/^#/, '');
 
@@ -247,9 +239,7 @@ export class HashtagsService {
     });
 
     // Filter only public posts
-    const posts = postHashtags
-      .map((ph) => ph.post)
-      .filter((post) => post.visibility === 'public');
+    const posts = postHashtags.map((ph) => ph.post).filter((post) => post.visibility === 'public');
 
     // Add user interaction data if userId provided
     let enrichedPosts = posts;
@@ -387,18 +377,19 @@ export class HashtagsService {
       where: { id: { in: hashtagIds } },
     });
 
-    const hashtagMap = new Map(hashtagDetails.map((h) => [h.id, h]));
-
-    return relatedHashtags.map((rh) => {
-      const h = hashtagMap.get(rh.hashtagId)!;
-      return {
-        id: h.id,
-        name: h.name,
-        tag: `#${h.name}`,
-        postCount: h.usageCount,
-        coOccurrences: rh._count.hashtagId,
-      };
-    });
+    return relatedHashtags
+      .map((rh) => {
+        const h = hashtagDetails.find((hd) => hd.id === rh.hashtagId);
+        if (!h) return null;
+        return {
+          id: h.id,
+          name: h.name,
+          tag: `#${h.name}`,
+          postCount: h.usageCount,
+          coOccurrences: rh._count.hashtagId,
+        };
+      })
+      .filter(Boolean);
   }
 
   /**

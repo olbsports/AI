@@ -18,7 +18,7 @@ interface CreateSessionDto {
   userAgent?: string;
 }
 
-interface SessionInfo {
+export interface SessionInfo {
   id: string;
   deviceId: string;
   deviceName: string | null;

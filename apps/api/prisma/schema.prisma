@@ -1659,6 +1659,10 @@ model Report {
   horseId          String?
   horse            Horse?   @relation(fields: [horseId], references: [id], onDelete: SetNull)
 
+  // Radiology Analysis (optional back-relation)
+  radiologyAnalysisId String?   @unique
+  radiologyAnalysis   RadiologyAnalysis? @relation(fields: [radiologyAnalysisId], references: [id], onDelete: SetNull)
+
   // Timestamps
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

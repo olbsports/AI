@@ -17,7 +17,7 @@ interface RecurrenceRule {
 export class CalendarService {
   constructor(
     private prisma: PrismaService,
-    private reminderService: ReminderService,
+    private reminderService: ReminderService
   ) {}
 
   // ========== EVENTS ==========
@@ -30,7 +30,7 @@ export class CalendarService {
       type?: string;
       horseId?: string;
       includeRecurrences?: boolean;
-    },
+    }
   ) {
     const where: any = {
       organizationId,
@@ -88,17 +88,13 @@ export class CalendarService {
 
         // Generate occurrences for recurring events
         if (event.recurrenceRule) {
-          const occurrences = this.generateOccurrences(
-            event,
-            filters.startDate,
-            filters.endDate,
-          );
+          const occurrences = this.generateOccurrences(event, filters.startDate, filters.endDate);
           allEvents.push(...occurrences);
         }
       }
 
       return allEvents.sort(
-        (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+        (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
       );
     }
 
@@ -153,7 +149,7 @@ export class CalendarService {
       reminderTimes?: number[]; // minutes before event
       recurrenceRule?: string;
       recurrenceEndDate?: string;
-    },
+    }
   ) {
     const event = await this.prisma.calendarEvent.create({
       data: {
@@ -170,9 +166,7 @@ export class CalendarService {
         priority: data.priority || 'normal',
         notes: data.notes,
         recurrenceRule: data.recurrenceRule,
-        recurrenceEndDate: data.recurrenceEndDate
-          ? new Date(data.recurrenceEndDate)
-          : null,
+        recurrenceEndDate: data.recurrenceEndDate ? new Date(data.recurrenceEndDate) : null,
         organizationId,
         createdById: userId,
       },
@@ -185,12 +179,7 @@ export class CalendarService {
 
     // Create reminders if specified
     if (data.reminderTimes && data.reminderTimes.length > 0) {
-      await this.reminderService.createReminders(
-        event.id,
-        userId,
-        data.reminderTimes,
-        'push',
-      );
+      await this.reminderService.createReminders(event.id, userId, data.reminderTimes, 'push');
     } else {
       // Create default reminders based on event type
       const defaultTimes = this.reminderService.getDefaultReminderTimes(data.type);
@@ -219,7 +208,7 @@ export class CalendarService {
       status?: string;
       recurrenceRule?: string;
       recurrenceEndDate?: string;
-    },
+    }
   ) {
     const event = await this.prisma.calendarEvent.findFirst({
       where: { id: eventId, organizationId },
@@ -246,9 +235,7 @@ export class CalendarService {
         notes: data.notes,
         status: data.status,
         recurrenceRule: data.recurrenceRule,
-        recurrenceEndDate: data.recurrenceEndDate
-          ? new Date(data.recurrenceEndDate)
-          : undefined,
+        recurrenceEndDate: data.recurrenceEndDate ? new Date(data.recurrenceEndDate) : undefined,
       },
       include: {
         horse: {
@@ -259,11 +246,7 @@ export class CalendarService {
     });
   }
 
-  async deleteEvent(
-    eventId: string,
-    organizationId: string,
-    deleteOccurrences = false,
-  ) {
+  async deleteEvent(eventId: string, organizationId: string, deleteOccurrences = false) {
     const event = await this.prisma.calendarEvent.findFirst({
       where: { id: eventId, organizationId },
     });
@@ -302,7 +285,7 @@ export class CalendarService {
       recurrenceEndDate?: string;
       generateOccurrences?: boolean;
       generateUntil?: string;
-    },
+    }
   ) {
     const event = await this.prisma.calendarEvent.findFirst({
       where: { id: eventId, organizationId },
@@ -323,9 +306,7 @@ export class CalendarService {
       where: { id: eventId },
       data: {
         recurrenceRule: data.recurrenceRule,
-        recurrenceEndDate: data.recurrenceEndDate
-          ? new Date(data.recurrenceEndDate)
-          : null,
+        recurrenceEndDate: data.recurrenceEndDate ? new Date(data.recurrenceEndDate) : null,
       },
     });
 
@@ -348,11 +329,7 @@ export class CalendarService {
   /**
    * Generate virtual occurrences for display (not saved in DB)
    */
-  private generateOccurrences(
-    event: any,
-    startDate: Date,
-    endDate: Date,
-  ): any[] {
+  private generateOccurrences(event: any, startDate: Date, endDate: Date): any[] {
     if (!event.recurrenceRule) {
       return [];
     }
@@ -369,9 +346,7 @@ export class CalendarService {
         : 60 * 60 * 1000; // 1 hour default
 
     let currentDate = new Date(event.startDate);
-    const recurrenceEnd = event.recurrenceEndDate
-      ? new Date(event.recurrenceEndDate)
-      : endDate;
+    const recurrenceEnd = event.recurrenceEndDate ? new Date(event.recurrenceEndDate) : endDate;
 
     let count = 0;
     const maxCount = rule.count || 365; // Safety limit
@@ -380,8 +355,7 @@ export class CalendarService {
       if (currentDate >= startDate && currentDate > new Date(event.startDate)) {
         // Check if occurrence already exists in database
         const existingOccurrence = event.occurrences?.find(
-          (o: any) =>
-            new Date(o.startDate).toDateString() === currentDate.toDateString(),
+          (o: any) => new Date(o.startDate).toDateString() === currentDate.toDateString()
         );
 
         if (!existingOccurrence) {
@@ -424,9 +398,7 @@ export class CalendarService {
         : 60 * 60 * 1000;
 
     let currentDate = new Date(event.startDate);
-    const recurrenceEnd = event.recurrenceEndDate
-      ? new Date(event.recurrenceEndDate)
-      : endDate;
+    const recurrenceEnd = event.recurrenceEndDate ? new Date(event.recurrenceEndDate) : endDate;
 
     let count = 0;
     const maxCount = rule.count || 100; // Safety limit
@@ -542,12 +514,11 @@ export class CalendarService {
     options?: {
       startDate?: Date;
       endDate?: Date;
-    },
+    }
   ) {
     const now = new Date();
     const startDate = options?.startDate || now;
-    const endDate =
-      options?.endDate || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const endDate = options?.endDate || new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     // Get horse info
     const horse = await this.prisma.horse.findFirst({
@@ -596,7 +567,7 @@ export class CalendarService {
     const trainingRecommendations = this.generateTrainingRecommendationsForHorse(
       horse,
       events,
-      competitions,
+      competitions
     );
 
     return {
@@ -642,7 +613,7 @@ export class CalendarService {
   private generateTrainingRecommendationsForHorse(
     horse: any,
     events: any[],
-    competitions: any[],
+    competitions: any[]
   ): any[] {
     const recommendations: any[] = [];
 
@@ -650,8 +621,7 @@ export class CalendarService {
     if (competitions.length > 0) {
       const nextCompetition = competitions[0];
       const daysUntil = Math.ceil(
-        (new Date(nextCompetition.competitionDate).getTime() - Date.now()) /
-          (24 * 60 * 60 * 1000),
+        (new Date(nextCompetition.competitionDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000)
       );
 
       if (daysUntil <= 14) {
@@ -661,10 +631,7 @@ export class CalendarService {
           priority: 'high',
           title: `Preparation competition: ${nextCompetition.competitionName}`,
           description: `Competition dans ${daysUntil} jours - ${nextCompetition.discipline}`,
-          suggestedExercises: this.getSuggestedExercises(
-            nextCompetition.discipline,
-            daysUntil,
-          ),
+          suggestedExercises: this.getSuggestedExercises(nextCompetition.discipline, daysUntil),
           dueDate: nextCompetition.competitionDate,
         });
       }
@@ -675,7 +642,7 @@ export class CalendarService {
     const now = new Date();
     const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const trainingsLastWeek = trainingEvents.filter(
-      (e: any) => new Date(e.startDate) >= lastWeek && new Date(e.startDate) <= now,
+      (e: any) => new Date(e.startDate) >= lastWeek && new Date(e.startDate) <= now
     ).length;
 
     if (trainingsLastWeek < 3) {
@@ -683,7 +650,7 @@ export class CalendarService {
         id: 'rec-training-frequency',
         type: 'training_frequency',
         priority: 'medium',
-        title: 'Augmenter la frequence d\'entrainement',
+        title: "Augmenter la frequence d'entrainement",
         description: `Seulement ${trainingsLastWeek} entrainements la semaine derniere. Recommandation: 3-5 seances par semaine.`,
         suggestedSchedule: this.suggestTrainingSchedule(events),
       });
@@ -714,13 +681,8 @@ export class CalendarService {
         type: 'variety',
         priority: 'low',
         title: 'Varier les activites',
-        description: 'Diversifiez les types d\'activites pour un developpement equilibre.',
-        suggestedActivities: [
-          'Travail sur le plat',
-          'Saut',
-          'Travail en exterieur',
-          'Longe',
-        ],
+        description: "Diversifiez les types d'activites pour un developpement equilibre.",
+        suggestedActivities: ['Travail sur le plat', 'Saut', 'Travail en exterieur', 'Longe'],
       });
     }
 
@@ -775,8 +737,7 @@ export class CalendarService {
       // Check if already has event
       const hasEvent = existingEvents.some(
         (e: any) =>
-          new Date(e.startDate).toDateString() === day.toDateString() &&
-          e.type === 'training',
+          new Date(e.startDate).toDateString() === day.toDateString() && e.type === 'training'
       );
 
       if (!hasEvent && daysOfWeek.some((d) => dayName.toLowerCase().includes(d.toLowerCase()))) {
@@ -824,7 +785,7 @@ export class CalendarService {
       targetDate: string;
       horseId?: string;
       riderId?: string;
-    },
+    }
   ) {
     return this.prisma.evolutionGoal.create({
       data: {
@@ -885,9 +846,16 @@ export class CalendarService {
   // ========== TRAINING PLANS ==========
 
   async getTrainingPlans(organizationId: string) {
+    // Get horses for this organization first
+    const horses = await this.prisma.horse.findMany({
+      where: { organizationId },
+      select: { id: true },
+    });
+    const horseIds = horses.map((h) => h.id);
+
     return this.prisma.trainingSession.findMany({
       where: {
-        horse: { organizationId },
+        horseId: { in: horseIds },
       },
       take: 20,
       orderBy: { sessionDate: 'desc' },
@@ -895,9 +863,16 @@ export class CalendarService {
   }
 
   async getActiveTrainingPlan(organizationId: string) {
+    // Get horses for this organization first
+    const horses = await this.prisma.horse.findMany({
+      where: { organizationId },
+      select: { id: true },
+    });
+    const horseIds = horses.map((h) => h.id);
+
     const recentSessions = await this.prisma.trainingSession.findMany({
       where: {
-        horse: { organizationId },
+        horseId: { in: horseIds },
         sessionDate: {
           gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
         },
@@ -941,7 +916,7 @@ export class CalendarService {
       difficulty: string;
       horseId?: string;
       sessions: any[];
-    },
+    }
   ) {
     const planId = `plan-${Date.now()}`;
     return {
@@ -963,7 +938,7 @@ export class CalendarService {
       currentLevel: string;
       targetLevel: string;
       preferences?: any;
-    },
+    }
   ) {
     const planId = `plan-ai-${Date.now()}`;
     const sessions = [];
@@ -1015,7 +990,7 @@ export class CalendarService {
       notes?: string;
       rating?: number;
       duration?: number;
-    },
+    }
   ) {
     return {
       success: true,

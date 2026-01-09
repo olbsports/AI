@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -61,7 +56,7 @@ export class TokensService {
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (stripeKey) {
       this.stripe = new Stripe(stripeKey, {
-        apiVersion: '2024-06-20',
+        apiVersion: '2023-10-16',
       });
     } else {
       this.logger.warn('STRIPE_SECRET_KEY not set - token purchases disabled');
@@ -107,7 +102,7 @@ export class TokensService {
 
   async getTransactions(
     organizationId: string,
-    query: TokenTransactionQueryDto,
+    query: TokenTransactionQueryDto
   ): Promise<{ transactions: TokenTransaction[]; total: number; page: number; limit: number }> {
     const page = query.page || 1;
     const limit = query.limit || 20;
@@ -146,13 +141,13 @@ export class TokensService {
 
   async debitTokens(
     organizationId: string,
-    dto: DebitTokensDto,
+    dto: DebitTokensDto
   ): Promise<{ success: boolean; newBalance: number }> {
     const balance = await this.getBalance(organizationId);
 
     if (balance.availableTokens < dto.amount) {
       throw new BadRequestException(
-        `Insufficient tokens. Available: ${balance.availableTokens}, Required: ${dto.amount}`,
+        `Insufficient tokens. Available: ${balance.availableTokens}, Required: ${dto.amount}`
       );
     }
 
@@ -191,7 +186,7 @@ export class TokensService {
     organizationId: string,
     amount: number,
     description: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, any>
   ): Promise<{ success: boolean; newBalance: number }> {
     const result = await this.prisma.$transaction(async (tx) => {
       const org = await tx.organization.update({
@@ -224,7 +219,7 @@ export class TokensService {
 
   async transferTokens(
     sourceOrganizationId: string,
-    dto: TransferTokensDto,
+    dto: TransferTokensDto
   ): Promise<{ success: boolean; sourceBalance: number; targetBalance: number }> {
     // Check source balance
     const sourceBalance = await this.getBalance(sourceOrganizationId);
@@ -289,7 +284,7 @@ export class TokensService {
     });
 
     this.logger.log(
-      `Transferred ${dto.amount} tokens from ${sourceOrganizationId} to ${dto.targetOrganizationId}`,
+      `Transferred ${dto.amount} tokens from ${sourceOrganizationId} to ${dto.targetOrganizationId}`
     );
 
     return {
@@ -302,7 +297,7 @@ export class TokensService {
   async reserveTokens(
     organizationId: string,
     amount: number,
-    analysisId: string,
+    analysisId: string
   ): Promise<boolean> {
     const balance = await this.getBalance(organizationId);
 
@@ -445,7 +440,7 @@ export class TokensService {
     return packs.map((pack) => {
       const pricePerToken = pack.price / pack.totalTokens;
       const savingsPercent = Math.round(
-        ((basePricePerToken - pricePerToken) / basePricePerToken) * 100,
+        ((basePricePerToken - pricePerToken) / basePricePerToken) * 100
       );
 
       return {
@@ -468,7 +463,14 @@ export class TokensService {
     // Default packs as specified in specs
     const packs = [
       { id: 'starter', name: 'Starter', baseTokens: 100, bonusPercent: 0, price: 999 },
-      { id: 'standard', name: 'Standard', baseTokens: 300, bonusPercent: 10, price: 2499, isPopular: true },
+      {
+        id: 'standard',
+        name: 'Standard',
+        baseTokens: 300,
+        bonusPercent: 10,
+        price: 2499,
+        isPopular: true,
+      },
       { id: 'pro', name: 'Pro', baseTokens: 600, bonusPercent: 20, price: 4499 },
       { id: 'business', name: 'Business', baseTokens: 1500, bonusPercent: 30, price: 9999 },
       { id: 'enterprise', name: 'Enterprise', baseTokens: 5000, bonusPercent: 40, price: 29999 },
@@ -480,7 +482,7 @@ export class TokensService {
       const totalTokens = Math.floor(pack.baseTokens * (1 + pack.bonusPercent / 100));
       const pricePerToken = pack.price / totalTokens;
       const savingsPercent = Math.round(
-        ((basePricePerToken - pricePerToken) / basePricePerToken) * 100,
+        ((basePricePerToken - pricePerToken) / basePricePerToken) * 100
       );
 
       return {
@@ -501,7 +503,7 @@ export class TokensService {
 
   async checkTokenAvailability(
     organizationId: string,
-    dto: CheckTokensDto,
+    dto: CheckTokensDto
   ): Promise<{
     available: boolean;
     currentBalance: number;
@@ -510,9 +512,7 @@ export class TokensService {
     suggestedPack: TokenPackResponseDto | null;
   }> {
     const balance = await this.getBalance(organizationId);
-    const required = dto.serviceType
-      ? this.tokenCosts[dto.serviceType] || dto.amount
-      : dto.amount;
+    const required = dto.serviceType ? this.tokenCosts[dto.serviceType] || dto.amount : dto.amount;
 
     const available = balance.availableTokens >= required;
     const shortfall = Math.max(0, required - balance.availableTokens);
@@ -534,13 +534,12 @@ export class TokensService {
   }
 
   async estimateCost(
-    serviceType: string,
+    serviceType: string
   ): Promise<{ tokens: number; priceEstimate: number; currency: string }> {
     const tokens = this.tokenCosts[serviceType] || 0;
     const packs = await this.getTokenPacks();
-    const avgPricePerToken = packs.length > 0
-      ? packs.reduce((sum, p) => sum + p.pricePerToken, 0) / packs.length
-      : 0.10;
+    const avgPricePerToken =
+      packs.length > 0 ? packs.reduce((sum, p) => sum + p.pricePerToken, 0) / packs.length : 0.1;
 
     return {
       tokens,
@@ -552,7 +551,7 @@ export class TokensService {
   async createPurchaseSession(
     organizationId: string,
     userId: string,
-    dto: PurchaseTokensDto,
+    dto: PurchaseTokensDto
   ): Promise<{ sessionId: string; checkoutUrl: string }> {
     if (!this.stripe) {
       throw new BadRequestException('Payment system not configured');
@@ -644,7 +643,9 @@ export class TokensService {
         },
       ],
       mode: 'payment',
-      success_url: dto.successUrl || `${process.env.FRONTEND_URL}/tokens/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url:
+        dto.successUrl ||
+        `${process.env.FRONTEND_URL}/tokens/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: dto.cancelUrl || `${process.env.FRONTEND_URL}/tokens/cancel`,
       metadata: {
         purchaseId: purchase.id,
@@ -662,7 +663,7 @@ export class TokensService {
     });
 
     this.logger.log(
-      `Created checkout session ${session.id} for ${totalTokens} tokens (org: ${organizationId})`,
+      `Created checkout session ${session.id} for ${totalTokens} tokens (org: ${organizationId})`
     );
 
     return {
@@ -742,7 +743,7 @@ export class TokensService {
     });
 
     this.logger.log(
-      `Completed purchase ${purchaseId}: credited ${purchase.totalTokens} tokens to org ${purchase.organizationId}`,
+      `Completed purchase ${purchaseId}: credited ${purchase.totalTokens} tokens to org ${purchase.organizationId}`
     );
   }
 
@@ -759,7 +760,7 @@ export class TokensService {
 
   async getPurchaseHistory(
     organizationId: string,
-    query: PurchaseHistoryQueryDto,
+    query: PurchaseHistoryQueryDto
   ): Promise<{
     purchases: any[];
     total: number;
@@ -806,7 +807,14 @@ export class TokensService {
 
     const defaultPacks = [
       { name: 'Starter', baseTokens: 100, bonusPercent: 0, price: 999, sortOrder: 1 },
-      { name: 'Standard', baseTokens: 300, bonusPercent: 10, price: 2499, sortOrder: 2, isPopular: true },
+      {
+        name: 'Standard',
+        baseTokens: 300,
+        bonusPercent: 10,
+        price: 2499,
+        sortOrder: 2,
+        isPopular: true,
+      },
       { name: 'Pro', baseTokens: 600, bonusPercent: 20, price: 4499, sortOrder: 3 },
       { name: 'Business', baseTokens: 1500, bonusPercent: 30, price: 9999, sortOrder: 4 },
       { name: 'Enterprise', baseTokens: 5000, bonusPercent: 40, price: 29999, sortOrder: 5 },
