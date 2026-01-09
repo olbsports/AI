@@ -414,7 +414,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         return Colors.blue;
       case ListingStatus.expired:
         return Colors.grey;
-      case ListingStatus.rejected:
+      case ListingStatus.cancelled:
         return Colors.red;
       default:
         return Colors.grey;
@@ -431,8 +431,8 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         return 'Vendu';
       case ListingStatus.expired:
         return 'Expirée';
-      case ListingStatus.rejected:
-        return 'Refusée';
+      case ListingStatus.cancelled:
+        return 'Annulée';
       default:
         return 'Inconnue';
     }
