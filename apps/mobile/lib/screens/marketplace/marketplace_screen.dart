@@ -441,7 +441,29 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
   void _handleMyListingAction(String action, MarketplaceListing listing) async {
     switch (action) {
       case 'edit':
-        context.push('/marketplace/edit/${listing.id}');
+        if (listing.id.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Erreur: ID de l\'annonce invalide'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+        try {
+          context.push('/marketplace/edit/${Uri.encodeComponent(listing.id)}');
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Erreur lors de l\'ouverture de l\'éditeur: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
         break;
       case 'sold':
         _showMarkAsSoldDialog(listing);

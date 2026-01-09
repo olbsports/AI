@@ -165,15 +165,14 @@ class MainScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final location = GoRouterState.of(context).uri.path;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
+    // Allow pop on dashboard to let the system handle app exit
+    final canPopRoute = location == '/dashboard';
 
-        // Si on est sur le dashboard, ne pas quitter l'app
-        if (location == '/dashboard') {
-          return;
-        }
+    return PopScope(
+      canPop: canPopRoute,
+      onPopInvokedWithResult: (didPop, result) {
+        // If already popped (dashboard case), let system handle it
+        if (didPop) return;
 
         // Si on est sur une route de catégorie principale, aller au dashboard
         if (_isMainCategoryRoute(context)) {

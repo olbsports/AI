@@ -695,13 +695,33 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen>
         ),
         child: _AddEventForm(
           onSubmit: (data) async {
-            final notifier = ref.read(planningNotifierProvider.notifier);
-            final result = await notifier.createEvent(data);
-            if (result != null && context.mounted) {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Événement créé !')),
-              );
+            try {
+              final notifier = ref.read(planningNotifierProvider.notifier);
+              final result = await notifier.createEvent(data);
+              if (context.mounted) {
+                if (result != null) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Événement créé !')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Erreur lors de la création de l\'événement'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Erreur: ${e.toString()}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
         ),

@@ -262,6 +262,20 @@ final pendingReportsCountProvider = FutureProvider<int>((ref) async {
   return response['count'] as int;
 });
 
+/// Resolved reports count
+final resolvedReportsCountProvider = FutureProvider<int>((ref) async {
+  final api = ref.watch(adminApiServiceProvider);
+  final response = await api.get('/moderation/reports/resolved-count');
+  return response['count'] as int;
+});
+
+/// Escalated reports count
+final escalatedReportsCountProvider = FutureProvider<int>((ref) async {
+  final api = ref.watch(adminApiServiceProvider);
+  final response = await api.get('/moderation/reports/escalated-count');
+  return response['count'] as int;
+});
+
 /// Report detail
 final reportDetailProvider =
     FutureProvider.family<ContentReport, String>((ref, reportId) async {
@@ -284,6 +298,34 @@ final openTicketsCountProvider = FutureProvider<int>((ref) async {
   final api = ref.watch(adminApiServiceProvider);
   final response = await api.get('/support/tickets/open-count');
   return response['count'] as int;
+});
+
+/// In progress tickets count
+final inProgressTicketsCountProvider = FutureProvider<int>((ref) async {
+  final api = ref.watch(adminApiServiceProvider);
+  final response = await api.get('/support/tickets/in-progress-count');
+  return response['count'] as int;
+});
+
+/// Resolved tickets count (last 7 days)
+final resolvedTicketsCountProvider = FutureProvider<int>((ref) async {
+  final api = ref.watch(adminApiServiceProvider);
+  final response = await api.get('/support/tickets/resolved-count');
+  return response['count'] as int;
+});
+
+/// Average response time
+final averageResponseTimeProvider = FutureProvider<String>((ref) async {
+  final api = ref.watch(adminApiServiceProvider);
+  final response = await api.get('/support/tickets/average-response-time');
+  return response['averageTime'] as String;
+});
+
+/// Support statistics by category
+final supportStatsByCategoryProvider = FutureProvider<Map<String, int>>((ref) async {
+  final api = ref.watch(adminApiServiceProvider);
+  final response = await api.get('/support/tickets/stats-by-category');
+  return Map<String, int>.from(response as Map);
 });
 
 /// Ticket detail
@@ -367,6 +409,22 @@ class RetentionCohort {
     );
   }
 }
+
+// ==================== Horses ====================
+
+/// Horses statistics
+final horsesStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final api = ref.watch(adminApiServiceProvider);
+  final response = await api.get('/admin/horses/stats');
+  return response as Map<String, dynamic>;
+});
+
+/// Horses list
+final horsesListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final api = ref.watch(adminApiServiceProvider);
+  final response = await api.get('/admin/horses');
+  return (response as List).map((e) => e as Map<String, dynamic>).toList();
+});
 
 // ==================== Settings ====================
 

@@ -19,12 +19,12 @@ class ModerationScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            const Text(
+            Text(
               'Modération',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: AdminColors.textPrimary,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             const SizedBox(height: 24),
@@ -34,9 +34,9 @@ class ModerationScreen extends ConsumerWidget {
               children: [
                 _buildStatCard('En attente', ref.watch(pendingReportsCountProvider).valueOrNull ?? 0, AdminColors.warning),
                 const SizedBox(width: 16),
-                _buildStatCard('Résolus', 124, AdminColors.success),
+                _buildStatCard('Résolus', ref.watch(resolvedReportsCountProvider).valueOrNull ?? 0, AdminColors.success),
                 const SizedBox(width: 16),
-                _buildStatCard('Escaladés', 3, AdminColors.error),
+                _buildStatCard('Escaladés', ref.watch(escalatedReportsCountProvider).valueOrNull ?? 0, AdminColors.error),
               ],
             ),
             const SizedBox(height: 24),
@@ -52,9 +52,9 @@ class ModerationScreen extends ConsumerWidget {
                             children: [
                               Icon(Icons.check_circle, size: 64, color: AdminColors.success),
                               const SizedBox(height: 16),
-                              const Text(
+                              Text(
                                 'Aucun signalement en attente',
-                                style: TextStyle(color: AdminColors.textSecondary),
+                                style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
                               ),
                             ],
                           ),
@@ -98,15 +98,19 @@ class ModerationScreen extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    value.toString(),
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AdminColors.textPrimary,
+                  Builder(
+                    builder: (ctx) => Text(
+                      value.toString(),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(ctx).textTheme.bodyLarge?.color,
+                      ),
                     ),
                   ),
-                  Text(label, style: TextStyle(color: AdminColors.textSecondary)),
+                  Builder(
+                    builder: (ctx) => Text(label, style: TextStyle(color: Theme.of(ctx).textTheme.bodyMedium?.color)),
+                  ),
                 ],
               ),
             ],
@@ -144,40 +148,49 @@ class ModerationScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AdminColors.darkCard,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Theme.of(context).dividerColor),
                         ),
-                        child: Text(
-                          report.contentType.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AdminColors.textSecondary,
+                        child: Builder(
+                          builder: (ctx) => Text(
+                            report.contentType.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(ctx).textTheme.bodyMedium?.color,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        report.reportReason,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: AdminColors.textPrimary,
+                      Builder(
+                        builder: (ctx) => Text(
+                          report.reportReason,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(ctx).textTheme.bodyLarge?.color,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   if (report.contentPreview != null)
-                    Text(
-                      report.contentPreview!,
-                      style: TextStyle(color: AdminColors.textSecondary, fontSize: 13),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Builder(
+                      builder: (ctx) => Text(
+                        report.contentPreview!,
+                        style: TextStyle(color: Theme.of(ctx).textTheme.bodyMedium?.color, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Signalé par ${report.reporterName} • ${DateFormat('dd/MM HH:mm').format(report.createdAt)}',
-                    style: TextStyle(color: AdminColors.textMuted, fontSize: 12),
+                  Builder(
+                    builder: (ctx) => Text(
+                      'Signalé par ${report.reporterName} • ${DateFormat('dd/MM HH:mm').format(report.createdAt)}',
+                      style: TextStyle(color: Theme.of(ctx).textTheme.bodyMedium?.color?.withOpacity(0.6), fontSize: 12),
+                    ),
                   ),
                 ],
               ),

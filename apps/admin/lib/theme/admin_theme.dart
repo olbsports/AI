@@ -189,6 +189,69 @@ class AdminTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AdminColors.primary, width: 2),
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AdminColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Color(0xFF1E293B),
+          side: const BorderSide(color: AdminColors.lightBorder),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AdminColors.primary,
+        ),
+      ),
+      dataTableTheme: DataTableThemeData(
+        headingRowColor: WidgetStateProperty.all(AdminColors.lightCard),
+        dataRowColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return AdminColors.lightCard.withOpacity(0.5);
+          }
+          return Colors.transparent;
+        }),
+        dividerThickness: 1,
+      ),
+      tabBarTheme: const TabBarThemeData(
+        labelColor: AdminColors.primary,
+        unselectedLabelColor: Color(0xFF64748B),
+        indicatorColor: AdminColors.primary,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AdminColors.lightCard,
+        labelStyle: const TextStyle(color: Color(0xFF1E293B)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: AdminColors.lightBorder),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AdminColors.lightSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: Color(0xFF1E293B),
+        contentTextStyle: const TextStyle(color: Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
