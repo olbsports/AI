@@ -1,6 +1,96 @@
 /// Complete Gamification System for Horse Tempo
 
 // ============================================
+// GAMIFICATION PROFILE
+// ============================================
+
+/// Complete user gamification profile
+class GamificationProfile {
+  final String userId;
+  final UserLevel level;
+  final UserStreak streak;
+  final List<Badge> recentBadges;
+  final List<Challenge> activeChallenges;
+  final ReferralStats referralStats;
+  final int leaderboardRank;
+  final DateTime lastActivityAt;
+  final GamificationStats? stats;
+
+  GamificationProfile({
+    required this.userId,
+    required this.level,
+    required this.streak,
+    this.recentBadges = const [],
+    this.activeChallenges = const [],
+    required this.referralStats,
+    this.leaderboardRank = 0,
+    required this.lastActivityAt,
+    this.stats,
+  });
+
+  factory GamificationProfile.fromJson(Map<String, dynamic> json) {
+    return GamificationProfile(
+      userId: json['userId'] as String? ?? '',
+      level: json['level'] != null
+          ? UserLevel.fromJson(json['level'] as Map<String, dynamic>)
+          : UserLevel(level: 1, title: 'Debutant', currentXp: 0, xpForNextLevel: 100, totalXp: 0),
+      streak: json['streak'] != null
+          ? UserStreak.fromJson(json['streak'] as Map<String, dynamic>)
+          : UserStreak(id: '', userId: ''),
+      recentBadges: (json['recentBadges'] as List?)
+          ?.map((b) => Badge.fromJson(b as Map<String, dynamic>))
+          .toList() ?? [],
+      activeChallenges: (json['activeChallenges'] as List?)
+          ?.map((c) => Challenge.fromJson(c as Map<String, dynamic>))
+          .toList() ?? [],
+      referralStats: json['referralStats'] != null
+          ? ReferralStats.fromJson(json['referralStats'] as Map<String, dynamic>)
+          : ReferralStats(userId: '', referralCode: '', referralLink: ''),
+      leaderboardRank: (json['leaderboardRank'] as num?)?.toInt() ?? 0,
+      lastActivityAt: json['lastActivityAt'] != null
+          ? DateTime.tryParse(json['lastActivityAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      stats: json['stats'] != null
+          ? GamificationStats.fromJson(json['stats'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
+/// Gamification statistics summary
+class GamificationStats {
+  final int totalBadgesEarned;
+  final int totalBadgesAvailable;
+  final int challengesCompleted;
+  final int challengesInProgress;
+  final int totalXpEarned;
+  final int xpThisWeek;
+  final int xpThisMonth;
+
+  GamificationStats({
+    this.totalBadgesEarned = 0,
+    this.totalBadgesAvailable = 0,
+    this.challengesCompleted = 0,
+    this.challengesInProgress = 0,
+    this.totalXpEarned = 0,
+    this.xpThisWeek = 0,
+    this.xpThisMonth = 0,
+  });
+
+  factory GamificationStats.fromJson(Map<String, dynamic> json) {
+    return GamificationStats(
+      totalBadgesEarned: (json['totalBadgesEarned'] as num?)?.toInt() ?? 0,
+      totalBadgesAvailable: (json['totalBadgesAvailable'] as num?)?.toInt() ?? 0,
+      challengesCompleted: (json['challengesCompleted'] as num?)?.toInt() ?? 0,
+      challengesInProgress: (json['challengesInProgress'] as num?)?.toInt() ?? 0,
+      totalXpEarned: (json['totalXpEarned'] as num?)?.toInt() ?? 0,
+      xpThisWeek: (json['xpThisWeek'] as num?)?.toInt() ?? 0,
+      xpThisMonth: (json['xpThisMonth'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+// ============================================
 // XP & LEVELS
 // ============================================
 
@@ -966,4 +1056,187 @@ class ChallengeTemplates {
       'difficulty': 'hard',
     },
   ];
+}
+
+// ============================================
+// LEADERBOARD
+// ============================================
+
+/// Leaderboard entry for a user
+class LeaderboardEntry {
+  final String rank;
+  final String userId;
+  final String userName;
+  final String? userAvatarUrl;
+  final int level;
+  final String levelTitle;
+  final int totalXp;
+  final int xpThisPeriod;
+  final int badgeCount;
+  final bool isCurrentUser;
+  final String? region;
+  final String? discipline;
+
+  LeaderboardEntry({
+    required this.rank,
+    required this.userId,
+    required this.userName,
+    this.userAvatarUrl,
+    required this.level,
+    required this.levelTitle,
+    required this.totalXp,
+    this.xpThisPeriod = 0,
+    this.badgeCount = 0,
+    this.isCurrentUser = false,
+    this.region,
+    this.discipline,
+  });
+
+  factory LeaderboardEntry.fromJson(Map<String, dynamic> json) {
+    return LeaderboardEntry(
+      rank: json['rank']?.toString() ?? '0',
+      userId: json['userId'] as String? ?? json['id'] as String? ?? '',
+      userName: json['userName'] as String? ?? json['name'] as String? ?? 'Utilisateur',
+      userAvatarUrl: json['userAvatarUrl'] as String? ?? json['avatarUrl'] as String?,
+      level: (json['level'] as num?)?.toInt() ?? 1,
+      levelTitle: json['levelTitle'] as String? ?? json['title'] as String? ?? 'Debutant',
+      totalXp: (json['totalXp'] as num?)?.toInt() ?? (json['xp'] as num?)?.toInt() ?? 0,
+      xpThisPeriod: (json['xpThisPeriod'] as num?)?.toInt() ?? 0,
+      badgeCount: (json['badgeCount'] as num?)?.toInt() ?? 0,
+      isCurrentUser: json['isCurrentUser'] as bool? ?? false,
+      region: json['region'] as String?,
+      discipline: json['discipline'] as String?,
+    );
+  }
+}
+
+/// Leaderboard response with pagination
+class LeaderboardResponse {
+  final List<LeaderboardEntry> entries;
+  final LeaderboardEntry? currentUserEntry;
+  final int totalEntries;
+  final LeaderboardPeriod period;
+  final LeaderboardScope scope;
+
+  LeaderboardResponse({
+    required this.entries,
+    this.currentUserEntry,
+    this.totalEntries = 0,
+    this.period = LeaderboardPeriod.allTime,
+    this.scope = LeaderboardScope.global,
+  });
+
+  factory LeaderboardResponse.fromJson(Map<String, dynamic> json) {
+    return LeaderboardResponse(
+      entries: (json['entries'] as List? ?? json['items'] as List? ?? [])
+          .map((e) => LeaderboardEntry.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      currentUserEntry: json['currentUserEntry'] != null
+          ? LeaderboardEntry.fromJson(json['currentUserEntry'] as Map<String, dynamic>)
+          : null,
+      totalEntries: (json['totalEntries'] as num?)?.toInt() ?? (json['total'] as num?)?.toInt() ?? 0,
+      period: LeaderboardPeriod.fromString(json['period'] as String? ?? 'all_time'),
+      scope: LeaderboardScope.fromString(json['scope'] as String? ?? 'global'),
+    );
+  }
+}
+
+/// Leaderboard time period
+enum LeaderboardPeriod {
+  daily,
+  weekly,
+  monthly,
+  allTime;
+
+  String get displayName {
+    switch (this) {
+      case LeaderboardPeriod.daily: return 'Aujourd\'hui';
+      case LeaderboardPeriod.weekly: return 'Cette semaine';
+      case LeaderboardPeriod.monthly: return 'Ce mois';
+      case LeaderboardPeriod.allTime: return 'Tout temps';
+    }
+  }
+
+  String get apiValue {
+    switch (this) {
+      case LeaderboardPeriod.daily: return 'daily';
+      case LeaderboardPeriod.weekly: return 'weekly';
+      case LeaderboardPeriod.monthly: return 'monthly';
+      case LeaderboardPeriod.allTime: return 'all_time';
+    }
+  }
+
+  static LeaderboardPeriod fromString(String value) {
+    switch (value.toLowerCase()) {
+      case 'daily': return LeaderboardPeriod.daily;
+      case 'weekly': return LeaderboardPeriod.weekly;
+      case 'monthly': return LeaderboardPeriod.monthly;
+      default: return LeaderboardPeriod.allTime;
+    }
+  }
+}
+
+/// Leaderboard scope/category
+enum LeaderboardScope {
+  global,
+  regional,
+  discipline,
+  friends;
+
+  String get displayName {
+    switch (this) {
+      case LeaderboardScope.global: return 'Global';
+      case LeaderboardScope.regional: return 'Regional';
+      case LeaderboardScope.discipline: return 'Discipline';
+      case LeaderboardScope.friends: return 'Amis';
+    }
+  }
+
+  static LeaderboardScope fromString(String value) {
+    switch (value.toLowerCase()) {
+      case 'regional': return LeaderboardScope.regional;
+      case 'discipline': return LeaderboardScope.discipline;
+      case 'friends': return LeaderboardScope.friends;
+      default: return LeaderboardScope.global;
+    }
+  }
+}
+
+// ============================================
+// CLAIM RESPONSE
+// ============================================
+
+/// Response when claiming a challenge reward
+class ClaimRewardResponse {
+  final bool success;
+  final int xpEarned;
+  final int? tokensEarned;
+  final Badge? badgeUnlocked;
+  final bool leveledUp;
+  final int? newLevel;
+  final String? message;
+
+  ClaimRewardResponse({
+    required this.success,
+    this.xpEarned = 0,
+    this.tokensEarned,
+    this.badgeUnlocked,
+    this.leveledUp = false,
+    this.newLevel,
+    this.message,
+  });
+
+  factory ClaimRewardResponse.fromJson(Map<String, dynamic> json) {
+    return ClaimRewardResponse(
+      success: json['success'] as bool? ?? true,
+      xpEarned: (json['xpEarned'] as num?)?.toInt() ?? 0,
+      tokensEarned: (json['tokensEarned'] as num?)?.toInt(),
+      badgeUnlocked: json['badgeUnlocked'] != null
+          ? Badge.fromJson(json['badgeUnlocked'] as Map<String, dynamic>)
+          : null,
+      leveledUp: json['leveledUp'] as bool? ?? false,
+      newLevel: (json['newLevel'] as num?)?.toInt(),
+      message: json['message'] as String?,
+    );
+  }
 }

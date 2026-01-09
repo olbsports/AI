@@ -206,6 +206,123 @@ class ApiService {
     return AuthResponse.fromJson(response.data);
   }
 
+  /// Login with device tracking and optional remember device
+  Future<AuthResponse> loginWithDevice(
+    String email,
+    String password, {
+    bool rememberDevice = false,
+    String? deviceFingerprint,
+  }) async {
+    final response = await _dio.post('/auth/login', data: {
+      'email': email,
+      'password': password,
+      'rememberDevice': rememberDevice,
+      if (deviceFingerprint != null) 'deviceFingerprint': deviceFingerprint,
+    });
+    return AuthResponse.fromJson(response.data);
+  }
+
+  /// Verify 2FA code during login
+  Future<AuthResponse> verify2FALogin(
+    String tempToken,
+    String code, {
+    bool trustDevice = false,
+  }) async {
+    final response = await _dio.post('/auth/2fa/verify', data: {
+      'tempToken': tempToken,
+      'code': code,
+      'trustDevice': trustDevice,
+    });
+    return AuthResponse.fromJson(response.data);
+  }
+
+  /// Enable 2FA for the current user
+  Future<TwoFactorSetupResponse> enable2FA() async {
+    final response = await _dio.post('/auth/2fa/enable');
+    return TwoFactorSetupResponse.fromJson(response.data);
+  }
+
+  /// Confirm 2FA setup with verification code
+  Future<void> confirm2FASetup(String code) async {
+    await _dio.post('/auth/2fa/confirm', data: {'code': code});
+  }
+
+  /// Disable 2FA for the current user
+  Future<void> disable2FA(String code) async {
+    await _dio.post('/auth/2fa/disable', data: {'code': code});
+  }
+
+  /// Get backup codes for 2FA
+  Future<List<Map<String, dynamic>>> getBackupCodes() async {
+    final response = await _dio.get('/auth/2fa/backup-codes');
+    final data = response.data;
+    if (data is List) {
+      return data.map((e) => e is Map<String, dynamic> ? e : <String, dynamic>{}).toList();
+    }
+    if (data is Map<String, dynamic> && data['codes'] != null) {
+      final codes = data['codes'] as List;
+      return codes.map((e) => e is Map<String, dynamic> ? e : <String, dynamic>{}).toList();
+    }
+    return [];
+  }
+
+  /// Regenerate backup codes for 2FA
+  Future<List<String>> regenerateBackupCodes() async {
+    final response = await _dio.post('/auth/2fa/backup-codes/regenerate');
+    final data = response.data;
+    if (data is Map<String, dynamic> && data['codes'] != null) {
+      final codes = data['codes'] as List;
+      return codes.map((e) => e.toString()).toList();
+    }
+    if (data is List) {
+      return data.map((e) => e.toString()).toList();
+    }
+    return [];
+  }
+
+  /// Get active sessions for the current user
+  Future<List<UserSession>> getActiveSessions() async {
+    final response = await _dio.get('/auth/sessions');
+    final data = response.data;
+    if (data is List) {
+      return data.map((json) => UserSession.fromJson(json as Map<String, dynamic>)).toList();
+    }
+    if (data is Map<String, dynamic> && data['sessions'] != null) {
+      final sessions = data['sessions'] as List;
+      return sessions.map((json) => UserSession.fromJson(json as Map<String, dynamic>)).toList();
+    }
+    return [];
+  }
+
+  /// Revoke a specific session
+  Future<void> revokeSession(String sessionId) async {
+    await _dio.delete('/auth/sessions/$sessionId');
+  }
+
+  /// Revoke all sessions except current
+  Future<void> revokeAllSessions() async {
+    await _dio.post('/auth/sessions/revoke-all');
+  }
+
+  /// Get trusted devices for the current user
+  Future<List<TrustedDevice>> getTrustedDevices() async {
+    final response = await _dio.get('/auth/devices');
+    final data = response.data;
+    if (data is List) {
+      return data.map((json) => TrustedDevice.fromJson(json as Map<String, dynamic>)).toList();
+    }
+    if (data is Map<String, dynamic> && data['devices'] != null) {
+      final devices = data['devices'] as List;
+      return devices.map((json) => TrustedDevice.fromJson(json as Map<String, dynamic>)).toList();
+    }
+    return [];
+  }
+
+  /// Remove a trusted device
+  Future<void> removeTrustedDevice(String deviceId) async {
+    await _dio.delete('/auth/devices/$deviceId');
+  }
+
   Future<AuthResponse> register({
     required String email,
     required String password,

@@ -818,3 +818,255 @@ class FeedStats {
     );
   }
 }
+
+// ============================================================================
+// STORIES PROVIDERS
+// ============================================================================
+
+/// Stories from following users (grouped by user)
+final storiesProvider = FutureProvider.autoDispose<List<StoryGroup>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  try {
+    final response = await api.get('/stories');
+    return ((response as List?) ?? [])
+        .map((e) => StoryGroup.fromJson(e as Map<String, dynamic>))
+        .where((g) => g.stories.isNotEmpty)
+        .toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
+});
+
+/// My own stories
+final myStoriesProvider = FutureProvider.autoDispose<List<Story>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  try {
+    final response = await api.get('/stories/my');
+    return ((response as List?) ?? [])
+        .map((e) => Story.fromJson(e as Map<String, dynamic>))
+        .where((s) => !s.isExpired)
+        .toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
+});
+
+/// Single story by ID
+final storyProvider = FutureProvider.autoDispose.family<Story, String>((ref, storyId) async {
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.get('/stories/$storyId');
+  return Story.fromJson(response);
+});
+
+/// Stories by user
+final userStoriesProvider = FutureProvider.autoDispose.family<List<Story>, String>((ref, userId) async {
+  final api = ref.watch(apiServiceProvider);
+  try {
+    final response = await api.get('/users/$userId/stories');
+    return ((response as List?) ?? [])
+        .map((e) => Story.fromJson(e as Map<String, dynamic>))
+        .where((s) => !s.isExpired)
+        .toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
+});
+
+/// Story viewers
+final storyViewersProvider = FutureProvider.autoDispose.family<List<FollowUser>, String>((ref, storyId) async {
+  final api = ref.watch(apiServiceProvider);
+  try {
+    final response = await api.get('/stories/$storyId/viewers');
+    return ((response as List?) ?? [])
+        .map((e) => FollowUser.fromJson(e as Map<String, dynamic>))
+        .toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
+});
+
+// ============================================================================
+// HASHTAG PROVIDERS
+// ============================================================================
+
+/// Hashtag details
+final hashtagDetailProvider = FutureProvider.autoDispose.family<Hashtag, String>((ref, tag) async {
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.get('/hashtags/$tag');
+  return Hashtag.fromJson(response);
+});
+
+/// Posts by hashtag (paginated)
+final hashtagPostsProvider = FutureProvider.autoDispose.family<List<PublicNote>, ({String tag, int page})>((ref, params) async {
+  final api = ref.watch(apiServiceProvider);
+  try {
+    final response = await api.get('/hashtags/${params.tag}/posts', queryParams: {
+      'page': params.page.toString(),
+    });
+    return ((response as List?) ?? [])
+        .map((e) => PublicNote.fromJson(e as Map<String, dynamic>))
+        .toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
+});
+
+/// Related hashtags
+final relatedHashtagsProvider = FutureProvider.autoDispose.family<List<TrendingTag>, String>((ref, tag) async {
+  final api = ref.watch(apiServiceProvider);
+  try {
+    final response = await api.get('/hashtags/$tag/related');
+    return ((response as List?) ?? [])
+        .map((e) => TrendingTag.fromJson(e as Map<String, dynamic>))
+        .toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
+});
+
+/// Followed hashtags
+final followedHashtagsProvider = FutureProvider.autoDispose<List<Hashtag>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  try {
+    final response = await api.get('/hashtags/following');
+    return ((response as List?) ?? [])
+        .map((e) => Hashtag.fromJson(e as Map<String, dynamic>))
+        .toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
+});
+
+// ============================================================================
+// EXTENDED USER PROFILE PROVIDER
+// ============================================================================
+
+/// Extended user profile with full details
+final extendedUserProfileProvider = FutureProvider.autoDispose.family<ExtendedUserProfile, String>((ref, userId) async {
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.get('/users/$userId/profile/extended');
+  return ExtendedUserProfile.fromJson(response);
+});
+
+/// User's posts grid (for profile)
+final userPostsGridProvider = FutureProvider.autoDispose.family<List<PublicNote>, ({String userId, int page})>((ref, params) async {
+  final api = ref.watch(apiServiceProvider);
+  try {
+    final response = await api.get('/users/${params.userId}/posts', queryParams: {
+      'page': params.page.toString(),
+      'limit': '12',
+    });
+    return ((response as List?) ?? [])
+        .map((e) => PublicNote.fromJson(e as Map<String, dynamic>))
+        .toList();
+  } catch (e) {
+    if (_is404Error(e)) return [];
+    rethrow;
+  }
+});
+
+// ============================================================================
+// STORY NOTIFIER (CRUD Operations)
+// ============================================================================
+
+/// Story notifier for CRUD operations
+class StoryNotifier extends StateNotifier<AsyncValue<void>> {
+  final ApiService _api;
+  final Ref _ref;
+
+  StoryNotifier(this._api, this._ref) : super(const AsyncValue.data(null));
+
+  /// Create a new story
+  Future<Story?> createStory({
+    required File mediaFile,
+    required String mediaType,
+    int? duration,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      // Upload media first
+      final mediaUrl = await _api.uploadMedia(mediaFile, type: mediaType);
+      if (mediaUrl == null) {
+        throw Exception('Failed to upload media');
+      }
+
+      // Create story
+      final response = await _api.post('/stories', {
+        'mediaUrl': mediaUrl,
+        'mediaType': mediaType,
+        if (duration != null) 'duration': duration,
+      });
+
+      _ref.invalidate(storiesProvider);
+      _ref.invalidate(myStoriesProvider);
+      state = const AsyncValue.data(null);
+      return Story.fromJson(response);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return null;
+    }
+  }
+
+  /// Delete a story
+  Future<bool> deleteStory(String storyId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _api.delete('/stories/$storyId');
+      _ref.invalidate(storiesProvider);
+      _ref.invalidate(myStoriesProvider);
+      state = const AsyncValue.data(null);
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
+  /// Mark story as viewed
+  Future<bool> viewStory(String storyId) async {
+    try {
+      await _api.post('/stories/$storyId/view', {});
+      _ref.invalidate(storiesProvider);
+      _ref.invalidate(storyProvider(storyId));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Follow a hashtag
+  Future<bool> followHashtag(String tag) async {
+    try {
+      await _api.post('/hashtags/$tag/follow', {});
+      _ref.invalidate(hashtagDetailProvider(tag));
+      _ref.invalidate(followedHashtagsProvider);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Unfollow a hashtag
+  Future<bool> unfollowHashtag(String tag) async {
+    try {
+      await _api.delete('/hashtags/$tag/follow');
+      _ref.invalidate(hashtagDetailProvider(tag));
+      _ref.invalidate(followedHashtagsProvider);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+
+final storyNotifierProvider = StateNotifierProvider<StoryNotifier, AsyncValue<void>>((ref) {
+  final api = ref.watch(apiServiceProvider);
+  return StoryNotifier(api, ref);
+});

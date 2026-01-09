@@ -3,7 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/gamification.dart';
 import '../../providers/gamification_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/gamification/gamification_widgets.dart';
+import 'badges_screen.dart';
+import 'challenges_screen.dart';
+import 'referral_screen.dart';
+import 'leaderboard_screen.dart';
 
+/// Main gamification dashboard screen
 class GamificationScreen extends ConsumerWidget {
   const GamificationScreen({super.key});
 
@@ -13,23 +19,33 @@ class GamificationScreen extends ConsumerWidget {
     final streakAsync = ref.watch(userStreakProvider);
     final badgesAsync = ref.watch(earnedBadgesProvider);
     final challengesAsync = ref.watch(activeChallengesProvider);
+    final streakInDanger = ref.watch(streakInDangerProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Progression'),
         actions: [
+          // Leaderboard button
+          IconButton(
+            icon: const Icon(Icons.leaderboard),
+            tooltip: 'Classement',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+            ),
+          ),
+          // Rewards button
           IconButton(
             icon: const Icon(Icons.card_giftcard),
-            onPressed: () => _showRewards(context, ref),
+            tooltip: 'Recompenses',
+            onPressed: () => _showRewardsSheet(context, ref),
           ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(userLevelProvider);
-          ref.invalidate(userStreakProvider);
-          ref.invalidate(earnedBadgesProvider);
-          ref.invalidate(activeChallengesProvider);
+          final notifier = ref.read(gamificationNotifierProvider.notifier);
+          await notifier.refreshAll();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -37,9 +53,15 @@ class GamificationScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Streak warning banner
+              if (streakInDanger) _buildStreakWarningBanner(context, ref),
+
               // Level & XP Card
               levelAsync.when(
-                data: (level) => _buildLevelCard(context, level),
+                data: (level) => LevelProgressBar(
+                  level: level,
+                  onTap: () => _showXpHistory(context, ref),
+                ),
                 loading: () => const _LoadingCard(height: 200),
                 error: (_, __) => const _ErrorCard(message: 'Erreur de chargement'),
               ),
@@ -47,52 +69,85 @@ class GamificationScreen extends ConsumerWidget {
 
               // Streak Card
               streakAsync.when(
-                data: (streak) => _buildStreakCard(context, streak, ref),
-                loading: () => const _LoadingCard(height: 120),
+                data: (streak) => StreakIndicator(
+                  streak: streak,
+                  onClaimDaily: () => _claimDailyLogin(context, ref),
+                ),
+                loading: () => const _LoadingCard(height: 150),
                 error: (_, __) => const SizedBox(),
               ),
               const SizedBox(height: 24),
 
-              // Active Challenges
-              Text(
-                'Défis actifs',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+              // Quick Stats Row
+              _buildQuickStats(context, ref),
+              const SizedBox(height: 24),
+
+              // Active Challenges Section
+              _buildSectionHeader(
+                context,
+                'Defis actifs',
+                onSeeAll: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChallengesScreen()),
+                ),
               ),
               const SizedBox(height: 12),
               challengesAsync.when(
-                data: (challenges) => challenges.isEmpty
-                    ? _buildEmptyState('Aucun défi actif')
-                    : Column(
-                        children: challenges.map((c) => _buildChallengeCard(context, c)).toList(),
+                data: (challenges) {
+                  if (challenges.isEmpty) {
+                    return _buildEmptyState(
+                      context,
+                      'Aucun defi actif',
+                      'Revenez plus tard pour de nouveaux defis !',
+                    );
+                  }
+                  // Show top 3 challenges
+                  final displayChallenges = challenges.take(3).toList();
+                  return Column(
+                    children: displayChallenges.map((c) => ChallengeCard(
+                      challenge: c,
+                      compact: true,
+                      onClaim: c.isCompleted || c.progress >= 1.0
+                          ? () => _claimChallengeReward(context, ref, c)
+                          : null,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ChallengesScreen()),
                       ),
+                    )).toList(),
+                  );
+                },
                 loading: () => const _LoadingCard(height: 150),
                 error: (_, __) => const _ErrorCard(message: 'Erreur'),
               ),
               const SizedBox(height: 24),
 
-              // Badges
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Badges obtenus',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  TextButton(
-                    onPressed: () => _showAllBadges(context, ref),
-                    child: const Text('Voir tout'),
-                  ),
-                ],
+              // Badges Section
+              _buildSectionHeader(
+                context,
+                'Badges obtenus',
+                onSeeAll: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BadgesScreen()),
+                ),
               ),
               const SizedBox(height: 12),
               badgesAsync.when(
-                data: (badges) => badges.isEmpty
-                    ? _buildEmptyState('Aucun badge obtenu')
-                    : _buildBadgesGrid(context, badges.take(8).toList()),
+                data: (badges) {
+                  if (badges.isEmpty) {
+                    return _buildEmptyState(
+                      context,
+                      'Aucun badge obtenu',
+                      'Completez des defis pour gagner des badges !',
+                    );
+                  }
+                  return BadgeGrid(
+                    badges: badges.take(8).toList(),
+                    onBadgeTap: (badge) => _showBadgeDetails(context, badge),
+                    showLockedBadges: false,
+                    crossAxisCount: 4,
+                  );
+                },
                 loading: () => const _LoadingCard(height: 200),
                 error: (_, __) => const _ErrorCard(message: 'Erreur'),
               ),
@@ -100,6 +155,7 @@ class GamificationScreen extends ConsumerWidget {
 
               // Referral Section
               _buildReferralSection(context, ref),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -107,282 +163,152 @@ class GamificationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLevelCard(BuildContext context, UserLevel level) {
+  Widget _buildStreakWarningBanner(BuildContext context, WidgetRef ref) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: Colors.orange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Niveau ${level.level}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
+          const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Streak en danger !',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Colors.orange.shade800,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Text(
-                    level.title,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 18,
-                    ),
+                ),
+                Text(
+                  'Validez votre connexion pour conserver votre serie',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.orange.shade700,
                   ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                  size: 40,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: level.progressToNextLevel,
-              minHeight: 12,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${level.currentXp} XP',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                '${level.xpForNextLevel} XP',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
+          FilledButton(
+            onPressed: () => _claimDailyLogin(context, ref),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.orange,
             ),
-            child: Text(
-              'Total: ${level.totalXp} XP',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            child: const Text('Valider'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStreakCard(BuildContext context, UserStreak streak, WidgetRef ref) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: streak.currentStreak > 0
-                    ? Colors.orange.withValues(alpha: 0.1)
-                    : Colors.grey.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                streak.currentStreak > 0 ? '🔥' : '💤',
-                style: const TextStyle(fontSize: 32),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${streak.currentStreak} jours consécutifs',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  Text(
-                    'Record: ${streak.longestStreak} jours',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            if (!streak.isActiveToday)
-              ElevatedButton(
-                onPressed: () async {
-                  final notifier = ref.read(gamificationNotifierProvider.notifier);
-                  await notifier.claimDailyLogin();
-                },
-                child: const Text('Valider'),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildQuickStats(BuildContext context, WidgetRef ref) {
+    final badgeCounts = ref.watch(badgeCountsProvider);
+    final levelAsync = ref.watch(userLevelProvider);
+    final streakAsync = ref.watch(userStreakProvider);
 
-  Widget _buildChallengeCard(BuildContext context, Challenge challenge) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getChallengeTypeColor(challenge.type).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    challenge.type.displayName,
-                    style: TextStyle(
-                      color: _getChallengeTypeColor(challenge.type),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '+${challenge.xpReward} XP',
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              challenge.title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              challenge.description,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: challenge.progress,
-                      minHeight: 8,
-                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  '${challenge.currentValue}/${challenge.targetValue}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Temps restant: ${_formatDuration(challenge.timeRemaining)}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-          ],
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatCard(
+            context,
+            icon: Icons.star,
+            iconColor: Colors.amber,
+            value: levelAsync.whenOrNull(data: (l) => '${l.level}') ?? '-',
+            label: 'Niveau',
+            onTap: () => _showXpHistory(context, ref),
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBadgesGrid(BuildContext context, List<Badge> badges) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-      ),
-      itemCount: badges.length,
-      itemBuilder: (context, index) {
-        final badge = badges[index];
-        return GestureDetector(
-          onTap: () => _showBadgeDetails(context, badge),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Color(badge.rarity.color).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Color(badge.rarity.color),
-                width: 2,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                badge.iconUrl,
-                style: const TextStyle(fontSize: 32),
-              ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatCard(
+            context,
+            icon: Icons.local_fire_department,
+            iconColor: Colors.orange,
+            value: streakAsync.whenOrNull(data: (s) => '${s.currentStreak}') ?? '-',
+            label: 'Streak',
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatCard(
+            context,
+            icon: Icons.emoji_events,
+            iconColor: Colors.purple,
+            value: '${badgeCounts.$1}/${badgeCounts.$2}',
+            label: 'Badges',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BadgesScreen()),
             ),
           ),
-        );
-      },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Icon(icon, color: iconColor, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title, {
+    VoidCallback? onSeeAll,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (onSeeAll != null)
+          TextButton(
+            onPressed: onSeeAll,
+            child: const Text('Voir tout'),
+          ),
+      ],
     );
   }
 
@@ -412,16 +338,16 @@ class GamificationScreen extends ConsumerWidget {
                       Text(
                         'Parrainage',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        'Invitez vos amis et gagnez des récompenses',
+                        'Invitez vos amis et gagnez des recompenses',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                          color: AppColors.textSecondary,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -431,10 +357,41 @@ class GamificationScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
+
+            // Referral stats preview
+            ref.watch(referralStatsProvider).whenOrNull(
+              data: (stats) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildMiniStat(
+                      context,
+                      '${stats.totalReferrals}',
+                      'Filleuls',
+                    ),
+                    _buildMiniStat(
+                      context,
+                      '${stats.activeReferrals}',
+                      'Actifs',
+                    ),
+                    _buildMiniStat(
+                      context,
+                      '${stats.totalTokensEarned}',
+                      'Tokens',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => _showReferralDialog(context, ref),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReferralScreen()),
+                ),
                 icon: const Icon(Icons.share),
                 label: const Text('Inviter des amis'),
               ),
@@ -445,114 +402,429 @@ class GamificationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildMiniStat(BuildContext context, String value, String label) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, String title, String subtitle) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Center(
-          child: Text(
-            message,
-            style: TextStyle(color: AppColors.textSecondary),
+          child: Column(
+            children: [
+              Icon(
+                Icons.emoji_events_outlined,
+                size: 48,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Color _getChallengeTypeColor(ChallengeType type) {
-    switch (type) {
-      case ChallengeType.daily:
-        return Colors.green;
-      case ChallengeType.weekly:
-        return Colors.blue;
-      case ChallengeType.monthly:
-        return Colors.purple;
-      case ChallengeType.special:
-        return Colors.orange;
-      case ChallengeType.seasonal:
-        return Colors.red;
-    }
-  }
-
-  String _formatDuration(Duration duration) {
-    if (duration.isNegative) return 'Expiré';
-    if (duration.inDays > 0) return '${duration.inDays}j ${duration.inHours % 24}h';
-    if (duration.inHours > 0) return '${duration.inHours}h ${duration.inMinutes % 60}m';
-    return '${duration.inMinutes}m';
-  }
-
   void _showBadgeDetails(BuildContext context, Badge badge) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Color(badge.rarity.color).withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Text(badge.iconUrl, style: const TextStyle(fontSize: 64)),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              badge.name,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Color(badge.rarity.color).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                badge.rarity.displayName,
-                style: TextStyle(
-                  color: Color(badge.rarity.color),
-                  fontWeight: FontWeight.w500,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: BadgeDetailSheet(badge: badge),
+      ),
+    );
+  }
+
+  void _showRewardsSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              badge.description,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            if (badge.earnedAt != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Obtenu le ${_formatDate(badge.earnedAt!)}',
-                style: Theme.of(context).textTheme.bodySmall,
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Recompenses disponibles',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final rewardsAsync = ref.watch(availableRewardsProvider);
+                    return rewardsAsync.when(
+                      data: (rewards) {
+                        if (rewards.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.card_giftcard_outlined,
+                                  size: 64,
+                                  color: AppColors.textTertiary,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Aucune recompense disponible',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: rewards.length,
+                          itemBuilder: (context, index) {
+                            final reward = rewards[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: ListTile(
+                                leading: Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      _getRewardIcon(reward.type),
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                                title: Text(reward.name),
+                                subtitle: Text(reward.description),
+                                trailing: FilledButton(
+                                  onPressed: reward.isClaimed
+                                      ? null
+                                      : () => _claimReward(context, ref, reward),
+                                  child: Text(reward.isClaimed ? 'Reclame' : 'Reclamer'),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (_, __) => const Center(child: Text('Erreur de chargement')),
+                    );
+                  },
+                ),
               ),
             ],
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
     );
   }
 
+  void _showXpHistory(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Historique XP',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final historyAsync = ref.watch(xpTransactionsProvider);
+                    return historyAsync.when(
+                      data: (transactions) {
+                        if (transactions.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'Aucune transaction XP',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          );
+                        }
+                        return ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: transactions.length,
+                          itemBuilder: (context, index) {
+                            final tx = transactions[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: tx.amount > 0
+                                        ? Colors.green.withValues(alpha: 0.1)
+                                        : Colors.red.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    _getXpSourceIcon(tx.source),
+                                    color: tx.amount > 0 ? Colors.green : Colors.red,
+                                    size: 20,
+                                  ),
+                                ),
+                                title: Text(tx.description),
+                                subtitle: Text(_formatDate(tx.createdAt)),
+                                trailing: Text(
+                                  '${tx.amount > 0 ? '+' : ''}${tx.amount} XP',
+                                  style: TextStyle(
+                                    color: tx.amount > 0 ? Colors.green : Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (_, __) => const Center(child: Text('Erreur de chargement')),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getRewardIcon(RewardType type) {
+    switch (type) {
+      case RewardType.tokens:
+        return Icons.token;
+      case RewardType.xp:
+        return Icons.star;
+      case RewardType.premiumDays:
+        return Icons.workspace_premium;
+      case RewardType.discount:
+        return Icons.local_offer;
+      case RewardType.featureUnlock:
+        return Icons.lock_open;
+      case RewardType.customization:
+        return Icons.palette;
+      case RewardType.badge:
+        return Icons.emoji_events;
+    }
+  }
+
+  IconData _getXpSourceIcon(XpSource source) {
+    switch (source) {
+      case XpSource.analysis:
+        return Icons.analytics;
+      case XpSource.dailyLogin:
+        return Icons.login;
+      case XpSource.streak:
+        return Icons.local_fire_department;
+      case XpSource.challengeComplete:
+        return Icons.flag;
+      case XpSource.badgeEarned:
+        return Icons.emoji_events;
+      case XpSource.horseAdded:
+        return Icons.pets;
+      case XpSource.reportGenerated:
+        return Icons.description;
+      case XpSource.socialShare:
+        return Icons.share;
+      case XpSource.referral:
+        return Icons.people;
+      case XpSource.competition:
+        return Icons.sports_score;
+      case XpSource.levelUp:
+        return Icons.arrow_upward;
+      case XpSource.achievement:
+        return Icons.military_tech;
+    }
+  }
+
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inDays == 0) {
+      if (diff.inHours == 0) {
+        return 'Il y a ${diff.inMinutes} min';
+      }
+      return 'Il y a ${diff.inHours}h';
+    }
+    if (diff.inDays == 1) return 'Hier';
+    if (diff.inDays < 7) return 'Il y a ${diff.inDays} jours';
+
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
-  void _showAllBadges(BuildContext context, WidgetRef ref) {
-    // Navigate to all badges screen
+  Future<void> _claimDailyLogin(BuildContext context, WidgetRef ref) async {
+    final notifier = ref.read(gamificationNotifierProvider.notifier);
+    final result = await notifier.claimDailyLogin();
+
+    if (result != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.star, color: Colors.amber),
+              const SizedBox(width: 8),
+              Text('+${result.amount} XP - ${result.description}'),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
   }
 
-  void _showRewards(BuildContext context, WidgetRef ref) {
-    // Show rewards bottom sheet
+  Future<void> _claimChallengeReward(
+    BuildContext context,
+    WidgetRef ref,
+    Challenge challenge,
+  ) async {
+    final notifier = ref.read(gamificationNotifierProvider.notifier);
+    final result = await notifier.claimChallengeReward(challenge.id);
+
+    if (result != null && result.success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.star, color: Colors.amber),
+              const SizedBox(width: 8),
+              Text('+${result.xpEarned} XP'),
+              if (result.tokensEarned != null && result.tokensEarned! > 0) ...[
+                const SizedBox(width: 8),
+                Text('+${result.tokensEarned} tokens'),
+              ],
+            ],
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+
+      // Show level up dialog if applicable
+      if (result.leveledUp && result.newLevel != null) {
+        showDialog(
+          context: context,
+          builder: (context) => LevelUpDialog(
+            newLevel: result.newLevel!,
+            newTitle: UserLevel.getTitleForLevel(result.newLevel!),
+            onContinue: () => Navigator.pop(context),
+          ),
+        );
+      }
+    }
   }
 
-  void _showReferralDialog(BuildContext context, WidgetRef ref) {
-    // Show referral sharing dialog
+  Future<void> _claimReward(
+    BuildContext context,
+    WidgetRef ref,
+    Reward reward,
+  ) async {
+    final notifier = ref.read(gamificationNotifierProvider.notifier);
+    final success = await notifier.claimReward(reward.id);
+
+    if (success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Recompense "${reward.name}" reclamee !'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
   }
 }
 

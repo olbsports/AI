@@ -3,6 +3,562 @@
 import 'package:flutter/material.dart';
 
 // ============================================
+// EVENT CATEGORIES
+// ============================================
+
+/// Event category with custom colors
+class EventCategory {
+  final String id;
+  final String name;
+  final int colorValue;
+  final IconData icon;
+  final bool isDefault;
+
+  const EventCategory({
+    required this.id,
+    required this.name,
+    required this.colorValue,
+    required this.icon,
+    this.isDefault = false,
+  });
+
+  Color get color => Color(colorValue);
+
+  factory EventCategory.fromJson(Map<String, dynamic> json) {
+    return EventCategory(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      colorValue: json['color'] as int? ?? 0xFF2196F3,
+      icon: _iconFromString(json['icon'] as String? ?? 'event'),
+      isDefault: json['isDefault'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'color': colorValue,
+    'icon': _iconToString(icon),
+    'isDefault': isDefault,
+  };
+
+  static IconData _iconFromString(String name) {
+    switch (name) {
+      case 'training': return Icons.fitness_center;
+      case 'competition': return Icons.emoji_events;
+      case 'health': return Icons.local_hospital;
+      case 'farrier': return Icons.handyman;
+      case 'transport': return Icons.local_shipping;
+      case 'lesson': return Icons.school;
+      default: return Icons.event;
+    }
+  }
+
+  static String _iconToString(IconData icon) {
+    if (icon == Icons.fitness_center) return 'training';
+    if (icon == Icons.emoji_events) return 'competition';
+    if (icon == Icons.local_hospital) return 'health';
+    if (icon == Icons.handyman) return 'farrier';
+    if (icon == Icons.local_shipping) return 'transport';
+    if (icon == Icons.school) return 'lesson';
+    return 'event';
+  }
+
+  /// Predefined categories
+  static const List<EventCategory> defaults = [
+    EventCategory(
+      id: 'training',
+      name: 'Entrainement',
+      colorValue: 0xFF2196F3,
+      icon: Icons.fitness_center,
+      isDefault: true,
+    ),
+    EventCategory(
+      id: 'competition',
+      name: 'Competition',
+      colorValue: 0xFFFF9800,
+      icon: Icons.emoji_events,
+      isDefault: true,
+    ),
+    EventCategory(
+      id: 'lesson',
+      name: 'Cours',
+      colorValue: 0xFF4CAF50,
+      icon: Icons.school,
+      isDefault: true,
+    ),
+    EventCategory(
+      id: 'vet',
+      name: 'Veterinaire',
+      colorValue: 0xFFF44336,
+      icon: Icons.local_hospital,
+      isDefault: true,
+    ),
+    EventCategory(
+      id: 'farrier',
+      name: 'Marechal',
+      colorValue: 0xFF795548,
+      icon: Icons.handyman,
+      isDefault: true,
+    ),
+    EventCategory(
+      id: 'health_reminder',
+      name: 'Rappel sante',
+      colorValue: 0xFFFFEB3B,
+      icon: Icons.vaccines,
+      isDefault: true,
+    ),
+    EventCategory(
+      id: 'transport',
+      name: 'Transport',
+      colorValue: 0xFF607D8B,
+      icon: Icons.local_shipping,
+      isDefault: true,
+    ),
+    EventCategory(
+      id: 'personal',
+      name: 'Personnel',
+      colorValue: 0xFF9E9E9E,
+      icon: Icons.person,
+      isDefault: true,
+    ),
+  ];
+}
+
+// ============================================
+// HEALTH REMINDERS
+// ============================================
+
+/// Health reminder for horses (vaccinations, deworming, etc.)
+class HealthReminder {
+  final String id;
+  final String organizationId;
+  final String horseId;
+  final String? horseName;
+  final HealthReminderType type;
+  final String? customType;
+  final HealthReminderFrequency frequency;
+  final DateTime? lastDoneAt;
+  final DateTime nextDueAt;
+  final int reminderDaysBefore;
+  final String? notes;
+  final String? vetName;
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+
+  HealthReminder({
+    required this.id,
+    required this.organizationId,
+    required this.horseId,
+    this.horseName,
+    required this.type,
+    this.customType,
+    required this.frequency,
+    this.lastDoneAt,
+    required this.nextDueAt,
+    this.reminderDaysBefore = 7,
+    this.notes,
+    this.vetName,
+    this.isActive = true,
+    required this.createdAt,
+    this.updatedAt,
+  });
+
+  /// Days until due
+  int get daysUntilDue => nextDueAt.difference(DateTime.now()).inDays;
+
+  /// Check if upcoming (within reminder period)
+  bool get isUpcoming => daysUntilDue <= reminderDaysBefore && daysUntilDue > 0;
+
+  /// Check if due today
+  bool get isDueToday => daysUntilDue == 0;
+
+  /// Check if overdue
+  bool get isOverdue => daysUntilDue < 0;
+
+  /// Get status for display
+  HealthReminderStatus get status {
+    if (isOverdue) return HealthReminderStatus.overdue;
+    if (isDueToday) return HealthReminderStatus.dueToday;
+    if (isUpcoming) return HealthReminderStatus.upcoming;
+    return HealthReminderStatus.scheduled;
+  }
+
+  factory HealthReminder.fromJson(Map<String, dynamic> json) {
+    return HealthReminder(
+      id: json['id'] as String,
+      organizationId: json['organizationId'] as String,
+      horseId: json['horseId'] as String,
+      horseName: json['horseName'] as String?,
+      type: HealthReminderType.fromString(json['type'] as String),
+      customType: json['customType'] as String?,
+      frequency: HealthReminderFrequency.fromJson(
+        json['frequency'] as Map<String, dynamic>,
+      ),
+      lastDoneAt: json['lastDoneAt'] != null
+          ? DateTime.parse(json['lastDoneAt'] as String)
+          : null,
+      nextDueAt: DateTime.parse(json['nextDueAt'] as String),
+      reminderDaysBefore: json['reminderDaysBefore'] as int? ?? 7,
+      notes: json['notes'] as String?,
+      vetName: json['vetName'] as String?,
+      isActive: json['isActive'] as bool? ?? true,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'organizationId': organizationId,
+    'horseId': horseId,
+    'horseName': horseName,
+    'type': type.name,
+    'customType': customType,
+    'frequency': frequency.toJson(),
+    'lastDoneAt': lastDoneAt?.toIso8601String(),
+    'nextDueAt': nextDueAt.toIso8601String(),
+    'reminderDaysBefore': reminderDaysBefore,
+    'notes': notes,
+    'vetName': vetName,
+    'isActive': isActive,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt?.toIso8601String(),
+  };
+
+  HealthReminder copyWith({
+    String? id,
+    String? organizationId,
+    String? horseId,
+    String? horseName,
+    HealthReminderType? type,
+    String? customType,
+    HealthReminderFrequency? frequency,
+    DateTime? lastDoneAt,
+    DateTime? nextDueAt,
+    int? reminderDaysBefore,
+    String? notes,
+    String? vetName,
+    bool? isActive,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return HealthReminder(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      horseId: horseId ?? this.horseId,
+      horseName: horseName ?? this.horseName,
+      type: type ?? this.type,
+      customType: customType ?? this.customType,
+      frequency: frequency ?? this.frequency,
+      lastDoneAt: lastDoneAt ?? this.lastDoneAt,
+      nextDueAt: nextDueAt ?? this.nextDueAt,
+      reminderDaysBefore: reminderDaysBefore ?? this.reminderDaysBefore,
+      notes: notes ?? this.notes,
+      vetName: vetName ?? this.vetName,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}
+
+/// Health reminder types
+enum HealthReminderType {
+  vaccination,
+  deworming,
+  dental,
+  farrier,
+  osteopath,
+  checkup,
+  other;
+
+  String get displayName {
+    switch (this) {
+      case HealthReminderType.vaccination:
+        return 'Vaccination';
+      case HealthReminderType.deworming:
+        return 'Vermifuge';
+      case HealthReminderType.dental:
+        return 'Dentiste';
+      case HealthReminderType.farrier:
+        return 'Marechal-ferrant';
+      case HealthReminderType.osteopath:
+        return 'Osteopathe';
+      case HealthReminderType.checkup:
+        return 'Visite veterinaire';
+      case HealthReminderType.other:
+        return 'Autre';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case HealthReminderType.vaccination:
+        return Icons.vaccines;
+      case HealthReminderType.deworming:
+        return Icons.bug_report;
+      case HealthReminderType.dental:
+        return Icons.medical_services;
+      case HealthReminderType.farrier:
+        return Icons.handyman;
+      case HealthReminderType.osteopath:
+        return Icons.healing;
+      case HealthReminderType.checkup:
+        return Icons.local_hospital;
+      case HealthReminderType.other:
+        return Icons.event_note;
+    }
+  }
+
+  int get defaultColor {
+    switch (this) {
+      case HealthReminderType.vaccination:
+        return 0xFF4CAF50;
+      case HealthReminderType.deworming:
+        return 0xFFFF5722;
+      case HealthReminderType.dental:
+        return 0xFF00BCD4;
+      case HealthReminderType.farrier:
+        return 0xFF795548;
+      case HealthReminderType.osteopath:
+        return 0xFF9C27B0;
+      case HealthReminderType.checkup:
+        return 0xFFF44336;
+      case HealthReminderType.other:
+        return 0xFF607D8B;
+    }
+  }
+
+  /// Default frequency for each type
+  HealthReminderFrequency get defaultFrequency {
+    switch (this) {
+      case HealthReminderType.vaccination:
+        return const HealthReminderFrequency(type: FrequencyType.months, interval: 6);
+      case HealthReminderType.deworming:
+        return const HealthReminderFrequency(type: FrequencyType.months, interval: 2);
+      case HealthReminderType.dental:
+        return const HealthReminderFrequency(type: FrequencyType.years, interval: 1);
+      case HealthReminderType.farrier:
+        return const HealthReminderFrequency(type: FrequencyType.weeks, interval: 6);
+      case HealthReminderType.osteopath:
+        return const HealthReminderFrequency(type: FrequencyType.months, interval: 3);
+      case HealthReminderType.checkup:
+        return const HealthReminderFrequency(type: FrequencyType.years, interval: 1);
+      case HealthReminderType.other:
+        return const HealthReminderFrequency(type: FrequencyType.months, interval: 1);
+    }
+  }
+
+  static HealthReminderType fromString(String value) {
+    return HealthReminderType.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => HealthReminderType.other,
+    );
+  }
+}
+
+/// Health reminder frequency
+class HealthReminderFrequency {
+  final FrequencyType type;
+  final int interval;
+
+  const HealthReminderFrequency({
+    required this.type,
+    required this.interval,
+  });
+
+  factory HealthReminderFrequency.fromJson(Map<String, dynamic> json) {
+    return HealthReminderFrequency(
+      type: FrequencyType.fromString(json['type'] as String),
+      interval: json['interval'] as int,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'type': type.name,
+    'interval': interval,
+  };
+
+  String get displayText {
+    final unitText = interval == 1
+        ? type.singularName
+        : type.pluralName;
+    return 'Tous les $interval $unitText';
+  }
+
+  /// Calculate next due date from a given date
+  DateTime nextDueFrom(DateTime date) {
+    switch (type) {
+      case FrequencyType.days:
+        return date.add(Duration(days: interval));
+      case FrequencyType.weeks:
+        return date.add(Duration(days: interval * 7));
+      case FrequencyType.months:
+        return DateTime(date.year, date.month + interval, date.day);
+      case FrequencyType.years:
+        return DateTime(date.year + interval, date.month, date.day);
+    }
+  }
+}
+
+/// Frequency type
+enum FrequencyType {
+  days,
+  weeks,
+  months,
+  years;
+
+  String get singularName {
+    switch (this) {
+      case FrequencyType.days: return 'jour';
+      case FrequencyType.weeks: return 'semaine';
+      case FrequencyType.months: return 'mois';
+      case FrequencyType.years: return 'an';
+    }
+  }
+
+  String get pluralName {
+    switch (this) {
+      case FrequencyType.days: return 'jours';
+      case FrequencyType.weeks: return 'semaines';
+      case FrequencyType.months: return 'mois';
+      case FrequencyType.years: return 'ans';
+    }
+  }
+
+  static FrequencyType fromString(String value) {
+    return FrequencyType.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => FrequencyType.months,
+    );
+  }
+}
+
+/// Health reminder status
+enum HealthReminderStatus {
+  scheduled,
+  upcoming,
+  dueToday,
+  overdue;
+
+  String get displayName {
+    switch (this) {
+      case HealthReminderStatus.scheduled:
+        return 'Planifie';
+      case HealthReminderStatus.upcoming:
+        return 'A venir';
+      case HealthReminderStatus.dueToday:
+        return 'Aujourd\'hui';
+      case HealthReminderStatus.overdue:
+        return 'En retard';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case HealthReminderStatus.scheduled:
+        return const Color(0xFF9E9E9E);
+      case HealthReminderStatus.upcoming:
+        return const Color(0xFFFFEB3B);
+      case HealthReminderStatus.dueToday:
+        return const Color(0xFFFF9800);
+      case HealthReminderStatus.overdue:
+        return const Color(0xFFF44336);
+    }
+  }
+}
+
+// ============================================
+// NOTIFICATION SETTINGS
+// ============================================
+
+/// User notification preferences for calendar events
+class CalendarNotificationSettings {
+  final bool pushEnabled;
+  final bool emailEnabled;
+  final bool smsEnabled;
+  final int quietHoursStart; // Hour of day (0-23)
+  final int quietHoursEnd;
+  final Map<String, List<int>> defaultRemindersByType; // EventType -> minutes before
+
+  const CalendarNotificationSettings({
+    this.pushEnabled = true,
+    this.emailEnabled = true,
+    this.smsEnabled = false,
+    this.quietHoursStart = 22,
+    this.quietHoursEnd = 7,
+    this.defaultRemindersByType = const {},
+  });
+
+  factory CalendarNotificationSettings.fromJson(Map<String, dynamic> json) {
+    return CalendarNotificationSettings(
+      pushEnabled: json['pushEnabled'] as bool? ?? true,
+      emailEnabled: json['emailEnabled'] as bool? ?? true,
+      smsEnabled: json['smsEnabled'] as bool? ?? false,
+      quietHoursStart: json['quietHoursStart'] as int? ?? 22,
+      quietHoursEnd: json['quietHoursEnd'] as int? ?? 7,
+      defaultRemindersByType: (json['defaultRemindersByType'] as Map<String, dynamic>?)
+          ?.map((k, v) => MapEntry(k, (v as List).cast<int>())) ?? {},
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'pushEnabled': pushEnabled,
+    'emailEnabled': emailEnabled,
+    'smsEnabled': smsEnabled,
+    'quietHoursStart': quietHoursStart,
+    'quietHoursEnd': quietHoursEnd,
+    'defaultRemindersByType': defaultRemindersByType,
+  };
+
+  /// Get default reminders for an event type
+  List<int> getDefaultReminders(EventType type) {
+    return defaultRemindersByType[type.name] ?? _fallbackReminders(type);
+  }
+
+  List<int> _fallbackReminders(EventType type) {
+    switch (type) {
+      case EventType.competition:
+        return [10080, 1440, 120]; // 1 week, 1 day, 2 hours
+      case EventType.veterinary:
+      case EventType.farrier:
+      case EventType.dentist:
+        return [1440, 120]; // 1 day, 2 hours
+      case EventType.training:
+      case EventType.lesson:
+        return [60]; // 1 hour
+      case EventType.vaccination:
+      case EventType.deworming:
+        return [10080, 1440]; // 1 week, 1 day
+      default:
+        return [1440, 60]; // 1 day, 1 hour
+    }
+  }
+
+  CalendarNotificationSettings copyWith({
+    bool? pushEnabled,
+    bool? emailEnabled,
+    bool? smsEnabled,
+    int? quietHoursStart,
+    int? quietHoursEnd,
+    Map<String, List<int>>? defaultRemindersByType,
+  }) {
+    return CalendarNotificationSettings(
+      pushEnabled: pushEnabled ?? this.pushEnabled,
+      emailEnabled: emailEnabled ?? this.emailEnabled,
+      smsEnabled: smsEnabled ?? this.smsEnabled,
+      quietHoursStart: quietHoursStart ?? this.quietHoursStart,
+      quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,
+      defaultRemindersByType: defaultRemindersByType ?? this.defaultRemindersByType,
+    );
+  }
+}
+
+// ============================================
 // CALENDAR EVENTS
 // ============================================
 

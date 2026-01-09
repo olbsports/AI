@@ -13,6 +13,9 @@ import '../../providers/social_provider.dart';
 import '../../providers/horses_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/stories_carousel.dart';
+import 'story_viewer_screen.dart';
+import 'create_story_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -38,12 +41,50 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
     super.dispose();
   }
 
+  void _onCreateStory() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CreateStoryScreen()),
+    );
+    if (result != null) {
+      ref.invalidate(storiesProvider);
+      ref.invalidate(myStoriesProvider);
+    }
+  }
+
+  void _onViewStories(StoryGroup group, int initialIndex) {
+    final storyGroups = ref.read(storiesProvider).valueOrNull ?? [];
+
+    // Find the group index
+    int groupIndex = storyGroups.indexWhere((g) => g.userId == group.userId);
+    if (groupIndex == -1) {
+      // If viewing own stories, they might not be in the main list
+      groupIndex = 0;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StoryViewerScreen(
+          storyGroups: groupIndex == -1 ? [group] : storyGroups,
+          initialGroupIndex: groupIndex == -1 ? 0 : groupIndex,
+          initialStoryIndex: initialIndex,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Communauté'),
+        title: const Text('Communaute'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.tag),
+            onPressed: () => _showHashtagExplore(context),
+            tooltip: 'Explorer les hashtags',
+          ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => _showSearch(context),
@@ -69,6 +110,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
         onPressed: () => _showCreatePostSheet(context),
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  void _showHashtagExplore(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HashtagExploreScreen()),
     );
   }
 
@@ -112,6 +160,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(feedProvider);
+        ref.invalidate(storiesProvider);
+        ref.invalidate(myStoriesProvider);
+        ref.invalidate(trendingTagsProvider);
       },
       child: feedAsync.when(
         data: (posts) {
@@ -121,11 +172,19 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
           return CustomScrollView(
             controller: _scrollController,
             slivers: [
+              // Stories carousel at the top
+              SliverToBoxAdapter(
+                child: StoriesCarousel(
+                  onCreateStory: _onCreateStory,
+                  onViewStories: _onViewStories,
+                ),
+              ),
+              const SliverToBoxAdapter(child: Divider(height: 1)),
               // Trending tags section
               SliverToBoxAdapter(
                 child: _buildTrendingTags(),
               ),
-              const SliverToBoxAdapter(child: Divider()),
+              const SliverToBoxAdapter(child: Divider(height: 1)),
               // Feed posts
               SliverList(
                 delegate: SliverChildBuilderDelegate(
@@ -143,29 +202,50 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
   }
 
   Widget _buildEmptyFeed() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.feed_outlined, size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          const Text(
-            'Aucune publication',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+    return CustomScrollView(
+      slivers: [
+        // Still show stories carousel even when feed is empty
+        SliverToBoxAdapter(
+          child: StoriesCarousel(
+            onCreateStory: _onCreateStory,
+            onViewStories: _onViewStories,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Soyez le premier à partager !',
-            style: TextStyle(color: Colors.grey.shade600),
+        ),
+        const SliverToBoxAdapter(child: Divider(height: 1)),
+        // Trending tags
+        SliverToBoxAdapter(
+          child: _buildTrendingTags(),
+        ),
+        const SliverToBoxAdapter(child: Divider(height: 1)),
+        // Empty state
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.feed_outlined, size: 64, color: Colors.grey.shade400),
+                const SizedBox(height: 16),
+                const Text(
+                  'Aucune publication',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Soyez le premier a partager !',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: () => _showCreatePostSheet(context),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Creer une publication'),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () => _showCreatePostSheet(context),
-            icon: const Icon(Icons.add),
-            label: const Text('Créer une publication'),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -792,37 +872,557 @@ class _FeedSearchDelegate extends SearchDelegate<String> {
   }
 }
 
-class TagPostsScreen extends ConsumerWidget {
+class TagPostsScreen extends ConsumerStatefulWidget {
   final String tag;
 
   const TagPostsScreen({super.key, required this.tag});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final postsAsync = ref.watch(postsByTagProvider(tag));
+  ConsumerState<TagPostsScreen> createState() => _TagPostsScreenState();
+}
+
+class _TagPostsScreenState extends ConsumerState<TagPostsScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final postsAsync = ref.watch(hashtagPostsProvider((tag: widget.tag, page: 0)));
+    final hashtagAsync = ref.watch(hashtagDetailProvider(widget.tag));
+    final relatedAsync = ref.watch(relatedHashtagsProvider(widget.tag));
 
     return Scaffold(
-      appBar: AppBar(title: Text('#$tag')),
-      body: postsAsync.when(
-        data: (posts) {
-          if (posts.isEmpty) {
-            return const Center(child: Text('Aucune publication avec ce tag'));
-          }
-          return ListView.builder(
-            itemCount: posts.length,
-            itemBuilder: (context, index) {
-              // Simplified post card for tag view
-              final post = posts[index];
-              return Card(
-                margin: const EdgeInsets.all(8),
-                child: ListTile(
-                  title: Text(post.authorName),
-                  subtitle: Text(
-                    post.content,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(hashtagPostsProvider((tag: widget.tag, page: 0)));
+          ref.invalidate(hashtagDetailProvider(widget.tag));
+          ref.invalidate(relatedHashtagsProvider(widget.tag));
+        },
+        child: CustomScrollView(
+          slivers: [
+            // Hashtag header
+            SliverAppBar(
+              expandedHeight: 160,
+              pinned: true,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text('#${widget.tag}'),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primary,
+                        AppColors.secondary,
+                      ],
+                    ),
+                  ),
+                  child: hashtagAsync.when(
+                    data: (hashtag) => Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 40),
+                          Text(
+                            '${hashtag.postCount} publications',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                          if (hashtag.weeklyPostCount > 0)
+                            Text(
+                              '+${hashtag.weeklyPostCount} cette semaine',
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
                   ),
                 ),
+              ),
+              actions: [
+                hashtagAsync.when(
+                  data: (hashtag) => TextButton.icon(
+                    icon: Icon(
+                      hashtag.isFollowing ? Icons.check : Icons.add,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      hashtag.isFollowing ? 'Suivi' : 'Suivre',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () => _toggleFollowHashtag(hashtag),
+                  ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+              ],
+            ),
+
+            // Related hashtags
+            SliverToBoxAdapter(
+              child: relatedAsync.when(
+                data: (related) {
+                  if (related.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: Text(
+                          'Hashtags associes',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 40,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: related.length,
+                          itemBuilder: (context, index) {
+                            final relatedTag = related[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: HashtagChip(
+                                tag: relatedTag.tag,
+                                postCount: relatedTag.postCount,
+                                onTap: () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TagPostsScreen(tag: relatedTag.tag),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const Divider(),
+                    ],
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+            ),
+
+            // Posts
+            postsAsync.when(
+              data: (posts) {
+                if (posts.isEmpty) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.tag, size: 64, color: Colors.grey.shade400),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Aucune publication avec #${widget.tag}',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('Soyez le premier a utiliser ce hashtag !'),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _HashtagPostCard(post: posts[index]),
+                    childCount: posts.length,
+                  ),
+                );
+              },
+              loading: () => const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => SliverFillRemaining(
+                child: Center(child: Text('Erreur: $e')),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _toggleFollowHashtag(Hashtag hashtag) async {
+    final notifier = ref.read(storyNotifierProvider.notifier);
+    if (hashtag.isFollowing) {
+      await notifier.unfollowHashtag(widget.tag);
+    } else {
+      await notifier.followHashtag(widget.tag);
+    }
+    ref.invalidate(hashtagDetailProvider(widget.tag));
+    ref.invalidate(followedHashtagsProvider);
+  }
+}
+
+/// Hashtag chip widget for clickable hashtags
+class HashtagChip extends StatelessWidget {
+  final String tag;
+  final int? postCount;
+  final VoidCallback? onTap;
+  final bool isSelected;
+
+  const HashtagChip({
+    super.key,
+    required this.tag,
+    this.postCount,
+    this.onTap,
+    this.isSelected = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ActionChip(
+      avatar: Icon(
+        Icons.tag,
+        size: 16,
+        color: isSelected ? Colors.white : AppColors.primary,
+      ),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(tag),
+          if (postCount != null) ...[
+            const SizedBox(width: 4),
+            Text(
+              '($postCount)',
+              style: TextStyle(
+                fontSize: 11,
+                color: isSelected ? Colors.white70 : Colors.grey,
+              ),
+            ),
+          ],
+        ],
+      ),
+      backgroundColor: isSelected ? AppColors.primary : null,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : null,
+      ),
+      onPressed: onTap,
+    );
+  }
+}
+
+/// Post card for hashtag view
+class _HashtagPostCard extends StatelessWidget {
+  final PublicNote post;
+
+  const _HashtagPostCard({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: InkWell(
+        onTap: () {
+          // Navigate to post detail
+          context.push('/post/${post.id}');
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Author row
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundImage: post.authorPhotoUrl != null
+                        ? CachedNetworkImageProvider(post.authorPhotoUrl!)
+                        : null,
+                    child: post.authorPhotoUrl == null
+                        ? Text(post.authorName.isNotEmpty ? post.authorName[0] : '?')
+                        : null,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          post.authorName,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          _formatTimeAgo(post.createdAt),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // Content
+              Text(
+                post.content,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              // Media preview
+              if (post.mediaUrls.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: CachedNetworkImage(
+                      imageUrl: post.mediaUrls.first,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(
+                        color: Colors.grey.shade200,
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        color: Colors.grey.shade200,
+                        child: const Icon(Icons.image),
+                      ),
+                    ),
+                  ),
+                ),
+                if (post.mediaUrls.length > 1)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '+${post.mediaUrls.length - 1} photo(s)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+              ],
+
+              // Engagement stats
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(
+                    post.isLiked ? Icons.favorite : Icons.favorite_border,
+                    size: 18,
+                    color: post.isLiked ? Colors.red : Colors.grey,
+                  ),
+                  const SizedBox(width: 4),
+                  Text('${post.likeCount}'),
+                  const SizedBox(width: 16),
+                  const Icon(Icons.chat_bubble_outline, size: 18, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Text('${post.commentCount}'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatTimeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}min';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    if (diff.inDays < 7) return '${diff.inDays}j';
+    return '${date.day}/${date.month}';
+  }
+}
+
+/// Hashtag explore screen with search and trending
+class HashtagExploreScreen extends ConsumerStatefulWidget {
+  const HashtagExploreScreen({super.key});
+
+  @override
+  ConsumerState<HashtagExploreScreen> createState() => _HashtagExploreScreenState();
+}
+
+class _HashtagExploreScreenState extends ConsumerState<HashtagExploreScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Explorer les hashtags'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Tendances'),
+            Tab(text: 'Suivis'),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Rechercher un hashtag...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() => _searchQuery = value);
+              },
+            ),
+          ),
+
+          // Content
+          Expanded(
+            child: _searchQuery.isNotEmpty
+                ? _buildSearchResults()
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildTrendingTab(),
+                      _buildFollowedTab(),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchResults() {
+    final trendingAsync = ref.watch(trendingTagsProvider);
+
+    return trendingAsync.when(
+      data: (tags) {
+        final filtered = tags
+            .where((t) => t.tag.toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
+
+        if (filtered.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
+                const SizedBox(height: 16),
+                Text('Aucun hashtag trouve pour "$_searchQuery"'),
+                const SizedBox(height: 8),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TagPostsScreen(tag: _searchQuery),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.tag),
+                  label: Text('Voir #$_searchQuery'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: filtered.length,
+          itemBuilder: (context, index) {
+            final tag = filtered[index];
+            return _HashtagListTile(
+              tag: tag.tag,
+              postCount: tag.postCount,
+              trendScore: tag.trendScore,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TagPostsScreen(tag: tag.tag),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Erreur: $e')),
+    );
+  }
+
+  Widget _buildTrendingTab() {
+    final trendingAsync = ref.watch(trendingTagsProvider);
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(trendingTagsProvider);
+      },
+      child: trendingAsync.when(
+        data: (tags) {
+          if (tags.isEmpty) {
+            return const Center(
+              child: Text('Aucun hashtag en tendance'),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: tags.length,
+            itemBuilder: (context, index) {
+              final tag = tags[index];
+              return _HashtagListTile(
+                tag: tag.tag,
+                postCount: tag.postCount,
+                trendScore: tag.trendScore,
+                rank: index + 1,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TagPostsScreen(tag: tag.tag),
+                    ),
+                  );
+                },
               );
             },
           );
@@ -830,6 +1430,235 @@ class TagPostsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Erreur: $e')),
       ),
+    );
+  }
+
+  Widget _buildFollowedTab() {
+    final followedAsync = ref.watch(followedHashtagsProvider);
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(followedHashtagsProvider);
+      },
+      child: followedAsync.when(
+        data: (hashtags) {
+          if (hashtags.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.tag, size: 64, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  const Text('Vous ne suivez aucun hashtag'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Suivez des hashtags pour voir les publications associees',
+                    style: TextStyle(color: Colors.grey.shade600),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: hashtags.length,
+            itemBuilder: (context, index) {
+              final hashtag = hashtags[index];
+              return _HashtagListTile(
+                tag: hashtag.tag,
+                postCount: hashtag.postCount,
+                isFollowing: hashtag.isFollowing,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TagPostsScreen(tag: hashtag.tag),
+                    ),
+                  );
+                },
+                onToggleFollow: () => _toggleFollow(hashtag),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Erreur: $e')),
+      ),
+    );
+  }
+
+  void _toggleFollow(Hashtag hashtag) async {
+    final notifier = ref.read(storyNotifierProvider.notifier);
+    if (hashtag.isFollowing) {
+      await notifier.unfollowHashtag(hashtag.tag);
+    } else {
+      await notifier.followHashtag(hashtag.tag);
+    }
+    ref.invalidate(followedHashtagsProvider);
+  }
+}
+
+/// List tile for hashtag display
+class _HashtagListTile extends StatelessWidget {
+  final String tag;
+  final int postCount;
+  final double? trendScore;
+  final int? rank;
+  final bool isFollowing;
+  final VoidCallback onTap;
+  final VoidCallback? onToggleFollow;
+
+  const _HashtagListTile({
+    required this.tag,
+    required this.postCount,
+    this.trendScore,
+    this.rank,
+    this.isFollowing = false,
+    required this.onTap,
+    this.onToggleFollow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: rank != null
+          ? SizedBox(
+              width: 36,
+              child: Center(
+                child: Text(
+                  '#$rank',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: rank! <= 3 ? AppColors.primary : Colors.grey,
+                    fontSize: rank! <= 3 ? 18 : 14,
+                  ),
+                ),
+              ),
+            )
+          : Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.tag, color: AppColors.primary),
+            ),
+      title: Text(
+        '#$tag',
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Row(
+        children: [
+          Text('$postCount publications'),
+          if (trendScore != null && trendScore! > 0) ...[
+            const SizedBox(width: 8),
+            Icon(Icons.trending_up, size: 14, color: Colors.green.shade600),
+            Text(
+              ' ${trendScore!.toStringAsFixed(0)}%',
+              style: TextStyle(
+                color: Colors.green.shade600,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ],
+      ),
+      trailing: onToggleFollow != null
+          ? IconButton(
+              icon: Icon(
+                isFollowing ? Icons.notifications_active : Icons.notifications_none,
+                color: isFollowing ? AppColors.primary : null,
+              ),
+              onPressed: onToggleFollow,
+            )
+          : const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+}
+
+/// Trending hashtags widget for sidebar/explore
+class TrendingHashtagsWidget extends ConsumerWidget {
+  final int maxItems;
+  final bool showTitle;
+
+  const TrendingHashtagsWidget({
+    super.key,
+    this.maxItems = 5,
+    this.showTitle = true,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trendingAsync = ref.watch(trendingTagsProvider);
+
+    return trendingAsync.when(
+      data: (tags) {
+        if (tags.isEmpty) return const SizedBox.shrink();
+
+        final displayTags = tags.take(maxItems).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (showTitle) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.trending_up, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Tendances',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HashtagExploreScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('Voir tout'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            ...displayTags.asMap().entries.map((entry) {
+              final index = entry.key;
+              final tag = entry.value;
+              return ListTile(
+                dense: true,
+                leading: Text(
+                  '${index + 1}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: index < 3 ? AppColors.primary : Colors.grey,
+                  ),
+                ),
+                title: Text('#${tag.tag}'),
+                subtitle: Text('${tag.postCount} publications'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TagPostsScreen(tag: tag.tag),
+                    ),
+                  );
+                },
+              );
+            }),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }
