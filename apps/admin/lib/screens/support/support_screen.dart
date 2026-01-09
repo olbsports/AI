@@ -32,11 +32,11 @@ class SupportScreen extends ConsumerWidget {
               children: [
                 _buildStatCard('Ouverts', ref.watch(openTicketsCountProvider).valueOrNull ?? 0, AdminColors.warning),
                 const SizedBox(width: 16),
-                _buildStatCard('En cours', 12, AdminColors.primary),
+                _buildStatCard('En cours', ref.watch(inProgressTicketsCountProvider).valueOrNull ?? 0, AdminColors.primary),
                 const SizedBox(width: 16),
-                _buildStatCard('Résolus (7j)', 45, AdminColors.success),
+                _buildStatCard('Résolus (7j)', ref.watch(resolvedTicketsCountProvider).valueOrNull ?? 0, AdminColors.success),
                 const SizedBox(width: 16),
-                _buildStatCard('Temps moyen', '2h30', AdminColors.accent),
+                _buildStatCard('Temps moyen', ref.watch(averageResponseTimeProvider).valueOrNull ?? 'N/A', AdminColors.accent),
               ],
             ),
             const SizedBox(height: 24),
@@ -138,19 +138,21 @@ class SupportScreen extends ConsumerWidget {
                 child: Icon(Icons.support_agent, color: color),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value.toString(),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AdminColors.textPrimary,
+              Builder(
+                builder: (ctx) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value.toString(),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(ctx).textTheme.bodyLarge?.color,
+                      ),
                     ),
-                  ),
-                  Text(label, style: TextStyle(color: AdminColors.textSecondary, fontSize: 12)),
-                ],
+                    Text(label, style: TextStyle(color: Theme.of(ctx).textTheme.bodyMedium?.color, fontSize: 12)),
+                  ],
+                ),
               ),
             ],
           ),
@@ -180,23 +182,25 @@ class SupportScreen extends ConsumerWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ticket.subject,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: AdminColors.textPrimary,
+              child: Builder(
+                builder: (ctx) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ticket.subject,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(ctx).textTheme.bodyLarge?.color,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '${ticket.userName} • ${ticket.category.displayName}',
-                    style: TextStyle(color: AdminColors.textSecondary, fontSize: 12),
-                  ),
-                ],
+                    Text(
+                      '${ticket.userName} • ${ticket.category.displayName}',
+                      style: TextStyle(color: Theme.of(ctx).textTheme.bodyMedium?.color, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -216,9 +220,11 @@ class SupportScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              DateFormat('dd/MM').format(ticket.createdAt),
-              style: TextStyle(color: AdminColors.textMuted, fontSize: 12),
+            Builder(
+              builder: (ctx) => Text(
+                DateFormat('dd/MM').format(ticket.createdAt),
+                style: TextStyle(color: Theme.of(ctx).textTheme.bodyMedium?.color?.withOpacity(0.6), fontSize: 12),
+              ),
             ),
           ],
         ),
@@ -227,18 +233,24 @@ class SupportScreen extends ConsumerWidget {
   }
 
   Widget _buildCategoryRow(TicketCategory category) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(category.displayName, style: TextStyle(color: AdminColors.textSecondary)),
-          Text(
-            '${(category.index + 1) * 3}',
-            style: const TextStyle(fontWeight: FontWeight.w500, color: AdminColors.textPrimary),
+    return Consumer(
+      builder: (context, ref, _) {
+        final statsByCategory = ref.watch(supportStatsByCategoryProvider).valueOrNull ?? {};
+        final count = statsByCategory[category.name] ?? 0;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(category.displayName, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
+              Text(
+                count.toString(),
+                style: TextStyle(fontWeight: FontWeight.w500, color: Theme.of(context).textTheme.bodyLarge?.color),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

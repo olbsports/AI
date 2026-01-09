@@ -31,7 +31,7 @@ class HorseTempoAdminApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AdminTheme.lightTheme,
       darkTheme: AdminTheme.darkTheme,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       routerConfig: router,
     );
   }

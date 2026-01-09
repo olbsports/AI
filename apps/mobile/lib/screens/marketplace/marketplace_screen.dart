@@ -441,7 +441,29 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
   void _handleMyListingAction(String action, MarketplaceListing listing) async {
     switch (action) {
       case 'edit':
-        context.push('/marketplace/edit/${listing.id}');
+        if (listing.id.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Erreur: ID de l\'annonce invalide'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+        try {
+          context.push('/marketplace/edit/${Uri.encodeComponent(listing.id)}');
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Erreur lors de l\'ouverture de l\'éditeur: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
         break;
       case 'sold':
         _showMarkAsSoldDialog(listing);
@@ -505,40 +527,77 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
   }
 
   void _showPromoteDialog(MarketplaceListing listing) {
+    int? selectedDays;
+
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Promouvoir l\'annonce'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Mettez votre annonce en avant pour plus de visibilité'),
-            const SizedBox(height: 16),
-            _buildPromoteOption('7 jours', '5 €', 7),
-            _buildPromoteOption('14 jours', '8 €', 14),
-            _buildPromoteOption('30 jours', '15 €', 30),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Promouvoir l\'annonce'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Mettez votre annonce en avant pour plus de visibilité'),
+              const SizedBox(height: 16),
+              _buildPromoteOptionTile('7 jours', '5 €', 7, selectedDays, (days) {
+                setDialogState(() => selectedDays = days);
+              }),
+              _buildPromoteOptionTile('14 jours', '8 €', 14, selectedDays, (days) {
+                setDialogState(() => selectedDays = days);
+              }),
+              _buildPromoteOptionTile('30 jours', '15 €', 30, selectedDays, (days) {
+                setDialogState(() => selectedDays = days);
+              }),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: selectedDays != null
+                  ? () async {
+                      Navigator.pop(dialogContext);
+                      final success = await ref
+                          .read(marketplaceNotifierProvider.notifier)
+                          .promoteListing(listing.id, selectedDays!);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(success
+                                ? 'Annonce mise en avant pour $selectedDays jours !'
+                                : 'Erreur lors de la promotion'),
+                            backgroundColor: success ? AppColors.success : Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  : null,
+              child: const Text('Confirmer'),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Annuler'),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildPromoteOption(String duration, String price, int days) {
+  Widget _buildPromoteOptionTile(String duration, String price, int days, int? selectedDays, Function(int) onSelect) {
+    final isSelected = selectedDays == days;
     return ListTile(
+      leading: Radio<int>(
+        value: days,
+        groupValue: selectedDays,
+        onChanged: (value) => onSelect(days),
+      ),
       title: Text(duration),
       trailing: Text(price, style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-      onTap: () async {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fonctionnalité bientôt disponible')),
-        );
-      },
+      onTap: () => onSelect(days),
+      selected: isSelected,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: isSelected ? BorderSide(color: AppColors.primary) : BorderSide.none,
+      ),
     );
   }
 

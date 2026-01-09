@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/api_service.dart';
@@ -6,8 +7,25 @@ import '../services/api_service.dart';
 final subscriptionProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   try {
     final api = ref.watch(apiServiceProvider);
-    return await api.getCurrentSubscription();
-  } catch (e) {
+    final result = await api.getCurrentSubscription();
+    debugPrint('BILLING: getCurrentSubscription returned type: ${result.runtimeType}');
+
+    // Ensure result is a proper Map
+    if (result is! Map) {
+      debugPrint('BILLING: WARNING - getCurrentSubscription returned non-map: ${result.runtimeType}');
+      return <String, dynamic>{
+        'status': 'active',
+        'planId': 'free',
+        'planName': 'Starter',
+        'plan': {'id': 'free', 'name': 'Starter', 'price': 0},
+      };
+    }
+
+    // Convert to Map<String, dynamic> with type safety
+    return Map<String, dynamic>.from(result);
+  } catch (e, st) {
+    debugPrint('BILLING: subscriptionProvider error: $e');
+    debugPrint('BILLING: stack trace: $st');
     // Return default subscription on any error
     return <String, dynamic>{
       'status': 'active',
@@ -22,8 +40,29 @@ final subscriptionProvider = FutureProvider.autoDispose<Map<String, dynamic>>((r
 final plansProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   try {
     final api = ref.watch(apiServiceProvider);
-    return await api.getPlans();
-  } catch (e) {
+    final result = await api.getPlans();
+    debugPrint('BILLING: getPlans returned ${result.length} items, type: ${result.runtimeType}');
+
+    // Ensure result is a proper List
+    if (result is! List) {
+      debugPrint('BILLING: WARNING - getPlans returned non-list: ${result.runtimeType}');
+      return <Map<String, dynamic>>[];
+    }
+
+    // Convert to List<Map<String, dynamic>> with type safety
+    return result.map((item) {
+      if (item is Map<String, dynamic>) {
+        return item;
+      } else if (item is Map) {
+        return Map<String, dynamic>.from(item);
+      } else {
+        debugPrint('BILLING: WARNING - plan item is not a Map: ${item.runtimeType}');
+        return <String, dynamic>{};
+      }
+    }).toList();
+  } catch (e, st) {
+    debugPrint('BILLING: plansProvider error: $e');
+    debugPrint('BILLING: stack trace: $st');
     return <Map<String, dynamic>>[];
   }
 });
@@ -32,8 +71,25 @@ final plansProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((re
 final tokenBalanceProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   try {
     final api = ref.watch(apiServiceProvider);
-    return await api.getTokenBalance();
-  } catch (e) {
+    final result = await api.getTokenBalance();
+    debugPrint('BILLING: getTokenBalance returned type: ${result.runtimeType}');
+
+    // Ensure result is a proper Map
+    if (result is! Map) {
+      debugPrint('BILLING: WARNING - getTokenBalance returned non-map: ${result.runtimeType}');
+      return <String, dynamic>{
+        'horsesUsed': 0,
+        'horsesLimit': 5,
+        'analysesUsed': 0,
+        'analysesLimit': 10,
+      };
+    }
+
+    // Convert to Map<String, dynamic> with type safety
+    return Map<String, dynamic>.from(result);
+  } catch (e, st) {
+    debugPrint('BILLING: tokenBalanceProvider error: $e');
+    debugPrint('BILLING: stack trace: $st');
     return <String, dynamic>{
       'horsesUsed': 0,
       'horsesLimit': 5,
@@ -47,8 +103,29 @@ final tokenBalanceProvider = FutureProvider.autoDispose<Map<String, dynamic>>((r
 final invoicesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   try {
     final api = ref.watch(apiServiceProvider);
-    return await api.getInvoices();
-  } catch (e) {
+    final result = await api.getInvoices();
+    debugPrint('BILLING: getInvoices returned ${result.length} items, type: ${result.runtimeType}');
+
+    // Ensure result is a proper List
+    if (result is! List) {
+      debugPrint('BILLING: WARNING - getInvoices returned non-list: ${result.runtimeType}');
+      return <Map<String, dynamic>>[];
+    }
+
+    // Convert to List<Map<String, dynamic>> with type safety
+    return result.map((item) {
+      if (item is Map<String, dynamic>) {
+        return item;
+      } else if (item is Map) {
+        return Map<String, dynamic>.from(item);
+      } else {
+        debugPrint('BILLING: WARNING - invoice item is not a Map: ${item.runtimeType}');
+        return <String, dynamic>{};
+      }
+    }).toList();
+  } catch (e, st) {
+    debugPrint('BILLING: invoicesProvider error: $e');
+    debugPrint('BILLING: stack trace: $st');
     return <Map<String, dynamic>>[];
   }
 });
