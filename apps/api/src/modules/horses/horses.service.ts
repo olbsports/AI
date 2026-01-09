@@ -102,10 +102,13 @@ export class HorsesService {
   }
 
   async create(organizationId: string, data: CreateHorseDto) {
+    const { riderId, sireId, ...rest } = data;
     return this.prisma.horse.create({
       data: {
-        ...data,
-        organizationId,
+        ...rest,
+        organization: { connect: { id: organizationId } },
+        ...(riderId && { rider: { connect: { id: riderId } } }),
+        ...(sireId && { sire: { connect: { id: sireId } } }),
       },
     });
   }
@@ -113,9 +116,14 @@ export class HorsesService {
   async update(id: string, organizationId: string, data: UpdateHorseDto) {
     await this.findById(id, organizationId);
 
+    const { riderId, sireId, ...rest } = data;
     return this.prisma.horse.update({
       where: { id },
-      data,
+      data: {
+        ...rest,
+        ...(riderId !== undefined && (riderId ? { rider: { connect: { id: riderId } } } : { rider: { disconnect: true } })),
+        ...(sireId !== undefined && (sireId ? { sire: { connect: { id: sireId } } } : { sire: { disconnect: true } })),
+      },
     });
   }
 
