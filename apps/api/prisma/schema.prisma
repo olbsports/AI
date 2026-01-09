@@ -44,6 +44,8 @@ model Organization {
   socialPosts         SocialPost[]
   notifications       Notification[]
   clubs               ClubMembership[]
+  calendarEvents      CalendarEvent[]
+  healthReminders     HealthReminder[]
 
   @@map("organizations")
 }
@@ -138,6 +140,27 @@ model User {
   pushSubscriptions       PushSubscription[]
   notificationPreferences NotificationPreference?
 
+  // Marketplace alerts
+  listingAlerts           ListingAlert[]
+
+  // Sessions (Device Tracking)
+  sessions                UserSession[]
+
+  // Stories
+  stories                 Story[]               @relation("UserStories")
+  storyViews              StoryView[]           @relation("StoryViews")
+
+  // Calendar & Reminders
+  calendarEvents          CalendarEvent[]
+  eventReminders          EventReminder[]
+
+  // Gamification
+  userChallenges          UserChallenge[]
+  userStreak              UserStreak?
+  referralsMade           Referral[]            @relation("Referrer")
+  referredBy              Referral[]            @relation("Referee")
+  xpTransactions          XpTransaction[]
+
   @@map("users")
 }
 
@@ -169,6 +192,8 @@ model Horse {
   // Grands-parents maternels
   damsSireName   String?  // Grand-père maternel
   damsDamName    String?  // Grand-mère maternelle
+  // Pedigree complet JSON (4 générations)
+  pedigree       Json?    // { sire: {...}, dam: {...}, sireSire: {...}, sireDam: {...}, damSire: {...}, damDam: {...}, ... }
 
   // Owner info
   ownerName      String?
@@ -231,6 +256,10 @@ model Horse {
   externalDataCache   ExternalDataCache[]
   socialPosts         SocialPost[]
   radiologyAnalyses   RadiologyAnalysis[]
+  performances        HorsePerformance[]
+  bodyConditionScores BodyConditionScore[]
+  calendarEvents      CalendarEvent[]
+  healthReminders     HealthReminder[]    @relation("HorseHealthReminders")
 
   @@index([sireId])
   @@index([ueln])
@@ -408,6 +437,9 @@ model HealthRecord {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  // Relations
+  healthReminders HealthReminder[]
 
   @@index([horseId, date])
   @@index([type])
@@ -651,11 +683,65 @@ model MarketplaceListing {
   // Relations
   favorites       Favorite[]
   messages        Message[]
+  promotions      ListingPromotion[]
 
   @@index([status, type])
   @@index([horseId])
   @@index([sellerId])
   @@map("marketplace_listings")
+}
+
+// ==================== LISTING PROMOTIONS ====================
+
+model ListingPromotion {
+  id              String   @id @default(uuid())
+
+  // Listing
+  listingId       String
+  listing         MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  // Promotion type
+  type            String   // featured, boost, refresh
+
+  // Cost
+  tokenCost       Int
+
+  // Timing
+  startedAt       DateTime @default(now())
+  expiresAt       DateTime?
+
+  createdAt       DateTime @default(now())
+
+  @@index([listingId, expiresAt])
+  @@index([type])
+  @@map("listing_promotions")
+}
+
+// ==================== LISTING ALERTS ====================
+
+model ListingAlert {
+  id              String   @id @default(uuid())
+
+  // User
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Alert filters (JSON)
+  filters         Json     // { type, minPrice, maxPrice, breed, location, etc. }
+
+  // Notification preferences
+  notifyEmail     Boolean  @default(true)
+  notifyPush      Boolean  @default(true)
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastTriggeredAt DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, isActive])
+  @@map("listing_alerts")
 }
 
 // ==================== FAVORITES ====================
@@ -753,6 +839,7 @@ model SocialPost {
   likes           Like[]
   savedPosts      SavedPost[]
   reports         UserReport[]
+  hashtags        PostHashtag[]
 
   @@index([authorId, createdAt])
   @@index([visibility])
@@ -1442,6 +1529,7 @@ model Rider {
   // Relations
   horses           Horse[]
   analysisSessions AnalysisSession[]
+  calendarEvents   CalendarEvent[]
 
   @@map("riders")
 }
@@ -1604,6 +1692,56 @@ model EmailVerificationToken {
   createdAt DateTime @default(now())
 
   @@map("email_verification_tokens")
+}
+
+// ==================== USER SESSIONS (Device Tracking) ====================
+
+model UserSession {
+  id            String   @id @default(uuid())
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Device info
+  deviceId      String
+  deviceName    String?
+  platform      String?  // ios, android, web, desktop
+
+  // Request info
+  ipAddress     String?
+  userAgent     String?
+
+  // Session management
+  lastActiveAt  DateTime @default(now())
+  expiresAt     DateTime
+  isRevoked     Boolean  @default(false)
+  revokedAt     DateTime?
+
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, deviceId])
+  @@index([userId, isRevoked])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+// ==================== LOGIN ATTEMPTS (Rate Limiting) ====================
+
+model LoginAttempt {
+  id          String   @id @default(uuid())
+
+  email       String
+  ipAddress   String?
+  userAgent   String?
+
+  successful  Boolean  @default(false)
+  failReason  String?  // invalid_credentials, account_locked, 2fa_failed, etc.
+
+  createdAt   DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+  @@map("login_attempts")
 }
 
 // ==================== TEAM INVITATIONS ====================
@@ -1816,6 +1954,90 @@ model ApiKey {
   @@map("api_keys")
 }
 
+
+// ==================== STORIES (24h ephemeral content) ====================
+
+model Story {
+  id          String   @id @default(uuid())
+
+  // Media
+  mediaUrl    String
+  mediaType   String   @default("image") // image, video
+
+  // Content (optional caption)
+  caption     String?
+
+  // Stats
+  viewsCount  Int      @default(0)
+
+  // Expiration (24h from creation)
+  expiresAt   DateTime
+
+  // Author
+  authorId    String
+  author      User     @relation("UserStories", fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  // Relations
+  views       StoryView[]
+
+  @@index([authorId, expiresAt])
+  @@index([expiresAt])
+  @@map("stories")
+}
+
+model StoryView {
+  id        String   @id @default(uuid())
+
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  visitorId String
+  visitor   User     @relation("StoryViews", fields: [visitorId], references: [id], onDelete: Cascade)
+
+  viewedAt  DateTime @default(now())
+
+  @@unique([storyId, visitorId])
+  @@index([storyId])
+  @@map("story_views")
+}
+
+// ==================== HASHTAGS ====================
+
+model Hashtag {
+  id          String   @id @default(uuid())
+
+  name        String   @unique
+  usageCount  Int      @default(0)
+  lastUsedAt  DateTime @default(now())
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  posts       PostHashtag[]
+
+  @@index([usageCount])
+  @@index([lastUsedAt])
+  @@map("hashtags")
+}
+
+model PostHashtag {
+  id        String   @id @default(uuid())
+
+  postId    String
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  hashtagId String
+  hashtag   Hashtag  @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, hashtagId])
+  @@index([hashtagId])
+  @@map("post_hashtags")
+}
 // ==================== USER BLOCKS ====================
 
 model UserBlock {
@@ -1942,6 +2164,145 @@ model SystemSettings {
   @@map("system_settings")
 }
 
+// ==================== GAMIFICATION: CHALLENGES ====================
+
+model Challenge {
+  id              String   @id @default(uuid())
+
+  // Basic info
+  title           String
+  description     String
+
+  // Type and configuration
+  type            String   // daily, weekly, monthly
+  conditionAction String   // login, analyze_horse, publish_post, complete_profile, add_horse, etc.
+  conditionCount  Int      @default(1)
+
+  // Rewards
+  xpReward        Int      @default(0)
+  tokenReward     Int      @default(0)
+
+  // Availability
+  startsAt        DateTime
+  expiresAt       DateTime
+  isActive        Boolean  @default(true)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  userChallenges  UserChallenge[]
+
+  @@index([type, isActive])
+  @@index([startsAt, expiresAt])
+  @@map("challenges")
+}
+
+model UserChallenge {
+  id              String    @id @default(uuid())
+
+  // Progress
+  progress        Int       @default(0)
+  completedAt     DateTime?
+  claimedAt       DateTime?
+
+  // User
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Challenge
+  challengeId     String
+  challenge       Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, challengeId])
+  @@index([userId, completedAt])
+  @@map("user_challenges")
+}
+
+// ==================== GAMIFICATION: STREAKS ====================
+
+model UserStreak {
+  id              String   @id @default(uuid())
+
+  // Streak data
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  lastActivityAt  DateTime?
+
+  // Bonus tracking
+  lastBonusAt     DateTime?
+  totalBonusXp    Int      @default(0)
+
+  // User
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("user_streaks")
+}
+
+// ==================== GAMIFICATION: REFERRALS ====================
+
+model Referral {
+  id              String    @id @default(uuid())
+
+  // Unique referral code (HORSE-XXXXXX)
+  code            String    @unique
+
+  // Status
+  status          String    @default("pending") // pending, completed
+
+  // Rewards
+  xpAwarded       Int       @default(0)
+  tokensAwarded   Int       @default(0)
+
+  // Referrer (who invited)
+  referrerId      String
+  referrer        User      @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  // Referee (who was invited)
+  refereeId       String?
+  referee         User?     @relation("Referee", fields: [refereeId], references: [id], onDelete: SetNull)
+
+  // Invitation email (before signup)
+  invitedEmail    String?
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime?
+
+  @@index([referrerId])
+  @@index([code])
+  @@map("referrals")
+}
+
+// ==================== GAMIFICATION: XP TRANSACTIONS ====================
+
+model XpTransaction {
+  id              String   @id @default(uuid())
+
+  // Transaction details
+  amount          Int
+  source          String   // daily_login, challenge, referral, streak_bonus, achievement, analysis, post, etc.
+  description     String
+
+  // User
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([source])
+  @@map("xp_transactions")
+}
+
 // ==================== SUBSCRIPTIONS ====================
 
 model Subscription {
@@ -1993,4 +2354,90 @@ model SubscriptionPlan {
   updatedAt            DateTime  @updatedAt
 
   @@map("subscription_plans")
+}
+
+// ==================== HORSE PERFORMANCE TRACKING ====================
+
+model HorsePerformance {
+  id              String   @id @default(uuid())
+
+  // Competition info
+  date            DateTime
+  competition     String   // Nom de la competition
+  discipline      String   // CSO, Dressage, CCE, Hunter, Endurance
+  level           String?  // Club4, Club3, Club2, Club1, Amateur, Pro
+
+  // Results
+  rank            Int?     // Classement
+  totalParticipants Int?   // Nombre de participants
+  penaltyPoints   Float?   // Points de penalite (fautes, refus)
+  timeSeconds     Float?   // Temps en secondes
+  score           Float?   // Score (pour dressage par ex.)
+  percentage      Float?   // Pourcentage (dressage)
+
+  // Context
+  riderName       String?
+  location        String?
+  surfaceType     String?  // Sable, herbe, etc.
+  weather         String?
+
+  // Notes
+  notes           String?
+
+  // Horse
+  horseId         String
+  horse           Horse    @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([horseId, date])
+  @@index([discipline])
+  @@map("horse_performances")
+}
+
+// ==================== BODY CONDITION SCORE ====================
+
+model BodyConditionScore {
+  id              String   @id @default(uuid())
+
+  // Score (echelle 1-9 ou 1-5)
+  score           Float    // Score global (1-9 echelle Henneke)
+  scaleType       String   @default("henneke") // henneke (1-9), french (0-5)
+
+  // Date de l'evaluation
+  date            DateTime
+
+  // Details par zone (optionnel)
+  neckScore       Float?   // Encolure
+  withersScore    Float?   // Garrot
+  backScore       Float?   // Dos
+  ribsScore       Float?   // Cotes
+  tailheadScore   Float?   // Base de la queue
+  shoulderScore   Float?   // Epaule
+
+  // Mesures complementaires
+  weightKg        Float?   // Poids estime
+  bellyGirthCm    Float?   // Tour de sangle
+
+  // Evaluateur
+  evaluatedBy     String?  // Nom de l'evaluateur
+  method          String   @default("visual") // visual, palpation, combined
+
+  // Notes et recommandations
+  notes           String?
+  recommendations String?
+
+  // Photos (optionnel)
+  photoUrls       Json     @default("[]")
+
+  // Horse
+  horseId         String
+  horse           Horse    @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([horseId, date])
+  @@map("body_condition_scores")
 }

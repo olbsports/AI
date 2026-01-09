@@ -1,5 +1,14 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+
+// Promotion types and their costs/durations
+const PROMOTION_CONFIG = {
+  featured: { tokenCost: 50, durationDays: 7, boostLevel: 3 },
+  boost: { tokenCost: 30, durationDays: 3, boostLevel: 2 },
+  refresh: { tokenCost: 10, durationDays: 0, boostLevel: 0 }, // Refresh just updates createdAt
+} as const;
+
+type PromotionType = keyof typeof PROMOTION_CONFIG;
 
 @Injectable()
 export class MarketplaceService {
@@ -772,5 +781,454 @@ export class MarketplaceService {
 
   async reportListing(listingId: string, userId: string, reason: string, details?: string) {
     return { success: true, listingId, message: 'Report submitted' };
+  }
+
+  // ============ PROMOTION SYSTEM ============
+
+  /**
+   * Promote a listing with tokens
+   * Types: featured (50 tokens, 7 days), boost (30 tokens, 3 days), refresh (10 tokens)
+   */
+  async promoteListingWithTokens(
+    listingId: string,
+    userId: string,
+    organizationId: string,
+    type: PromotionType
+  ) {
+    const listing = await this.prisma.marketplaceListing.findUnique({
+      where: { id: listingId },
+    });
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    if (listing.sellerId !== userId) {
+      throw new ForbiddenException('You can only promote your own listings');
+    }
+
+    const config = PROMOTION_CONFIG[type];
+    if (!config) {
+      throw new BadRequestException('Invalid promotion type. Use: featured, boost, or refresh');
+    }
+
+    // Check organization token balance
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { tokenBalance: true },
+    });
+
+    if (!org || org.tokenBalance < config.tokenCost) {
+      throw new BadRequestException(
+        `Insufficient tokens. Required: ${config.tokenCost}, Available: ${org?.tokenBalance || 0}`
+      );
+    }
+
+    // Calculate expiration
+    const expiresAt =
+      config.durationDays > 0
+        ? new Date(Date.now() + config.durationDays * 24 * 60 * 60 * 1000)
+        : null;
+
+    // Use transaction to ensure atomicity
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Deduct tokens
+      await tx.organization.update({
+        where: { id: organizationId },
+        data: { tokenBalance: { decrement: config.tokenCost } },
+      });
+
+      // Record token transaction
+      await tx.tokenTransaction.create({
+        data: {
+          amount: -config.tokenCost,
+          type: 'debit',
+          description: `Promotion ${type} for listing: ${listing.title}`,
+          metadata: { listingId, promotionType: type },
+          organizationId,
+        },
+      });
+
+      // Create promotion record
+      const promotion = await tx.listingPromotion.create({
+        data: {
+          listingId,
+          type,
+          tokenCost: config.tokenCost,
+          expiresAt,
+        },
+      });
+
+      // Update listing based on promotion type
+      const updateData: any = {};
+
+      if (type === 'featured') {
+        updateData.isFeatured = true;
+        updateData.featuredUntil = expiresAt;
+        updateData.boostLevel = Math.max(listing.boostLevel, config.boostLevel);
+      } else if (type === 'boost') {
+        updateData.boostLevel = Math.max(listing.boostLevel, config.boostLevel);
+        updateData.featuredUntil = expiresAt;
+      } else if (type === 'refresh') {
+        // Refresh brings the listing to the top of recent
+        updateData.createdAt = new Date();
+      }
+
+      const updatedListing = await tx.marketplaceListing.update({
+        where: { id: listingId },
+        data: updateData,
+      });
+
+      return { promotion, listing: updatedListing };
+    });
+
+    return {
+      success: true,
+      promotion: {
+        id: result.promotion.id,
+        type,
+        tokenCost: config.tokenCost,
+        startedAt: result.promotion.startedAt,
+        expiresAt: result.promotion.expiresAt,
+      },
+      listing: this.formatListing(result.listing),
+      message: `Listing promoted successfully with ${type}`,
+    };
+  }
+
+  /**
+   * Get current promotion status for a listing
+   */
+  async getListingPromotion(listingId: string) {
+    const listing = await this.prisma.marketplaceListing.findUnique({
+      where: { id: listingId },
+      select: {
+        id: true,
+        title: true,
+        isFeatured: true,
+        featuredUntil: true,
+        boostLevel: true,
+      },
+    });
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    // Get active promotions
+    const activePromotions = await this.prisma.listingPromotion.findMany({
+      where: {
+        listingId,
+        OR: [{ expiresAt: { gt: new Date() } }, { expiresAt: null }],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Get promotion history
+    const promotionHistory = await this.prisma.listingPromotion.findMany({
+      where: { listingId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    return {
+      listingId,
+      title: listing.title,
+      currentStatus: {
+        isFeatured: listing.isFeatured,
+        featuredUntil: listing.featuredUntil,
+        boostLevel: listing.boostLevel,
+        isActive: activePromotions.length > 0,
+      },
+      activePromotions: activePromotions.map((p) => ({
+        id: p.id,
+        type: p.type,
+        startedAt: p.startedAt,
+        expiresAt: p.expiresAt,
+        tokenCost: p.tokenCost,
+      })),
+      history: promotionHistory.map((p) => ({
+        id: p.id,
+        type: p.type,
+        startedAt: p.startedAt,
+        expiresAt: p.expiresAt,
+        tokenCost: p.tokenCost,
+        isExpired: p.expiresAt ? p.expiresAt < new Date() : false,
+      })),
+      availablePromotions: Object.entries(PROMOTION_CONFIG).map(([key, value]) => ({
+        type: key,
+        tokenCost: value.tokenCost,
+        durationDays: value.durationDays,
+        description: this.getPromotionDescription(key as PromotionType),
+      })),
+    };
+  }
+
+  private getPromotionDescription(type: PromotionType): string {
+    switch (type) {
+      case 'featured':
+        return 'Mise en avant pendant 7 jours - Affichage prioritaire sur la page d\'accueil';
+      case 'boost':
+        return 'Boost de visibilité pendant 3 jours - Meilleur classement dans les recherches';
+      case 'refresh':
+        return 'Remontée en tête des annonces récentes';
+      default:
+        return '';
+    }
+  }
+
+  // ============ LISTING ALERTS SYSTEM ============
+
+  /**
+   * Create a new listing alert
+   */
+  async createListingAlert(
+    userId: string,
+    data: {
+      filters: {
+        type?: string;
+        minPrice?: number;
+        maxPrice?: number;
+        breed?: string;
+        location?: string;
+        country?: string;
+      };
+      notifyEmail?: boolean;
+      notifyPush?: boolean;
+    }
+  ) {
+    // Validate that at least one filter is provided
+    if (!data.filters || Object.keys(data.filters).length === 0) {
+      throw new BadRequestException('At least one filter must be provided');
+    }
+
+    const alert = await this.prisma.listingAlert.create({
+      data: {
+        userId,
+        filters: data.filters,
+        notifyEmail: data.notifyEmail ?? true,
+        notifyPush: data.notifyPush ?? true,
+      },
+    });
+
+    return {
+      id: alert.id,
+      filters: alert.filters,
+      notifyEmail: alert.notifyEmail,
+      notifyPush: alert.notifyPush,
+      isActive: alert.isActive,
+      createdAt: alert.createdAt,
+    };
+  }
+
+  /**
+   * Get user's listing alerts
+   */
+  async getListingAlerts(userId: string) {
+    const alerts = await this.prisma.listingAlert.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return alerts.map((alert) => ({
+      id: alert.id,
+      filters: alert.filters,
+      notifyEmail: alert.notifyEmail,
+      notifyPush: alert.notifyPush,
+      isActive: alert.isActive,
+      lastTriggeredAt: alert.lastTriggeredAt,
+      createdAt: alert.createdAt,
+    }));
+  }
+
+  /**
+   * Update a listing alert
+   */
+  async updateListingAlert(
+    alertId: string,
+    userId: string,
+    data: {
+      filters?: any;
+      notifyEmail?: boolean;
+      notifyPush?: boolean;
+      isActive?: boolean;
+    }
+  ) {
+    const alert = await this.prisma.listingAlert.findUnique({
+      where: { id: alertId },
+    });
+
+    if (!alert) {
+      throw new NotFoundException('Alert not found');
+    }
+
+    if (alert.userId !== userId) {
+      throw new ForbiddenException('You can only update your own alerts');
+    }
+
+    const updated = await this.prisma.listingAlert.update({
+      where: { id: alertId },
+      data: {
+        ...(data.filters && { filters: data.filters }),
+        ...(data.notifyEmail !== undefined && { notifyEmail: data.notifyEmail }),
+        ...(data.notifyPush !== undefined && { notifyPush: data.notifyPush }),
+        ...(data.isActive !== undefined && { isActive: data.isActive }),
+      },
+    });
+
+    return {
+      id: updated.id,
+      filters: updated.filters,
+      notifyEmail: updated.notifyEmail,
+      notifyPush: updated.notifyPush,
+      isActive: updated.isActive,
+      createdAt: updated.createdAt,
+    };
+  }
+
+  /**
+   * Delete a listing alert
+   */
+  async deleteListingAlert(alertId: string, userId: string) {
+    const alert = await this.prisma.listingAlert.findUnique({
+      where: { id: alertId },
+    });
+
+    if (!alert) {
+      throw new NotFoundException('Alert not found');
+    }
+
+    if (alert.userId !== userId) {
+      throw new ForbiddenException('You can only delete your own alerts');
+    }
+
+    await this.prisma.listingAlert.delete({
+      where: { id: alertId },
+    });
+
+    return { success: true, message: 'Alert deleted successfully' };
+  }
+
+  // ============ SELLER STATS ============
+
+  /**
+   * Get seller statistics
+   */
+  async getSellerStats(userId: string) {
+    // Get all seller's listings
+    const listings = await this.prisma.marketplaceListing.findMany({
+      where: { sellerId: userId },
+      include: {
+        promotions: true,
+      },
+    });
+
+    // Calculate stats
+    const totalListings = listings.length;
+    const activeListings = listings.filter((l) => l.status === 'active').length;
+    const soldListings = listings.filter((l) => l.status === 'sold').length;
+    const draftListings = listings.filter((l) => l.status === 'draft').length;
+
+    const totalViews = listings.reduce((sum, l) => sum + l.viewCount, 0);
+    const totalContacts = listings.reduce((sum, l) => sum + l.contactCount, 0);
+    const totalFavorites = listings.reduce((sum, l) => sum + l.favoriteCount, 0);
+
+    // Calculate conversion rate (contacts / views)
+    const conversionRate = totalViews > 0 ? (totalContacts / totalViews) * 100 : 0;
+
+    // Calculate sales stats
+    const salesRevenue = listings
+      .filter((l) => l.status === 'sold' && l.soldPrice)
+      .reduce((sum, l) => sum + (l.soldPrice || 0), 0);
+
+    const averageSalePrice =
+      soldListings > 0
+        ? salesRevenue / soldListings
+        : 0;
+
+    // Calculate time-based stats (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recentListings = listings.filter((l) => new Date(l.createdAt) >= thirtyDaysAgo);
+    const recentViews = recentListings.reduce((sum, l) => sum + l.viewCount, 0);
+    const recentContacts = recentListings.reduce((sum, l) => sum + l.contactCount, 0);
+
+    // Calculate promotion stats
+    const totalPromotions = listings.reduce((sum, l) => sum + l.promotions.length, 0);
+    const totalPromotionSpent = listings.reduce(
+      (sum, l) => sum + l.promotions.reduce((pSum, p) => pSum + p.tokenCost, 0),
+      0
+    );
+
+    // Get top performing listings
+    const topListings = [...listings]
+      .filter((l) => l.status === 'active')
+      .sort((a, b) => b.viewCount - a.viewCount)
+      .slice(0, 5)
+      .map((l) => ({
+        id: l.id,
+        title: l.title,
+        viewCount: l.viewCount,
+        favoriteCount: l.favoriteCount,
+        contactCount: l.contactCount,
+        price: l.price,
+      }));
+
+    // Get listings by type
+    const listingsByType = listings.reduce(
+      (acc, l) => {
+        acc[l.type] = (acc[l.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    // Calculate performance by listing type
+    const performanceByType = Object.keys(listingsByType).map((type) => {
+      const typeListings = listings.filter((l) => l.type === type);
+      return {
+        type,
+        count: typeListings.length,
+        totalViews: typeListings.reduce((sum, l) => sum + l.viewCount, 0),
+        totalContacts: typeListings.reduce((sum, l) => sum + l.contactCount, 0),
+        avgViews:
+          typeListings.length > 0
+            ? Math.round(typeListings.reduce((sum, l) => sum + l.viewCount, 0) / typeListings.length)
+            : 0,
+      };
+    });
+
+    return {
+      overview: {
+        totalListings,
+        activeListings,
+        soldListings,
+        draftListings,
+      },
+      engagement: {
+        totalViews,
+        totalContacts,
+        totalFavorites,
+        conversionRate: Math.round(conversionRate * 100) / 100, // 2 decimal places
+        viewToFavoriteRate: totalViews > 0 ? Math.round((totalFavorites / totalViews) * 10000) / 100 : 0,
+      },
+      sales: {
+        totalSold: soldListings,
+        totalRevenue: salesRevenue,
+        averageSalePrice: Math.round(averageSalePrice),
+        currency: 'EUR',
+      },
+      last30Days: {
+        newListings: recentListings.length,
+        views: recentViews,
+        contacts: recentContacts,
+      },
+      promotions: {
+        totalPromotions,
+        tokensSpent: totalPromotionSpent,
+      },
+      topListings,
+      listingsByType,
+      performanceByType,
+    };
   }
 }
