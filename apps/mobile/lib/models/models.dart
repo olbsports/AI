@@ -10,10 +10,9 @@ export 'breeding.dart';
 export 'social.dart' hide Badge, BadgeCategory, BadgeRarity;
 export 'marketplace.dart';
 export 'gamification.dart';
-// Hide HealthReminder from health.dart (use the one from planning.dart)
-export 'health.dart' hide HealthReminder;
-// Hide TrainingSession from planning.dart (use the one from performance.dart)
-export 'planning.dart' hide TrainingSession;
+export 'health.dart';
+// Hide HealthReminder and TrainingSession from planning.dart (use from health.dart and performance.dart)
+export 'planning.dart' hide TrainingSession, HealthReminder;
 export 'clubs.dart';
 export 'gestation.dart';
 export 'services.dart';
