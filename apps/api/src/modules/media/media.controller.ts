@@ -43,7 +43,7 @@ export class MediaController {
   })
   async uploadMedia(
     @CurrentOrganization() organizationId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
     @Query('type') type: string = 'image',
   ) {
     if (!file) {
