@@ -714,7 +714,7 @@ class _HorseDetailScreenState extends ConsumerState<HorseDetailScreen>
               );
             }
             return Column(
-              children: sessions.take(5).map((s) {
+              children: sessions.take(5).map<Widget>((s) {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
@@ -758,7 +758,7 @@ class _HorseDetailScreenState extends ConsumerState<HorseDetailScreen>
   // ==================== HEALTH TAB ====================
 
   Widget _buildHealthTab(BuildContext context, Horse horse) {
-    final healthRecordsAsync = ref.watch(healthRecordsProvider(widget.horseId));
+    final healthRecordsAsync = ref.watch(horseHealthRecordsProvider(widget.horseId));
 
     return healthRecordsAsync.when(
       data: (records) => HealthTimelineWidget(
@@ -774,8 +774,8 @@ class _HorseDetailScreenState extends ConsumerState<HorseDetailScreen>
   // ==================== WEIGHT & BCS TAB ====================
 
   Widget _buildWeightBCSTab(BuildContext context, Horse horse) {
-    final weightRecordsAsync = ref.watch(weightRecordsProvider(widget.horseId));
-    final bcsRecordsAsync = ref.watch(bodyConditionRecordsProvider(widget.horseId));
+    final weightRecordsAsync = ref.watch(horseWeightRecordsProvider(widget.horseId));
+    final bcsRecordsAsync = ref.watch(horseBodyConditionRecordsProvider(widget.horseId));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -985,7 +985,7 @@ class _HorseDetailScreenState extends ConsumerState<HorseDetailScreen>
         horseId: horse.id,
         horseName: horse.name,
         onSave: (data) async {
-          await ref.read(healthNotifierProvider.notifier).addHealthRecord(horse.id, data);
+          await ref.read(horseHealthNotifierProvider.notifier).addHealthRecord(horse.id, data);
         },
       ),
     );
@@ -1057,7 +1057,7 @@ class _HorseDetailScreenState extends ConsumerState<HorseDetailScreen>
             onPressed: () async {
               final weight = double.tryParse(weightController.text);
               if (weight != null) {
-                await ref.read(healthNotifierProvider.notifier).addWeightRecord(
+                await ref.read(horseHealthNotifierProvider.notifier).addWeightRecord(
                   widget.horseId,
                   {
                     'weight': weight,
@@ -1076,7 +1076,7 @@ class _HorseDetailScreenState extends ConsumerState<HorseDetailScreen>
   }
 
   void _addBodyConditionRecord(BuildContext context, int score) {
-    ref.read(healthNotifierProvider.notifier).addBodyConditionRecord(
+    ref.read(horseHealthNotifierProvider.notifier).addBodyConditionRecord(
       widget.horseId,
       {
         'score': score,

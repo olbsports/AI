@@ -261,10 +261,10 @@ final performanceNotifierProvider =
   return PerformanceNotifier(api, ref);
 });
 
-// ==================== HEALTH ====================
+// ==================== HEALTH (for horse detail screen) ====================
 
-/// Health records for a horse
-final healthRecordsProvider = FutureProvider.autoDispose.family<List<HealthRecord>, String>((ref, horseId) async {
+/// Health records for a horse (used in horse detail screen)
+final horseHealthRecordsProvider = FutureProvider.autoDispose.family<List<HealthRecord>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/horses/$horseId/health');
@@ -282,13 +282,13 @@ final healthSummaryProvider = FutureProvider.autoDispose.family<HealthSummary, S
     return HealthSummary.fromJson(response);
   } catch (e) {
     // Build summary from records if API fails
-    final records = await ref.watch(healthRecordsProvider(horseId).future);
+    final records = await ref.watch(horseHealthRecordsProvider(horseId).future);
     return _buildHealthSummaryFromRecords(horseId, records);
   }
 });
 
-/// Weight records for a horse
-final weightRecordsProvider = FutureProvider.autoDispose.family<List<WeightRecord>, String>((ref, horseId) async {
+/// Weight records for a horse (used in horse detail screen)
+final horseWeightRecordsProvider = FutureProvider.autoDispose.family<List<WeightRecord>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/horses/$horseId/weight');
@@ -298,8 +298,8 @@ final weightRecordsProvider = FutureProvider.autoDispose.family<List<WeightRecor
   }
 });
 
-/// Body condition records for a horse
-final bodyConditionRecordsProvider = FutureProvider.autoDispose.family<List<BodyConditionRecord>, String>((ref, horseId) async {
+/// Body condition records for a horse (used in horse detail screen)
+final horseBodyConditionRecordsProvider = FutureProvider.autoDispose.family<List<BodyConditionRecord>, String>((ref, horseId) async {
   final api = ref.watch(apiServiceProvider);
   try {
     final response = await api.get('/horses/$horseId/body-condition');
@@ -332,19 +332,19 @@ final activeNutritionPlanProvider = FutureProvider.autoDispose.family<NutritionP
   }
 });
 
-/// Health notifier for managing health data
-class HealthNotifier extends StateNotifier<AsyncValue<void>> {
+/// Health notifier for managing health data (used in horse detail screen)
+class HorseHealthNotifier extends StateNotifier<AsyncValue<void>> {
   final ApiService _api;
   final Ref _ref;
 
-  HealthNotifier(this._api, this._ref) : super(const AsyncValue.data(null));
+  HorseHealthNotifier(this._api, this._ref) : super(const AsyncValue.data(null));
 
   /// Add a health record
   Future<HealthRecord?> addHealthRecord(String horseId, Map<String, dynamic> data) async {
     state = const AsyncValue.loading();
     try {
       final response = await _api.post('/horses/$horseId/health', data);
-      _ref.invalidate(healthRecordsProvider(horseId));
+      _ref.invalidate(horseHealthRecordsProvider(horseId));
       _ref.invalidate(healthSummaryProvider(horseId));
       state = const AsyncValue.data(null);
       return HealthRecord.fromJson(response);
@@ -359,7 +359,7 @@ class HealthNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _api.put('/horses/$horseId/health/$recordId', data);
-      _ref.invalidate(healthRecordsProvider(horseId));
+      _ref.invalidate(horseHealthRecordsProvider(horseId));
       _ref.invalidate(healthSummaryProvider(horseId));
       state = const AsyncValue.data(null);
       return true;
@@ -374,7 +374,7 @@ class HealthNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _api.delete('/horses/$horseId/health/$recordId');
-      _ref.invalidate(healthRecordsProvider(horseId));
+      _ref.invalidate(horseHealthRecordsProvider(horseId));
       _ref.invalidate(healthSummaryProvider(horseId));
       state = const AsyncValue.data(null);
       return true;
@@ -389,7 +389,7 @@ class HealthNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       final response = await _api.post('/horses/$horseId/weight', data);
-      _ref.invalidate(weightRecordsProvider(horseId));
+      _ref.invalidate(horseWeightRecordsProvider(horseId));
       _ref.invalidate(horseProvider(horseId));
       state = const AsyncValue.data(null);
       return WeightRecord.fromJson(response);
@@ -404,7 +404,7 @@ class HealthNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       final response = await _api.post('/horses/$horseId/body-condition', data);
-      _ref.invalidate(bodyConditionRecordsProvider(horseId));
+      _ref.invalidate(horseBodyConditionRecordsProvider(horseId));
       state = const AsyncValue.data(null);
       return BodyConditionRecord.fromJson(response);
     } catch (e, st) {
@@ -431,10 +431,10 @@ class HealthNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final healthNotifierProvider =
-    StateNotifierProvider<HealthNotifier, AsyncValue<void>>((ref) {
+final horseHealthNotifierProvider =
+    StateNotifierProvider<HorseHealthNotifier, AsyncValue<void>>((ref) {
   final api = ref.watch(apiServiceProvider);
-  return HealthNotifier(api, ref);
+  return HorseHealthNotifier(api, ref);
 });
 
 /// Helper function to build health summary from records

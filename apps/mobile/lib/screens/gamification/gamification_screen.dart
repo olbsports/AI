@@ -359,7 +359,7 @@ class GamificationScreen extends ConsumerWidget {
             const SizedBox(height: 16),
 
             // Referral stats preview
-            ref.watch(referralStatsProvider).whenOrNull(
+            ref.watch(referralStatsProvider).when(
               data: (stats) => Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Row(
@@ -383,6 +383,8 @@ class GamificationScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
             ),
 
             SizedBox(
