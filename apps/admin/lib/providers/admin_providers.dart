@@ -7,7 +7,7 @@ import '../services/admin_api_service.dart';
 /// Dashboard statistics
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   final api = ref.watch(adminApiServiceProvider);
-  final response = await api.get('/dashboard/stats');
+  final response = await api.get('/admin/dashboard/stats');
   return DashboardStats.fromJson(response);
 });
 

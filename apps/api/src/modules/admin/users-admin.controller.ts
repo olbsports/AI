@@ -9,7 +9,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @ApiTags('users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('owner')
+@Roles('admin', 'owner')
 @ApiBearerAuth()
 export class UsersAdminController {
   constructor(private readonly prisma: PrismaService) {}
