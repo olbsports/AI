@@ -1106,7 +1106,7 @@ export class SocialService {
       throw new ForbiddenException('You can only edit your own posts');
     }
 
-    return this.prisma.socialPost.update({
+    const updatedPost = await this.prisma.socialPost.update({
       where: { id: postId },
       data: {
         ...(data.content && { content: data.content }),
@@ -1130,6 +1130,13 @@ export class SocialService {
         },
       },
     });
+
+    // Update hashtags if content was changed
+    if (data.content) {
+      await this.hashtagsService.updateHashtagsForPost(postId, data.content);
+    }
+
+    return updatedPost;
   }
 
   // ==================== UNFOLLOW ====================

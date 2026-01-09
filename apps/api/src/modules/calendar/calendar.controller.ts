@@ -1,7 +1,9 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 
 import { CalendarService } from './calendar.service';
+import { ReminderService } from './reminder.service';
+import { HealthReminderService, HealthReminderType } from './health-reminder.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -10,23 +12,43 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class CalendarController {
-  constructor(private readonly calendarService: CalendarService) {}
+  constructor(
+    private readonly calendarService: CalendarService,
+    private readonly reminderService: ReminderService,
+    private readonly healthReminderService: HealthReminderService,
+  ) {}
+
+  // ========== EVENTS ==========
 
   @Get('events')
   @ApiOperation({ summary: 'Get calendar events' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Start date for filtering' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'End date for filtering' })
+  @ApiQuery({ name: 'type', required: false, description: 'Event type filter' })
+  @ApiQuery({ name: 'horseId', required: false, description: 'Filter by horse ID' })
+  @ApiQuery({ name: 'includeRecurrences', required: false, type: Boolean })
   async getEvents(
     @CurrentUser() user: any,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('type') type?: string,
-    @Query('horseId') horseId?: string
+    @Query('horseId') horseId?: string,
+    @Query('includeRecurrences') includeRecurrences?: string,
   ) {
     return this.calendarService.getEvents(user.organizationId, {
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
       type,
       horseId,
+      includeRecurrences: includeRecurrences === 'true',
     });
+  }
+
+  @Get('events/:id')
+  @ApiOperation({ summary: 'Get single event by ID' })
+  @ApiParam({ name: 'id', description: 'Event ID' })
+  async getEventById(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.calendarService.getEventById(id, user.organizationId);
   }
 
   @Post('events')
@@ -44,9 +66,13 @@ export class CalendarController {
       horseId?: string;
       riderId?: string;
       location?: string;
-      reminder?: number;
-      recurrence?: string;
-    }
+      color?: string;
+      priority?: string;
+      notes?: string;
+      reminderTimes?: number[];
+      recurrenceRule?: string;
+      recurrenceEndDate?: string;
+    },
   ) {
     return this.calendarService.createEvent(user.organizationId, user.id, data);
   }
@@ -67,18 +93,154 @@ export class CalendarController {
       horseId?: string;
       riderId?: string;
       location?: string;
-      reminder?: number;
-      recurrence?: string;
+      color?: string;
+      priority?: string;
+      notes?: string;
       status?: string;
-    }
+      recurrenceRule?: string;
+      recurrenceEndDate?: string;
+    },
   ) {
     return this.calendarService.updateEvent(id, user.organizationId, data);
   }
 
   @Delete('events/:id')
   @ApiOperation({ summary: 'Delete calendar event' })
-  async deleteEvent(@CurrentUser() user: any, @Param('id') id: string) {
-    return this.calendarService.deleteEvent(id, user.organizationId);
+  @ApiQuery({ name: 'deleteOccurrences', required: false, type: Boolean })
+  async deleteEvent(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Query('deleteOccurrences') deleteOccurrences?: string,
+  ) {
+    return this.calendarService.deleteEvent(
+      id,
+      user.organizationId,
+      deleteOccurrences === 'true',
+    );
+  }
+
+  // ========== RECURRENCE ==========
+
+  @Post('events/:id/recurrence')
+  @ApiOperation({ summary: 'Set recurrence rule for an event' })
+  @ApiParam({ name: 'id', description: 'Event ID' })
+  async setEventRecurrence(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body()
+    data: {
+      recurrenceRule: string;
+      recurrenceEndDate?: string;
+      generateOccurrences?: boolean;
+      generateUntil?: string;
+    },
+  ) {
+    return this.calendarService.setEventRecurrence(id, user.organizationId, data);
+  }
+
+  // ========== REMINDERS ==========
+
+  @Get('reminders')
+  @ApiOperation({ summary: 'Get user reminders' })
+  async getUserReminders(@CurrentUser() user: any) {
+    return this.reminderService.getUserReminders(user.id);
+  }
+
+  @Post('events/:eventId/reminders')
+  @ApiOperation({ summary: 'Create reminder for an event' })
+  async createReminder(
+    @CurrentUser() user: any,
+    @Param('eventId') eventId: string,
+    @Body()
+    data: {
+      reminderType: 'email' | 'push' | 'both';
+      reminderTime: number;
+    },
+  ) {
+    return this.reminderService.createReminder({
+      eventId,
+      userId: user.id,
+      reminderType: data.reminderType,
+      reminderTime: data.reminderTime,
+    });
+  }
+
+  // ========== HEALTH REMINDERS ==========
+
+  @Get('health-reminders')
+  @ApiOperation({ summary: 'Get health reminders for organization' })
+  @ApiQuery({ name: 'horseId', required: false })
+  @ApiQuery({ name: 'type', required: false })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'startDate', required: false })
+  @ApiQuery({ name: 'endDate', required: false })
+  async getHealthReminders(
+    @CurrentUser() user: any,
+    @Query('horseId') horseId?: string,
+    @Query('type') type?: string,
+    @Query('status') status?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.healthReminderService.getHealthReminders(user.organizationId, {
+      horseId,
+      type: type as HealthReminderType,
+      status,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
+  }
+
+  @Get('health-reminders/horse/:horseId')
+  @ApiOperation({ summary: 'Get health summary for a horse' })
+  async getHorseHealthSummary(
+    @CurrentUser() user: any,
+    @Param('horseId') horseId: string,
+  ) {
+    return this.healthReminderService.getHorseHealthSummary(horseId);
+  }
+
+  @Post('health-reminders/:id/dismiss')
+  @ApiOperation({ summary: 'Dismiss a health reminder' })
+  async dismissHealthReminder(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ) {
+    return this.healthReminderService.dismissReminder(id, user.organizationId);
+  }
+
+  @Post('health-reminders/:id/complete')
+  @ApiOperation({ summary: 'Mark health reminder as completed' })
+  async completeHealthReminder(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ) {
+    return this.healthReminderService.completeReminder(id, user.organizationId);
+  }
+
+  @Post('health-reminders/generate')
+  @ApiOperation({ summary: 'Manually trigger health reminder generation' })
+  async generateHealthReminders(@CurrentUser() user: any) {
+    return this.healthReminderService.generateHealthReminders();
+  }
+
+  // ========== INTELLIGENT PLANNING ==========
+
+  @Get('planning')
+  @ApiOperation({ summary: 'Get intelligent planning for a horse' })
+  @ApiQuery({ name: 'horseId', required: true, description: 'Horse ID for planning' })
+  @ApiQuery({ name: 'startDate', required: false })
+  @ApiQuery({ name: 'endDate', required: false })
+  async getHorsePlanning(
+    @CurrentUser() user: any,
+    @Query('horseId') horseId: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.calendarService.getHorsePlanning(user.organizationId, horseId, {
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
   }
 
   // ========== GOALS ==========
@@ -88,7 +250,7 @@ export class CalendarController {
   async getGoals(
     @CurrentUser() user: any,
     @Query('status') status?: string,
-    @Query('horseId') horseId?: string
+    @Query('horseId') horseId?: string,
   ) {
     return this.calendarService.getGoals(user.organizationId, { status, horseId });
   }
@@ -108,7 +270,7 @@ export class CalendarController {
       targetDate: string;
       horseId?: string;
       riderId?: string;
-    }
+    },
   ) {
     return this.calendarService.createGoal(user.organizationId, data);
   }
@@ -126,7 +288,7 @@ export class CalendarController {
       targetValue?: number;
       targetDate?: string;
       status?: string;
-    }
+    },
   ) {
     return this.calendarService.updateGoal(id, user.organizationId, data);
   }
@@ -169,7 +331,7 @@ export class CalendarController {
       difficulty: string;
       horseId?: string;
       sessions: any[];
-    }
+    },
   ) {
     return this.calendarService.createTrainingPlan(user.organizationId, data);
   }
@@ -186,7 +348,7 @@ export class CalendarController {
       currentLevel: string;
       targetLevel: string;
       preferences?: any;
-    }
+    },
   ) {
     return this.calendarService.generateTrainingPlan(user.organizationId, data);
   }
@@ -202,13 +364,13 @@ export class CalendarController {
       notes?: string;
       rating?: number;
       duration?: number;
-    }
+    },
   ) {
     return this.calendarService.completeTrainingSession(
       planId,
       sessionId,
       user.organizationId,
-      data
+      data,
     );
   }
 
