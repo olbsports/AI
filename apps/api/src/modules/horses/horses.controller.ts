@@ -22,6 +22,9 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateHorseDto } from './dto/create-horse.dto';
 import { UpdateHorseDto } from './dto/update-horse.dto';
 import { ListHorsesQueryDto } from './dto/list-horses-query.dto';
+import { UpdatePedigreeDto } from './dto/pedigree.dto';
+import { CreatePerformanceDto, UpdatePerformanceDto } from './dto/performance.dto';
+import { CreateBodyConditionDto, UpdateBodyConditionDto } from './dto/body-condition.dto';
 
 @ApiTags('horses')
 @Controller('horses')
@@ -163,19 +166,40 @@ export class HorsesController {
   }
 
   @Get(':id/body-condition')
-  @ApiOperation({ summary: 'Get body condition records' })
-  async getBodyConditionRecords(@CurrentUser() user: any, @Param('id') id: string) {
-    return this.horsesService.getBodyConditionRecords(id, user.organizationId);
+  @ApiOperation({ summary: 'Get body condition scores with history and statistics' })
+  async getBodyConditionScores(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getBodyConditionScores(id, user.organizationId);
   }
 
   @Post(':id/body-condition')
-  @ApiOperation({ summary: 'Add body condition record' })
-  async addBodyConditionRecord(
+  @ApiOperation({ summary: 'Add body condition score' })
+  async createBodyConditionScore(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() data: { score: number; date: string; notes?: string },
+    @Body() data: CreateBodyConditionDto,
   ) {
-    return this.horsesService.addBodyConditionRecord(id, user.organizationId, data);
+    return this.horsesService.createBodyConditionScore(id, user.organizationId, data);
+  }
+
+  @Patch(':id/body-condition/:scoreId')
+  @ApiOperation({ summary: 'Update body condition score' })
+  async updateBodyConditionScore(
+    @CurrentUser() user: any,
+    @Param('id') horseId: string,
+    @Param('scoreId') scoreId: string,
+    @Body() data: UpdateBodyConditionDto,
+  ) {
+    return this.horsesService.updateBodyConditionScore(horseId, scoreId, user.organizationId, data);
+  }
+
+  @Delete(':id/body-condition/:scoreId')
+  @ApiOperation({ summary: 'Delete body condition score' })
+  async deleteBodyConditionScore(
+    @CurrentUser() user: any,
+    @Param('id') horseId: string,
+    @Param('scoreId') scoreId: string,
+  ) {
+    return this.horsesService.deleteBodyConditionScore(horseId, scoreId, user.organizationId);
   }
 
   // ========== NUTRITION ==========
@@ -216,5 +240,92 @@ export class HorsesController {
   @ApiOperation({ summary: 'Get calendar events for horse' })
   async getHorseEvents(@CurrentUser() user: any, @Param('id') id: string) {
     return this.horsesService.getHorseEvents(id, user.organizationId);
+  }
+
+  // ========== PEDIGREE / GENEALOGY ==========
+
+  @Get(':id/pedigree')
+  @ApiOperation({ summary: 'Get pedigree tree (4 generations)' })
+  async getPedigree(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Query('generations') generations?: number,
+  ) {
+    return this.horsesService.getPedigree(id, user.organizationId, generations ?? 4);
+  }
+
+  @Patch(':id/pedigree')
+  @ApiOperation({ summary: 'Update pedigree information' })
+  async updatePedigree(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() data: UpdatePedigreeDto,
+  ) {
+    return this.horsesService.updatePedigree(id, user.organizationId, data.pedigree);
+  }
+
+  @Get(':id/offspring')
+  @ApiOperation({ summary: 'Get offspring (progeny) of a horse' })
+  async getOffspring(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getOffspring(id, user.organizationId);
+  }
+
+  // ========== PERFORMANCE TRACKING ==========
+
+  @Get(':id/performances')
+  @ApiOperation({ summary: 'Get performance records' })
+  async getPerformances(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Query('discipline') discipline?: string,
+    @Query('level') level?: string,
+    @Query('year') year?: number,
+    @Query('page') page?: number,
+    @Query('pageSize') pageSize?: number,
+  ) {
+    return this.horsesService.getPerformances(id, user.organizationId, {
+      discipline,
+      level,
+      year: year ? Number(year) : undefined,
+      page: page ? Number(page) : undefined,
+      pageSize: pageSize ? Number(pageSize) : undefined,
+    });
+  }
+
+  @Post(':id/performances')
+  @ApiOperation({ summary: 'Add performance record' })
+  async createPerformance(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() data: CreatePerformanceDto,
+  ) {
+    return this.horsesService.createPerformance(id, user.organizationId, data);
+  }
+
+  @Patch(':id/performances/:performanceId')
+  @ApiOperation({ summary: 'Update performance record' })
+  async updatePerformance(
+    @CurrentUser() user: any,
+    @Param('id') horseId: string,
+    @Param('performanceId') performanceId: string,
+    @Body() data: UpdatePerformanceDto,
+  ) {
+    return this.horsesService.updatePerformance(horseId, performanceId, user.organizationId, data);
+  }
+
+  @Delete(':id/performances/:performanceId')
+  @ApiOperation({ summary: 'Delete performance record' })
+  async deletePerformance(
+    @CurrentUser() user: any,
+    @Param('id') horseId: string,
+    @Param('performanceId') performanceId: string,
+  ) {
+    return this.horsesService.deletePerformance(horseId, performanceId, user.organizationId);
+  }
+
+  @Get(':id/performances/stats')
+  @ApiOperation({ summary: 'Get performance statistics' })
+  async getPerformanceStats(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.horsesService.getPerformanceStats(id, user.organizationId);
   }
 }
