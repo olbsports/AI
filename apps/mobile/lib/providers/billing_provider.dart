@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/api_service.dart';
@@ -6,8 +7,12 @@ import '../services/api_service.dart';
 final subscriptionProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   try {
     final api = ref.watch(apiServiceProvider);
-    return await api.getCurrentSubscription();
-  } catch (e) {
+    final result = await api.getCurrentSubscription();
+    debugPrint('BILLING: getCurrentSubscription returned type: ${result.runtimeType}');
+    return result;
+  } catch (e, st) {
+    debugPrint('BILLING: subscriptionProvider error: $e');
+    debugPrint('BILLING: stack trace: $st');
     // Return default subscription on any error
     return <String, dynamic>{
       'status': 'active',
@@ -22,8 +27,12 @@ final subscriptionProvider = FutureProvider.autoDispose<Map<String, dynamic>>((r
 final plansProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   try {
     final api = ref.watch(apiServiceProvider);
-    return await api.getPlans();
-  } catch (e) {
+    final result = await api.getPlans();
+    debugPrint('BILLING: getPlans returned ${result.length} items, type: ${result.runtimeType}');
+    return result;
+  } catch (e, st) {
+    debugPrint('BILLING: plansProvider error: $e');
+    debugPrint('BILLING: stack trace: $st');
     return <Map<String, dynamic>>[];
   }
 });
@@ -32,8 +41,12 @@ final plansProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((re
 final tokenBalanceProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   try {
     final api = ref.watch(apiServiceProvider);
-    return await api.getTokenBalance();
-  } catch (e) {
+    final result = await api.getTokenBalance();
+    debugPrint('BILLING: getTokenBalance returned type: ${result.runtimeType}');
+    return result;
+  } catch (e, st) {
+    debugPrint('BILLING: tokenBalanceProvider error: $e');
+    debugPrint('BILLING: stack trace: $st');
     return <String, dynamic>{
       'horsesUsed': 0,
       'horsesLimit': 5,
@@ -47,8 +60,12 @@ final tokenBalanceProvider = FutureProvider.autoDispose<Map<String, dynamic>>((r
 final invoicesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   try {
     final api = ref.watch(apiServiceProvider);
-    return await api.getInvoices();
-  } catch (e) {
+    final result = await api.getInvoices();
+    debugPrint('BILLING: getInvoices returned ${result.length} items, type: ${result.runtimeType}');
+    return result;
+  } catch (e, st) {
+    debugPrint('BILLING: invoicesProvider error: $e');
+    debugPrint('BILLING: stack trace: $st');
     return <Map<String, dynamic>>[];
   }
 });
