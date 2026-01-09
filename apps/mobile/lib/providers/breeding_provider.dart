@@ -57,7 +57,7 @@ final stallionSearchProvider =
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions', queryParams: filters.toQueryParams());
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => Stallion.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -66,7 +66,7 @@ final stallionsProvider = FutureProvider.autoDispose<List<Stallion>>((ref) async
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => Stallion.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -84,7 +84,7 @@ final stallionsByStudbookProvider =
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions', queryParams: {'studbook': studbook});
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => Stallion.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -93,7 +93,7 @@ final featuredStallionsProvider = FutureProvider.autoDispose<List<Stallion>>((re
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions/featured');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => Stallion.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -110,7 +110,7 @@ final myMaresProvider = FutureProvider.autoDispose<List<MareProfile>>((ref) asyn
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/my-mares');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => MareProfile.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -120,7 +120,7 @@ final breedingRecommendationsProvider =
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/recommendations/$mareId');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => BreedingRecommendation.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -135,7 +135,7 @@ final aiBreedingRecommendationsProvider =
     'disciplines': params.disciplines,
   });
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => BreedingRecommendation.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -145,7 +145,7 @@ final stallionOffspringProvider =
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stallions/$stallionId/offspring');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => StallionOffspring.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -190,7 +190,7 @@ final breedingStationsProvider = FutureProvider.autoDispose<List<BreedingStation
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/stations');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => BreedingStation.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -317,7 +317,7 @@ class BreedingNotifier extends StateNotifier<AsyncValue<void>> {
       });
       state = const AsyncValue.data(null);
       if (response == null) return [];
-      final list = response is List ? response : (response['items'] as List? ?? []);
+      final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
       return list.map((e) => BreedingRecommendation.fromJson(e as Map<String, dynamic>)).toList();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -434,7 +434,7 @@ final myBreedingReservationsProvider = FutureProvider.autoDispose<List<BreedingR
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/breeding/my-reservations');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => BreedingReservation.fromJson(e as Map<String, dynamic>)).toList();
 });
 

@@ -14,7 +14,7 @@ final xpTransactionsProvider = FutureProvider.autoDispose<List<XpTransaction>>((
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/xp/history');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => XpTransaction.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -23,7 +23,7 @@ final allBadgesProvider = FutureProvider.autoDispose<List<Badge>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/badges');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => Badge.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -32,7 +32,7 @@ final earnedBadgesProvider = FutureProvider.autoDispose<List<Badge>>((ref) async
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/badges/earned');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => Badge.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -41,7 +41,7 @@ final activeChallengesProvider = FutureProvider.autoDispose<List<Challenge>>((re
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/challenges/active');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => Challenge.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -57,7 +57,7 @@ final availableRewardsProvider = FutureProvider.autoDispose<List<Reward>>((ref) 
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gamification/rewards');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => Reward.fromJson(e as Map<String, dynamic>)).toList();
 });
 

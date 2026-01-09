@@ -590,9 +590,17 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
   }
 
   void _showAddRecordDialog(BuildContext context) {
-    final typeController = TextEditingController();
+    if (_selectedHorseId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez d\'abord sélectionner un cheval')),
+      );
+      return;
+    }
+
     final notesController = TextEditingController();
     HealthRecordType selectedType = HealthRecordType.vaccination;
+    DateTime selectedDate = DateTime.now();
+    bool isLoading = false;
 
     showModalBottomSheet(
       context: context,
@@ -619,6 +627,20 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
                 onChanged: (value) => setSheetState(() => selectedType = value!),
               ),
               const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (date != null) setSheetState(() => selectedDate = date);
+                },
+                icon: const Icon(Icons.calendar_today),
+                label: Text('${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'),
+              ),
+              const SizedBox(height: 12),
               TextField(
                 controller: notesController,
                 decoration: const InputDecoration(labelText: 'Notes'),
@@ -628,17 +650,31 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () async {
-                    Navigator.pop(sheetContext);
-                    // Wait for bottom sheet to close before showing snackbar
-                    await Future.delayed(const Duration(milliseconds: 100));
+                  onPressed: isLoading ? null : () async {
+                    setSheetState(() => isLoading = true);
+
+                    final result = await ref.read(healthNotifierProvider.notifier).addHealthRecord(
+                      _selectedHorseId!,
+                      {
+                        'type': selectedType.name,
+                        'date': selectedDate.toIso8601String(),
+                        'notes': notesController.text.isNotEmpty ? notesController.text : null,
+                      },
+                    );
+
                     if (mounted) {
+                      Navigator.pop(sheetContext);
                       ScaffoldMessenger.of(this.context).showSnackBar(
-                        const SnackBar(content: Text('Suivi santé ajouté')),
+                        SnackBar(
+                          content: Text(result != null ? 'Suivi santé ajouté' : 'Erreur lors de l\'ajout'),
+                          backgroundColor: result != null ? AppColors.success : Colors.red,
+                        ),
                       );
                     }
                   },
-                  child: const Text('Ajouter'),
+                  child: isLoading
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Ajouter'),
                 ),
               ),
             ],
@@ -646,41 +682,74 @@ class _HealthScreenState extends ConsumerState<HealthScreen>
         ),
       ),
     ).then((_) {
-      typeController.dispose();
       notesController.dispose();
     });
   }
 
   void _showAddWeightDialog(BuildContext context) {
+    if (_selectedHorseId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez d\'abord sélectionner un cheval')),
+      );
+      return;
+    }
+
     final weightController = TextEditingController();
+    bool isLoading = false;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Ajouter un poids'),
-        content: TextField(
-          controller: weightController,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Poids (kg)',
-            suffixText: 'kg',
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Ajouter un poids'),
+          content: TextField(
+            controller: weightController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Poids (kg)',
+              suffixText: 'kg',
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: isLoading ? null : () async {
+                final weight = double.tryParse(weightController.text);
+                if (weight == null || weight <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Veuillez entrer un poids valide')),
+                  );
+                  return;
+                }
+
+                setDialogState(() => isLoading = true);
+
+                final result = await ref.read(healthNotifierProvider.notifier).addWeightRecord(
+                  _selectedHorseId!,
+                  weight,
+                  MeasurementMethod.scale,
+                  null,
+                );
+
+                if (mounted) {
+                  Navigator.pop(dialogContext);
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    SnackBar(
+                      content: Text(result != null ? 'Poids enregistré' : 'Erreur lors de l\'enregistrement'),
+                      backgroundColor: result != null ? AppColors.success : Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: isLoading
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Enregistrer'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Poids enregistré')),
-              );
-            },
-            child: const Text('Enregistrer'),
-          ),
-        ],
       ),
     ).then((_) => weightController.dispose());
   }

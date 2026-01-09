@@ -559,7 +559,7 @@ class SubscriptionsScreen extends ConsumerWidget {
             _buildDetailRow('Plan', sub.planName),
             _buildDetailRow('Montant', '${sub.amount}€/${sub.interval.displayName}'),
             _buildDetailRow('Statut', sub.status.displayName),
-            _buildDetailRow('Créé le', DateFormat('dd/MM/yyyy').format(sub.createdAt)),
+            _buildDetailRow('Début', DateFormat('dd/MM/yyyy').format(sub.startDate)),
             if (sub.cancelledAt != null)
               _buildDetailRow('Annulé le', DateFormat('dd/MM/yyyy').format(sub.cancelledAt!)),
           ],

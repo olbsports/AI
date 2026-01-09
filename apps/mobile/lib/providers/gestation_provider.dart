@@ -7,7 +7,7 @@ final gestationsProvider = FutureProvider.autoDispose<List<GestationRecord>>((re
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => GestationRecord.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -35,7 +35,7 @@ final mareGestationsProvider =
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/horses/$mareId/gestations');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => GestationRecord.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -45,7 +45,7 @@ final gestationCheckupsProvider =
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId/checkups');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => GestationCheckup.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -55,7 +55,7 @@ final gestationMilestonesProvider =
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId/milestones');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => GestationMilestone.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -65,7 +65,7 @@ final gestationNotesProvider =
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/gestations/$gestationId/notes');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => GestationNote.fromJson(e as Map<String, dynamic>)).toList();
 });
 
@@ -74,7 +74,7 @@ final birthRecordsProvider = FutureProvider.autoDispose<List<BirthRecord>>((ref)
   final api = ref.watch(apiServiceProvider);
   final response = await api.get('/births');
   if (response == null) return [];
-  final list = response is List ? response : (response['items'] as List? ?? []);
+  final list = response is List ? response : (response is Map ? (response['items'] as List? ?? []) : []);
   return list.map((e) => BirthRecord.fromJson(e as Map<String, dynamic>)).toList();
 });
 
