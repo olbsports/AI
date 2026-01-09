@@ -2,6 +2,8 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } fro
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { SocialService } from './social.service';
+import { StoriesService } from './stories.service';
+import { HashtagsService } from './hashtags.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -10,7 +12,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class SocialController {
-  constructor(private readonly socialService: SocialService) {}
+  constructor(
+    private readonly socialService: SocialService,
+    private readonly storiesService: StoriesService,
+    private readonly hashtagsService: HashtagsService
+  ) {}
 
   // ==================== FEED ENDPOINTS ====================
 
@@ -31,10 +37,12 @@ export class SocialController {
       case 'trending':
         return this.socialService.getTrendingPosts(pageNum, limitNum);
       case 'discover':
-        return this.socialService.getTrendingPosts(pageNum, limitNum);
+        return this.socialService.getDiscoverFeed(user.id, pageNum, limitNum);
+      case 'personalized':
+        return this.socialService.getPersonalizedFeed(user.id, pageNum, limitNum);
       case 'forYou':
       default:
-        return this.socialService.getForYouFeed(user.id, pageNum, limitNum);
+        return this.socialService.getPersonalizedFeed(user.id, pageNum, limitNum);
     }
   }
 
@@ -75,6 +83,20 @@ export class SocialController {
     );
   }
 
+  @Get('feed/discover')
+  @ApiOperation({ summary: 'Get discover feed - content from users you don\'t follow' })
+  async getDiscoverFeed(
+    @CurrentUser() user: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.socialService.getDiscoverFeed(
+      user.id,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20
+    );
+  }
+
   @Get('feed/trending-tags')
   @ApiOperation({ summary: 'Get trending hashtags' })
   async getTrendingTags(@Query('limit') limit?: string) {
@@ -84,6 +106,7 @@ export class SocialController {
   @Get('feed/tags/:tag')
   @ApiOperation({ summary: 'Get posts by hashtag' })
   async getPostsByTag(
+    @CurrentUser() user: any,
     @Param('tag') tag: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string
@@ -93,6 +116,117 @@ export class SocialController {
       page ? parseInt(page) : 1,
       limit ? parseInt(limit) : 20
     );
+  }
+
+  // ==================== HASHTAGS ENDPOINTS ====================
+
+  @Get('hashtags/trending')
+  @ApiOperation({ summary: 'Get trending hashtags with scores' })
+  async getTrendingHashtags(
+    @Query('limit') limit?: string,
+    @Query('days') days?: string
+  ) {
+    return this.hashtagsService.getTrendingHashtags(
+      limit ? parseInt(limit) : 20,
+      days ? parseInt(days) : 7
+    );
+  }
+
+  @Get('hashtags/search')
+  @ApiOperation({ summary: 'Search hashtags by name' })
+  async searchHashtags(
+    @Query('q') query: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.hashtagsService.searchHashtags(query || '', limit ? parseInt(limit) : 10);
+  }
+
+  @Get('hashtags/:name')
+  @ApiOperation({ summary: 'Get hashtag details' })
+  async getHashtag(@Param('name') name: string) {
+    return this.hashtagsService.getHashtag(name);
+  }
+
+  @Get('hashtags/:name/posts')
+  @ApiOperation({ summary: 'Get posts by hashtag' })
+  async getPostsByHashtag(
+    @CurrentUser() user: any,
+    @Param('name') name: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.hashtagsService.getPostsByHashtag(
+      name,
+      user.id,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20
+    );
+  }
+
+  @Get('hashtags/:name/related')
+  @ApiOperation({ summary: 'Get related hashtags' })
+  async getRelatedHashtags(
+    @Param('name') name: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.hashtagsService.getRelatedHashtags(name, limit ? parseInt(limit) : 10);
+  }
+
+  // ==================== STORIES ENDPOINTS ====================
+
+  @Get('stories')
+  @ApiOperation({ summary: 'Get stories from followed users' })
+  async getStories(@CurrentUser() user: any) {
+    return this.storiesService.getStories(user.id);
+  }
+
+  @Post('stories')
+  @ApiOperation({ summary: 'Create a new story (expires in 24h)' })
+  async createStory(
+    @CurrentUser() user: any,
+    @Body() body: { mediaUrl: string; mediaType?: string; caption?: string }
+  ) {
+    return this.storiesService.createStory(user.id, body);
+  }
+
+  @Get('stories/:id')
+  @ApiOperation({ summary: 'Get a specific story' })
+  async getStory(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.storiesService.getStory(id, user.id);
+  }
+
+  @Delete('stories/:id')
+  @ApiOperation({ summary: 'Delete a story' })
+  async deleteStory(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.storiesService.deleteStory(id, user.id);
+  }
+
+  @Post('stories/:id/view')
+  @ApiOperation({ summary: 'Record a story view' })
+  async viewStory(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.storiesService.viewStory(id, user.id);
+  }
+
+  @Get('stories/:id/viewers')
+  @ApiOperation({ summary: 'Get story viewers (only author can see)' })
+  async getStoryViewers(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.storiesService.getStoryViewers(
+      id,
+      user.id,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 50
+    );
+  }
+
+  @Get('users/:id/stories')
+  @ApiOperation({ summary: 'Get stories by a specific user' })
+  async getUserStories(@CurrentUser() user: any, @Param('id') userId: string) {
+    return this.storiesService.getUserStories(userId, user.id);
   }
 
   // ==================== NOTES/POSTS ENDPOINTS ====================

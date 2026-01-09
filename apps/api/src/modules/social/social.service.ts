@@ -165,6 +165,251 @@ export class SocialService {
     });
   }
 
+  // ==================== ENHANCED FEED WITH SCORING ====================
+
+  /**
+   * Calculate feed score for a post based on multiple factors:
+   * - Recency (30%): How recent is the post
+   * - Engagement (25%): Likes + comments + shares
+   * - Affinity (20%): User's relationship with the author
+   * - Media Quality (15%): Posts with media score higher
+   * - Content Type (10%): Different content types have different weights
+   */
+  private calculatePostScore(
+    post: any,
+    userId: string,
+    userInteractions: Map<string, { likedCount: number; commentedCount: number }>
+  ): number {
+    const now = Date.now();
+    const postAge = now - new Date(post.createdAt).getTime();
+    const hoursSincePost = postAge / (1000 * 60 * 60);
+
+    // Recency score (30%) - exponential decay over 48 hours
+    const recencyScore = Math.max(0, 1 - hoursSincePost / 48) * 0.3;
+
+    // Engagement score (25%) - normalized engagement
+    const totalEngagement =
+      (post.likeCount || 0) + (post.commentCount || 0) * 2 + (post.shareCount || 0) * 3;
+    const engagementScore = Math.min(1, totalEngagement / 100) * 0.25;
+
+    // Affinity score (20%) - based on past interactions with the author
+    let affinityScore = 0;
+    const interactions = userInteractions.get(post.authorId);
+    if (interactions) {
+      const interactionScore =
+        (interactions.likedCount * 1 + interactions.commentedCount * 2) / 10;
+      affinityScore = Math.min(1, interactionScore) * 0.2;
+    }
+
+    // Media quality score (15%)
+    let mediaScore = 0;
+    if (post.mediaUrls && Array.isArray(post.mediaUrls) && post.mediaUrls.length > 0) {
+      mediaScore = 0.15;
+      if (post.mediaType === 'video') {
+        mediaScore *= 1.2; // Videos score slightly higher
+      }
+    }
+
+    // Content type score (10%)
+    let contentTypeScore = 0.05; // Default for regular posts
+    switch (post.type) {
+      case 'achievement':
+        contentTypeScore = 0.1;
+        break;
+      case 'competition':
+        contentTypeScore = 0.08;
+        break;
+      case 'sale':
+        contentTypeScore = 0.03;
+        break;
+    }
+
+    return recencyScore + engagementScore + affinityScore + mediaScore + contentTypeScore;
+  }
+
+  /**
+   * Get personalized "For You" feed with scoring algorithm
+   */
+  async getPersonalizedFeed(userId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    // Get blocked users to exclude
+    const blockedUsers = await this.prisma.userBlock.findMany({
+      where: {
+        OR: [{ blockerId: userId }, { blockedId: userId }],
+      },
+      select: { blockerId: true, blockedId: true },
+    });
+    const blockedUserIds = new Set<string>();
+    blockedUsers.forEach((b) => {
+      blockedUserIds.add(b.blockerId);
+      blockedUserIds.add(b.blockedId);
+    });
+    blockedUserIds.delete(userId); // Don't block self
+
+    // Get user's past interactions for affinity calculation
+    const [userLikes, userComments] = await Promise.all([
+      this.prisma.like.findMany({
+        where: { userId },
+        include: { post: { select: { authorId: true } } },
+        take: 100,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.comment.findMany({
+        where: { authorId: userId },
+        include: { post: { select: { authorId: true } } },
+        take: 100,
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    // Build interaction map
+    const userInteractions = new Map<
+      string,
+      { likedCount: number; commentedCount: number }
+    >();
+    userLikes.forEach((like) => {
+      const authorId = like.post.authorId;
+      const existing = userInteractions.get(authorId) || {
+        likedCount: 0,
+        commentedCount: 0,
+      };
+      existing.likedCount++;
+      userInteractions.set(authorId, existing);
+    });
+    userComments.forEach((comment) => {
+      const authorId = comment.post.authorId;
+      const existing = userInteractions.get(authorId) || {
+        likedCount: 0,
+        commentedCount: 0,
+      };
+      existing.commentedCount++;
+      userInteractions.set(authorId, existing);
+    });
+
+    // Get candidate posts (more than needed for scoring)
+    const candidatePosts = await this.prisma.socialPost.findMany({
+      where: {
+        visibility: 'public',
+        authorId: { notIn: Array.from(blockedUserIds) },
+        createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }, // Last 7 days
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        horse: {
+          select: {
+            id: true,
+            name: true,
+            photoUrl: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+            likes: true,
+          },
+        },
+      },
+      take: 200, // Get more posts for scoring
+    });
+
+    // Score and sort posts
+    const scoredPosts = candidatePosts
+      .map((post) => ({
+        ...post,
+        score: this.calculatePostScore(post, userId, userInteractions),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(skip, skip + limit);
+
+    return this.transformPosts(scoredPosts, userId);
+  }
+
+  /**
+   * Get discover feed - content from users you don't follow
+   * Great for discovering new content and users
+   */
+  async getDiscoverFeed(userId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    // Get users the current user is following
+    const following = await this.prisma.follow.findMany({
+      where: { followerId: userId },
+      select: { followingId: true },
+    });
+    const followingIds = new Set(following.map((f) => f.followingId));
+    followingIds.add(userId); // Exclude own posts
+
+    // Get blocked users
+    const blockedUsers = await this.prisma.userBlock.findMany({
+      where: {
+        OR: [{ blockerId: userId }, { blockedId: userId }],
+      },
+      select: { blockerId: true, blockedId: true },
+    });
+    const blockedUserIds = new Set<string>();
+    blockedUsers.forEach((b) => {
+      blockedUserIds.add(b.blockerId);
+      blockedUserIds.add(b.blockedId);
+    });
+
+    // Combine excluded users
+    const excludedUserIds = new Set([...followingIds, ...blockedUserIds]);
+
+    // Get trending posts from users not followed
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 14); // Last 2 weeks for discover
+
+    const posts = await this.prisma.socialPost.findMany({
+      where: {
+        visibility: 'public',
+        authorId: { notIn: Array.from(excludedUserIds) },
+        createdAt: { gte: weekAgo },
+        OR: [
+          { likeCount: { gte: 5 } },
+          { commentCount: { gte: 2 } },
+          { mediaUrls: { not: [] } },
+        ],
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            followersCount: true,
+          },
+        },
+        horse: {
+          select: {
+            id: true,
+            name: true,
+            photoUrl: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+            likes: true,
+          },
+        },
+      },
+      orderBy: [{ likeCount: 'desc' }, { commentCount: 'desc' }, { createdAt: 'desc' }],
+      skip,
+      take: limit,
+    });
+
+    return this.transformPosts(posts, userId);
+  }
+
   // ==================== POSTS/NOTES ====================
 
   async createPost(
