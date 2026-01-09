@@ -9,14 +9,15 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
-interface AuthenticatedSocket extends Socket {
+// Extended Socket type with user info
+type AuthenticatedSocket = Socket & {
   userId?: string;
   organizationId?: string;
-}
+};
 
 // ==================== WEBSOCKET EVENTS ====================
 
@@ -79,7 +80,7 @@ export class AppWebSocketGateway
 
   constructor(
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   afterInit(server: Server) {
@@ -153,7 +154,7 @@ export class AppWebSocketGateway
   @SubscribeMessage('subscribe_analysis')
   handleSubscribeAnalysis(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { analysisId: string },
+    @MessageBody() data: { analysisId: string }
   ) {
     client.join(`analysis:${data.analysisId}`);
     return { subscribed: true, analysisId: data.analysisId };
@@ -162,7 +163,7 @@ export class AppWebSocketGateway
   @SubscribeMessage('unsubscribe_analysis')
   handleUnsubscribeAnalysis(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { analysisId: string },
+    @MessageBody() data: { analysisId: string }
   ) {
     client.leave(`analysis:${data.analysisId}`);
     return { unsubscribed: true, analysisId: data.analysisId };
@@ -171,7 +172,7 @@ export class AppWebSocketGateway
   @SubscribeMessage('subscribe_horse')
   handleSubscribeHorse(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { horseId: string },
+    @MessageBody() data: { horseId: string }
   ) {
     client.join(`horse:${data.horseId}`);
     return { subscribed: true, horseId: data.horseId };
@@ -180,7 +181,7 @@ export class AppWebSocketGateway
   @SubscribeMessage('typing')
   handleTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { conversationId: string; isTyping: boolean },
+    @MessageBody() data: { conversationId: string; isTyping: boolean }
   ) {
     // Broadcast typing status to conversation participants
     client.to(`conversation:${data.conversationId}`).emit(WsEvents.TYPING, {
@@ -232,7 +233,10 @@ export class AppWebSocketGateway
     this.emitToUser(userId, WsEvents.ANALYSIS_FAILED, { analysisId, ...error });
   }
 
-  sendTokenBalanceUpdate(userId: string, balance: { total: number; included: number; purchased: number }) {
+  sendTokenBalanceUpdate(
+    userId: string,
+    balance: { total: number; included: number; purchased: number }
+  ) {
     this.emitToUser(userId, WsEvents.TOKEN_BALANCE_UPDATED, balance);
   }
 
