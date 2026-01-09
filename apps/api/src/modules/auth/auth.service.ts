@@ -206,7 +206,8 @@ export class AuthService {
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
-    const user = await this.usersService.findById(userId);
+    // Use findByIdInternal to get passwordHash for verification
+    const user = await this.usersService.findByIdInternal(userId);
 
     if (!user) {
       throw new NotFoundException('User not found');
