@@ -105,6 +105,59 @@ class MainScaffold extends StatelessWidget {
         location == '/plus';
   }
 
+  /// Get the parent route for nested navigation
+  String? _getParentRoute(String location) {
+    // Map sub-routes to their parent routes
+    final parentRoutes = {
+      // Horses
+      '/horses/': '/ecurie',
+      '/horse/': '/horses',
+      // Riders
+      '/riders/': '/ecurie',
+      '/rider/': '/riders',
+      // Health
+      '/health/': '/ecurie',
+      // Gestation
+      '/gestation/': '/ecurie',
+      // Analyses
+      '/analyses/': '/ia',
+      '/analysis/': '/analyses',
+      // Reports
+      '/reports/': '/ia',
+      '/report/': '/reports',
+      // Planning
+      '/planning/': '/ia',
+      // Feed
+      '/feed/': '/social',
+      '/post/': '/feed',
+      // Marketplace
+      '/marketplace/': '/social',
+      '/listing/': '/marketplace',
+      // Clubs
+      '/clubs/': '/social',
+      '/club/': '/clubs',
+      // Leaderboard
+      '/leaderboard/': '/social',
+      // Settings
+      '/settings/': '/plus',
+      // Breeding
+      '/breeding/': '/plus',
+      // Services
+      '/services/': '/plus',
+      // Gamification
+      '/gamification/': '/plus',
+    };
+
+    // Check for exact matches or prefix matches
+    for (final entry in parentRoutes.entries) {
+      if (location.startsWith(entry.key) && location != entry.value) {
+        return entry.value;
+      }
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentCategory = _getCurrentCategory(context);
@@ -119,7 +172,6 @@ class MainScaffold extends StatelessWidget {
 
         // Si on est sur le dashboard, ne pas quitter l'app
         if (location == '/dashboard') {
-          // Optionnel: montrer une snackbar ou rien faire
           return;
         }
 
@@ -129,29 +181,37 @@ class MainScaffold extends StatelessWidget {
           return;
         }
 
-        // Sinon, essayer de naviguer vers la page parente
+        // Essayer d'abord de pop via go_router
         if (context.canPop()) {
           context.pop();
-        } else {
-          // Retour à la catégorie home selon la route actuelle
-          final category = _getCurrentCategory(context);
-          switch (category) {
-            case NavCategory.accueil:
-              context.go('/dashboard');
-              break;
-            case NavCategory.ecurie:
-              context.go('/ecurie');
-              break;
-            case NavCategory.ia:
-              context.go('/ia');
-              break;
-            case NavCategory.social:
-              context.go('/social');
-              break;
-            case NavCategory.plus:
-              context.go('/plus');
-              break;
-          }
+          return;
+        }
+
+        // Chercher la route parente
+        final parentRoute = _getParentRoute(location);
+        if (parentRoute != null) {
+          context.go(parentRoute);
+          return;
+        }
+
+        // Retour à la catégorie home selon la route actuelle
+        final category = _getCurrentCategory(context);
+        switch (category) {
+          case NavCategory.accueil:
+            context.go('/dashboard');
+            break;
+          case NavCategory.ecurie:
+            context.go('/ecurie');
+            break;
+          case NavCategory.ia:
+            context.go('/ia');
+            break;
+          case NavCategory.social:
+            context.go('/social');
+            break;
+          case NavCategory.plus:
+            context.go('/plus');
+            break;
         }
       },
       child: Scaffold(

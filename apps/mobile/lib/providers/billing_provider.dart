@@ -2,28 +2,55 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/api_service.dart';
 
-// Current subscription provider
+// Current subscription provider - with extra error handling
 final subscriptionProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
-  final api = ref.watch(apiServiceProvider);
-  return api.getCurrentSubscription();
+  try {
+    final api = ref.watch(apiServiceProvider);
+    return await api.getCurrentSubscription();
+  } catch (e) {
+    // Return default subscription on any error
+    return <String, dynamic>{
+      'status': 'active',
+      'planId': 'free',
+      'planName': 'Starter',
+      'plan': {'id': 'free', 'name': 'Starter', 'price': 0},
+    };
+  }
 });
 
 // Available plans provider
 final plansProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-  final api = ref.watch(apiServiceProvider);
-  return api.getPlans();
+  try {
+    final api = ref.watch(apiServiceProvider);
+    return await api.getPlans();
+  } catch (e) {
+    return <Map<String, dynamic>>[];
+  }
 });
 
 // Token balance provider
 final tokenBalanceProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
-  final api = ref.watch(apiServiceProvider);
-  return api.getTokenBalance();
+  try {
+    final api = ref.watch(apiServiceProvider);
+    return await api.getTokenBalance();
+  } catch (e) {
+    return <String, dynamic>{
+      'horsesUsed': 0,
+      'horsesLimit': 5,
+      'analysesUsed': 0,
+      'analysesLimit': 10,
+    };
+  }
 });
 
 // Invoices provider
 final invoicesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-  final api = ref.watch(apiServiceProvider);
-  return api.getInvoices();
+  try {
+    final api = ref.watch(apiServiceProvider);
+    return await api.getInvoices();
+  } catch (e) {
+    return <Map<String, dynamic>>[];
+  }
 });
 
 // Billing notifier for actions

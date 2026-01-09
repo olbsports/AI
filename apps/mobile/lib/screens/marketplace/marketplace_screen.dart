@@ -25,7 +25,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -44,6 +44,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           tabs: const [
             Tab(icon: Icon(Icons.sell), text: 'Ventes'),
             Tab(icon: Icon(Icons.favorite), text: 'Élevage'),
+            Tab(icon: Icon(Icons.person), text: 'Mes annonces'),
           ],
         ),
         actions: [
@@ -62,6 +63,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
         children: [
           _buildSalesTab(),
           _buildBreedingTab(),
+          _buildMyListingsTab(),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -260,6 +262,315 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMyListingsTab() {
+    final myListingsAsync = ref.watch(myListingsProvider);
+
+    return RefreshIndicator(
+      onRefresh: () async => ref.invalidate(myListingsProvider),
+      child: myListingsAsync.when(
+        data: (listings) {
+          if (listings.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  const Text('Vous n\'avez pas encore d\'annonces'),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () => _showCreateListingSheet(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Créer une annonce'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: listings.length,
+            padding: const EdgeInsets.all(8),
+            itemBuilder: (context, index) {
+              final listing = listings[index];
+              return _buildMyListingCard(listing);
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => _buildErrorWidget(error, () => ref.invalidate(myListingsProvider)),
+      ),
+    );
+  }
+
+  Widget _buildMyListingCard(MarketplaceListing listing) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: listing.mediaUrls.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        listing.mediaUrls.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stack) => const Center(
+                          child: Icon(Icons.pets, size: 32, color: Colors.grey),
+                        ),
+                      ),
+                    )
+                  : const Center(child: Icon(Icons.pets, size: 32, color: Colors.grey)),
+            ),
+            const SizedBox(width: 12),
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    listing.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    listing.priceDisplay,
+                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(listing.status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _getStatusText(listing.status),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: _getStatusColor(listing.status),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.visibility, size: 14, color: Colors.grey.shade600),
+                      const SizedBox(width: 2),
+                      Text('${listing.viewCount}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                      const SizedBox(width: 8),
+                      Icon(Icons.favorite, size: 14, color: Colors.grey.shade600),
+                      const SizedBox(width: 2),
+                      Text('${listing.favoriteCount}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Actions
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) => _handleMyListingAction(value, listing),
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'edit', child: Text('Modifier')),
+                const PopupMenuItem(value: 'sold', child: Text('Marquer comme vendu')),
+                const PopupMenuItem(value: 'promote', child: Text('Promouvoir')),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Supprimer', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(ListingStatus status) {
+    switch (status) {
+      case ListingStatus.active:
+        return Colors.green;
+      case ListingStatus.pending:
+        return Colors.orange;
+      case ListingStatus.sold:
+        return Colors.blue;
+      case ListingStatus.expired:
+        return Colors.grey;
+      case ListingStatus.rejected:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusText(ListingStatus status) {
+    switch (status) {
+      case ListingStatus.active:
+        return 'Active';
+      case ListingStatus.pending:
+        return 'En attente';
+      case ListingStatus.sold:
+        return 'Vendu';
+      case ListingStatus.expired:
+        return 'Expirée';
+      case ListingStatus.rejected:
+        return 'Refusée';
+      default:
+        return 'Inconnue';
+    }
+  }
+
+  void _handleMyListingAction(String action, MarketplaceListing listing) async {
+    switch (action) {
+      case 'edit':
+        context.push('/marketplace/edit/${listing.id}');
+        break;
+      case 'sold':
+        _showMarkAsSoldDialog(listing);
+        break;
+      case 'promote':
+        _showPromoteDialog(listing);
+        break;
+      case 'delete':
+        _confirmDeleteListing(listing);
+        break;
+    }
+  }
+
+  void _showMarkAsSoldDialog(MarketplaceListing listing) {
+    final priceController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Marquer comme vendu'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Félicitations ! Voulez-vous indiquer le prix de vente ?'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: priceController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Prix de vente (optionnel)',
+                suffixText: '€',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final price = int.tryParse(priceController.text);
+              final success = await ref.read(marketplaceNotifierProvider.notifier).markAsSold(listing.id, price);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(success ? 'Annonce marquée comme vendue' : 'Erreur'),
+                    backgroundColor: success ? AppColors.success : Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Confirmer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPromoteDialog(MarketplaceListing listing) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Promouvoir l\'annonce'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Mettez votre annonce en avant pour plus de visibilité'),
+            const SizedBox(height: 16),
+            _buildPromoteOption('7 jours', '5 €', 7),
+            _buildPromoteOption('14 jours', '8 €', 14),
+            _buildPromoteOption('30 jours', '15 €', 30),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPromoteOption(String duration, String price, int days) {
+    return ListTile(
+      title: Text(duration),
+      trailing: Text(price, style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+      onTap: () async {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fonctionnalité bientôt disponible')),
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteListing(MarketplaceListing listing) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer l\'annonce'),
+        content: Text('Êtes-vous sûr de vouloir supprimer "${listing.title}" ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final success = await ref.read(marketplaceNotifierProvider.notifier).deleteListing(listing.id);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(success ? 'Annonce supprimée' : 'Erreur lors de la suppression'),
+                    backgroundColor: success ? AppColors.success : Colors.red,
+                  ),
+                );
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
     );
   }
 
