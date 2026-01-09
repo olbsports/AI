@@ -603,13 +603,17 @@ class ApiService {
   // ==================== TOKENS/BILLING ====================
 
   Future<Map<String, dynamic>> getTokenBalance() async {
-    final response = await _dio.get('/billing/tokens');
-    final data = response.data;
-    // Handle case where API returns a list or non-map response
-    if (data is Map<String, dynamic>) {
-      return data;
+    try {
+      final response = await _dio.get('/billing/tokens');
+      final data = response.data;
+      // Handle case where API returns a list or non-map response
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+    } on DioException catch (e) {
+      debugPrint('getTokenBalance error: ${e.message}');
     }
-    // Return empty map with defaults if API returns unexpected format
+    // Return defaults on error
     return <String, dynamic>{
       'horsesUsed': 0,
       'horsesLimit': 5,
@@ -619,10 +623,14 @@ class ApiService {
   }
 
   Future<List<Map<String, dynamic>>> getTokenHistory() async {
-    final response = await _dio.get('/billing/tokens/history');
-    final data = response.data;
-    if (data is List) {
-      return data.map((e) => e is Map<String, dynamic> ? e : <String, dynamic>{}).toList();
+    try {
+      final response = await _dio.get('/billing/tokens/history');
+      final data = response.data;
+      if (data is List) {
+        return data.map((e) => e is Map<String, dynamic> ? e : <String, dynamic>{}).toList();
+      }
+    } on DioException catch (e) {
+      debugPrint('getTokenHistory error: ${e.message}');
     }
     return <Map<String, dynamic>>[];
   }
@@ -630,45 +638,73 @@ class ApiService {
   // ==================== SUBSCRIPTIONS ====================
 
   Future<List<Map<String, dynamic>>> getPlans() async {
-    final response = await _dio.get('/subscriptions/plans');
-    final data = response.data;
-    // API might return a map of plans keyed by plan ID, convert to list
-    if (data is Map<String, dynamic>) {
-      return data.entries.map((e) {
-        final value = e.value;
-        if (value is Map<String, dynamic>) {
-          return {'id': e.key, ...value};
-        } else if (value is Map) {
-          return {'id': e.key, ...Map<String, dynamic>.from(value)};
-        }
-        return <String, dynamic>{'id': e.key};
-      }).toList();
+    try {
+      final response = await _dio.get('/subscriptions/plans');
+      final data = response.data;
+      // API might return a map of plans keyed by plan ID, convert to list
+      if (data is Map<String, dynamic>) {
+        return data.entries.map((e) {
+          final value = e.value;
+          if (value is Map<String, dynamic>) {
+            return {'id': e.key, ...value};
+          } else if (value is Map) {
+            return {'id': e.key, ...Map<String, dynamic>.from(value)};
+          }
+          return <String, dynamic>{'id': e.key};
+        }).toList();
+      }
+      // If it's a list, safely convert each element
+      if (data is List) {
+        return data.map((e) {
+          if (e is Map<String, dynamic>) return e;
+          if (e is Map) return Map<String, dynamic>.from(e);
+          return <String, dynamic>{};
+        }).toList();
+      }
+      return <Map<String, dynamic>>[];
+    } on DioException catch (e) {
+      debugPrint('getPlans error: ${e.message}');
+      // Return empty list on error - billing_screen will show default plans
+      return <Map<String, dynamic>>[];
     }
-    // If it's a list, safely convert each element
-    if (data is List) {
-      return data.map((e) {
-        if (e is Map<String, dynamic>) return e;
-        if (e is Map) return Map<String, dynamic>.from(e);
-        return <String, dynamic>{};
-      }).toList();
-    }
-    return <Map<String, dynamic>>[];
   }
 
   Future<Map<String, dynamic>> getCurrentSubscription() async {
-    final response = await _dio.get('/subscriptions/current');
-    final data = response.data;
-    // Handle case where API returns a list or non-map response
-    if (data is Map<String, dynamic>) {
-      return data;
+    try {
+      final response = await _dio.get('/subscriptions/current');
+      final data = response.data;
+      // Handle case where API returns a list or non-map response
+      if (data is Map<String, dynamic>) {
+        return {
+          'status': data['status'] ?? 'active',
+          'planId': data['plan'] ?? data['planId'] ?? 'free',
+          'planName': data['planName'] ?? _getPlanName(data['plan']),
+          'plan': data['plan'] is Map ? data['plan'] : {'id': data['plan'] ?? 'free', 'name': _getPlanName(data['plan']), 'price': 0},
+          ...data,
+        };
+      }
+    } on DioException catch (e) {
+      debugPrint('getCurrentSubscription error: ${e.message}');
     }
-    // Return default subscription if API returns unexpected format
+    // Return default subscription on error
     return <String, dynamic>{
       'status': 'active',
       'planId': 'free',
       'planName': 'Starter',
       'plan': {'id': 'free', 'name': 'Starter', 'price': 0},
     };
+  }
+
+  String _getPlanName(dynamic plan) {
+    if (plan == null) return 'Starter';
+    final planStr = plan.toString().toLowerCase();
+    switch (planStr) {
+      case 'free': return 'Gratuit';
+      case 'starter': return 'Starter';
+      case 'professional': return 'Professional';
+      case 'enterprise': return 'Enterprise';
+      default: return 'Starter';
+    }
   }
 
   Future<Map<String, dynamic>> upgradePlan(String planId) async {
@@ -693,17 +729,21 @@ class ApiService {
   // ==================== INVOICES ====================
 
   Future<List<Map<String, dynamic>>> getInvoices() async {
-    final response = await _dio.get('/invoices');
-    final data = response.data;
-    // API returns {invoices: [], total: 0, ...}, extract the invoices list
-    if (data is Map<String, dynamic> && data.containsKey('invoices')) {
-      final invoices = data['invoices'];
-      if (invoices is List) {
-        return invoices.map((e) => e is Map<String, dynamic> ? e : <String, dynamic>{}).toList();
+    try {
+      final response = await _dio.get('/invoices');
+      final data = response.data;
+      // API returns {invoices: [], total: 0, ...}, extract the invoices list
+      if (data is Map<String, dynamic> && data.containsKey('invoices')) {
+        final invoices = data['invoices'];
+        if (invoices is List) {
+          return invoices.map((e) => e is Map<String, dynamic> ? e : <String, dynamic>{}).toList();
+        }
       }
-    }
-    if (data is List) {
-      return data.map((e) => e is Map<String, dynamic> ? e : <String, dynamic>{}).toList();
+      if (data is List) {
+        return data.map((e) => e is Map<String, dynamic> ? e : <String, dynamic>{}).toList();
+      }
+    } on DioException catch (e) {
+      debugPrint('getInvoices error: ${e.message}');
     }
     return <Map<String, dynamic>>[];
   }
