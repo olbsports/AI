@@ -3,21 +3,29 @@ import {
   UnauthorizedException,
   BadRequestException,
   NotFoundException,
+  TooManyRequestsException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHmac } from 'crypto';
+import * as speakeasy from 'speakeasy';
+import * as QRCode from 'qrcode';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { UploadService } from '../upload/upload.service';
+import { SessionTrackingService } from './session-tracking.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+
+// Rate limiting constants
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MINUTES = 15;
 
 @Injectable()
 export class AuthService {
@@ -27,10 +35,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
-    private readonly uploadService: UploadService
+    private readonly uploadService: UploadService,
+    private readonly sessionTrackingService: SessionTrackingService
   ) {}
 
-  async validateUser(email: string, password: string) {
+  async validateUser(email: string, password: string, ipAddress?: string) {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
@@ -50,9 +59,227 @@ export class AuthService {
     return user;
   }
 
-  async login(dto: LoginDto) {
-    const user = await this.validateUser(dto.email, dto.password);
+  async login(dto: LoginDto, ipAddress?: string, userAgent?: string) {
+    // Check rate limiting
+    await this.checkRateLimiting(dto.email, ipAddress);
 
+    try {
+      const user = await this.validateUser(dto.email, dto.password, ipAddress);
+
+      // Check if 2FA is enabled
+      if (user.twoFactorEnabled) {
+        // Return partial response indicating 2FA is required
+        return {
+          requiresTwoFactor: true,
+          userId: user.id,
+          message: 'Two-factor authentication required',
+        };
+      }
+
+      // Record successful login attempt
+      await this.recordLoginAttempt(dto.email, ipAddress, userAgent, true);
+
+      // Create session if deviceId provided
+      let session = null;
+      if (dto.deviceId) {
+        session = await this.sessionTrackingService.createOrUpdateSession({
+          userId: user.id,
+          deviceId: dto.deviceId,
+          deviceName: dto.deviceName,
+          platform: dto.platform,
+          ipAddress,
+          userAgent,
+        });
+      }
+
+      const tokens = await this.generateTokens(user);
+      return { ...tokens, session };
+    } catch (error) {
+      // Record failed login attempt
+      await this.recordLoginAttempt(
+        dto.email,
+        ipAddress,
+        userAgent,
+        false,
+        error.message || 'invalid_credentials'
+      );
+      throw error;
+    }
+  }
+
+  async loginWith2FA(
+    email: string,
+    password: string,
+    twoFactorCode: string,
+    deviceInfo?: { deviceId?: string; deviceName?: string; platform?: string },
+    ipAddress?: string,
+    userAgent?: string
+  ) {
+    // Check rate limiting
+    await this.checkRateLimiting(email, ipAddress);
+
+    try {
+      const user = await this.validateUser(email, password, ipAddress);
+
+      if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+        throw new BadRequestException('Two-factor authentication is not enabled');
+      }
+
+      // First try TOTP verification
+      let isValid = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token: twoFactorCode,
+        window: 1, // Allow 1 step before/after for clock drift
+      });
+
+      // If TOTP fails, try backup code
+      if (!isValid) {
+        const backupCodeResult = await this.verifyAndConsumeBackupCode(user.id, twoFactorCode);
+        isValid = backupCodeResult.valid;
+      }
+
+      if (!isValid) {
+        await this.recordLoginAttempt(email, ipAddress, userAgent, false, '2fa_failed');
+        throw new UnauthorizedException('Invalid two-factor code');
+      }
+
+      // Record successful login attempt
+      await this.recordLoginAttempt(email, ipAddress, userAgent, true);
+
+      // Create session if deviceId provided
+      let session = null;
+      if (deviceInfo?.deviceId) {
+        session = await this.sessionTrackingService.createOrUpdateSession({
+          userId: user.id,
+          deviceId: deviceInfo.deviceId,
+          deviceName: deviceInfo.deviceName,
+          platform: deviceInfo.platform,
+          ipAddress,
+          userAgent,
+        });
+      }
+
+      const tokens = await this.generateTokens(user);
+      return { ...tokens, session };
+    } catch (error) {
+      if (!(error instanceof UnauthorizedException)) {
+        await this.recordLoginAttempt(email, ipAddress, userAgent, false, error.message);
+      }
+      throw error;
+    }
+  }
+
+  // ========== RATE LIMITING ==========
+
+  private async checkRateLimiting(email: string, ipAddress?: string): Promise<void> {
+    const windowStart = new Date(Date.now() - LOCKOUT_DURATION_MINUTES * 60 * 1000);
+
+    // Check failed attempts for this email
+    const emailAttempts = await this.prisma.loginAttempt.count({
+      where: {
+        email,
+        successful: false,
+        createdAt: { gte: windowStart },
+      },
+    });
+
+    if (emailAttempts >= MAX_LOGIN_ATTEMPTS) {
+      throw new TooManyRequestsException(
+        `Too many login attempts. Please try again in ${LOCKOUT_DURATION_MINUTES} minutes.`
+      );
+    }
+
+    // Also check by IP if provided
+    if (ipAddress) {
+      const ipAttempts = await this.prisma.loginAttempt.count({
+        where: {
+          ipAddress,
+          successful: false,
+          createdAt: { gte: windowStart },
+        },
+      });
+
+      if (ipAttempts >= MAX_LOGIN_ATTEMPTS * 2) {
+        throw new TooManyRequestsException(
+          `Too many login attempts from this IP. Please try again later.`
+        );
+      }
+    }
+  }
+
+  private async recordLoginAttempt(
+    email: string,
+    ipAddress?: string,
+    userAgent?: string,
+    successful: boolean = false,
+    failReason?: string
+  ): Promise<void> {
+    await this.prisma.loginAttempt.create({
+      data: {
+        email,
+        ipAddress,
+        userAgent,
+        successful,
+        failReason: successful ? null : failReason,
+      },
+    });
+  }
+
+  // ========== BACKUP CODE VERIFICATION ==========
+
+  private async verifyAndConsumeBackupCode(
+    userId: string,
+    code: string
+  ): Promise<{ valid: boolean }> {
+    const user = await this.usersService.findById(userId);
+    if (!user) return { valid: false };
+
+    const preferences = (user.preferences as any) || {};
+    const storedCodes: string[] = preferences.backupCodes || [];
+
+    if (storedCodes.length === 0) return { valid: false };
+
+    // Hash the provided code for comparison
+    const hashedCode = this.hashCode(code);
+
+    // Find matching backup code
+    const codeIndex = storedCodes.findIndex((stored) => stored === hashedCode);
+
+    if (codeIndex === -1) return { valid: false };
+
+    // Remove the used backup code
+    const updatedCodes = [...storedCodes];
+    updatedCodes.splice(codeIndex, 1);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        preferences: {
+          ...preferences,
+          backupCodes: updatedCodes,
+        },
+      },
+    });
+
+    return { valid: true };
+  }
+
+  // ========== SESSION MANAGEMENT ==========
+
+  async getUserSessions(userId: string, currentDeviceId?: string) {
+    return this.sessionTrackingService.getUserSessions(userId, currentDeviceId);
+  }
+
+  async revokeSession(userId: string, sessionId: string) {
+    return this.sessionTrackingService.revokeSession(userId, sessionId);
+  }
+
+  async revokeAllSessions(userId: string, exceptDeviceId?: string) {
+    return this.sessionTrackingService.revokeAllSessions(userId, exceptDeviceId);
+  }
+
+  private async generateTokens(user: any) {
     // Update last login
     await this.prisma.user.update({
       where: { id: user.id },
@@ -370,5 +597,213 @@ export class AuthService {
     });
 
     return { url, user: updatedUser };
+  }
+
+  // ========== TWO-FACTOR AUTHENTICATION ==========
+
+  async enable2FA(userId: string): Promise<{
+    secret: string;
+    qrCodeUrl: string;
+    backupCodes: string[];
+  }> {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.twoFactorEnabled) {
+      throw new BadRequestException('Two-factor authentication is already enabled');
+    }
+
+    // Generate secret
+    const secret = speakeasy.generateSecret({
+      name: `HorseTempo:${user.email}`,
+      length: 32,
+    });
+
+    // Generate QR code
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url || '');
+
+    // Generate backup codes
+    const backupCodes = this.generateBackupCodes();
+
+    // Store secret temporarily (not enabled yet until verified)
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorSecret: secret.base32,
+        // Store backup codes hashed
+        preferences: {
+          ...(user.preferences as any || {}),
+          pendingBackupCodes: backupCodes.map((code) => this.hashCode(code)),
+        },
+      },
+    });
+
+    return {
+      secret: secret.base32,
+      qrCodeUrl,
+      backupCodes,
+    };
+  }
+
+  async verify2FASetup(userId: string, code: string): Promise<{ success: boolean; backupCodes: string[] }> {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.twoFactorEnabled) {
+      throw new BadRequestException('Two-factor authentication is already enabled');
+    }
+
+    if (!user.twoFactorSecret) {
+      throw new BadRequestException('Please initiate 2FA setup first');
+    }
+
+    // Verify the code
+    const isValid = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: code,
+      window: 1,
+    });
+
+    if (!isValid) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    // Get backup codes from preferences
+    const preferences = user.preferences as any || {};
+    const backupCodes = preferences.pendingBackupCodes || [];
+
+    // Enable 2FA
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorEnabled: true,
+        preferences: {
+          ...preferences,
+          pendingBackupCodes: undefined,
+          backupCodes, // Store hashed backup codes
+        },
+      },
+    });
+
+    return {
+      success: true,
+      backupCodes: [], // Don't return again - user should have saved them
+    };
+  }
+
+  async disable2FA(userId: string, code: string): Promise<{ success: boolean }> {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+      throw new BadRequestException('Two-factor authentication is not enabled');
+    }
+
+    // Verify the code
+    const isValid = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: code,
+      window: 1,
+    });
+
+    if (!isValid) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    // Disable 2FA
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+        preferences: {
+          ...(user.preferences as any || {}),
+          backupCodes: undefined,
+        },
+      },
+    });
+
+    return { success: true };
+  }
+
+  async get2FAStatus(userId: string): Promise<{ enabled: boolean }> {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return { enabled: user.twoFactorEnabled };
+  }
+
+  async regenerateBackupCodes(userId: string, code: string): Promise<{ backupCodes: string[] }> {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+      throw new BadRequestException('Two-factor authentication is not enabled');
+    }
+
+    // Verify the code
+    const isValid = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: code,
+      window: 1,
+    });
+
+    if (!isValid) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    // Generate new backup codes
+    const backupCodes = this.generateBackupCodes();
+
+    // Store new backup codes
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        preferences: {
+          ...(user.preferences as any || {}),
+          backupCodes: backupCodes.map((c) => this.hashCode(c)),
+        },
+      },
+    });
+
+    return { backupCodes };
+  }
+
+  private generateBackupCodes(count: number = 10): string[] {
+    const codes: string[] = [];
+    for (let i = 0; i < count; i++) {
+      // Generate 8-character alphanumeric codes
+      const code = randomBytes(4)
+        .toString('hex')
+        .toUpperCase()
+        .match(/.{4}/g)
+        ?.join('-') || '';
+      codes.push(code);
+    }
+    return codes;
+  }
+
+  private hashCode(code: string): string {
+    return createHmac('sha256', this.configService.get('JWT_SECRET') || 'secret')
+      .update(code.replace(/-/g, ''))
+      .digest('hex');
   }
 }

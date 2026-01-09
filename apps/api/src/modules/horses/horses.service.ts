@@ -3,6 +3,9 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { CreateHorseDto } from './dto/create-horse.dto';
 import { UpdateHorseDto } from './dto/update-horse.dto';
+import { PedigreeDto } from './dto/pedigree.dto';
+import { CreatePerformanceDto, UpdatePerformanceDto } from './dto/performance.dto';
+import { CreateBodyConditionDto, UpdateBodyConditionDto } from './dto/body-condition.dto';
 import { calculatePagination, calculateOffset } from '@horse-tempo/types';
 
 @Injectable()
@@ -565,5 +568,441 @@ export class HorsesService {
     }
 
     return nextDate;
+  }
+
+  // ========== PEDIGREE / GENEALOGY ==========
+
+  async getPedigree(horseId: string, organizationId: string, generations: number = 4) {
+    const horse = await this.prisma.horse.findFirst({
+      where: { id: horseId, organizationId },
+      select: {
+        id: true,
+        name: true,
+        ueln: true,
+        sireId: true,
+        sireName: true,
+        sireUeln: true,
+        damName: true,
+        damUeln: true,
+        siresSireName: true,
+        siresDamName: true,
+        damsSireName: true,
+        damsDamName: true,
+        pedigree: true,
+        breed: true,
+        studbook: true,
+        color: true,
+        birthDate: true,
+      },
+    });
+
+    if (!horse) {
+      throw new NotFoundException('Horse not found');
+    }
+
+    // Build pedigree tree from stored data
+    const pedigreeData = horse.pedigree as any || {};
+
+    return {
+      horse: {
+        id: horse.id,
+        name: horse.name,
+        ueln: horse.ueln,
+        breed: horse.breed,
+        studbook: horse.studbook,
+        color: horse.color,
+        birthYear: horse.birthDate ? horse.birthDate.getFullYear().toString() : null,
+      },
+      pedigree: {
+        sire: pedigreeData.sire || { name: horse.sireName, ueln: horse.sireUeln },
+        dam: pedigreeData.dam || { name: horse.damName, ueln: horse.damUeln },
+        sireSire: pedigreeData.sireSire || { name: horse.siresSireName },
+        sireDam: pedigreeData.sireDam || { name: horse.siresDamName },
+        damSire: pedigreeData.damSire || { name: horse.damsSireName },
+        damDam: pedigreeData.damDam || { name: horse.damsDamName },
+        // Generation 3 (arriere-grands-parents)
+        sireSireSire: pedigreeData.sireSireSire,
+        sireSireDam: pedigreeData.sireSireDam,
+        sireDamSire: pedigreeData.sireDamSire,
+        sireDamDam: pedigreeData.sireDamDam,
+        damSireSire: pedigreeData.damSireSire,
+        damSireDam: pedigreeData.damSireDam,
+        damDamSire: pedigreeData.damDamSire,
+        damDamDam: pedigreeData.damDamDam,
+      },
+      generations,
+    };
+  }
+
+  async updatePedigree(horseId: string, organizationId: string, pedigreeDto: PedigreeDto) {
+    await this.findById(horseId, organizationId);
+
+    // Update both the legacy fields and the JSON pedigree
+    return this.prisma.horse.update({
+      where: { id: horseId },
+      data: {
+        sireName: pedigreeDto.sire?.name,
+        sireUeln: pedigreeDto.sire?.ueln,
+        damName: pedigreeDto.dam?.name,
+        damUeln: pedigreeDto.dam?.ueln,
+        siresSireName: pedigreeDto.sireSire?.name,
+        siresDamName: pedigreeDto.sireDam?.name,
+        damsSireName: pedigreeDto.damSire?.name,
+        damsDamName: pedigreeDto.damDam?.name,
+        pedigree: pedigreeDto as any,
+      },
+    });
+  }
+
+  async getOffspring(horseId: string, organizationId: string) {
+    const horse = await this.findById(horseId, organizationId);
+
+    // Search for offspring by looking at breeding records where this horse was stallion or dam
+    const breedingRecords = await this.prisma.breedingRecord.findMany({
+      where: {
+        horseId,
+        foalBorn: true,
+      },
+      select: {
+        id: true,
+        year: true,
+        foalName: true,
+        foalGender: true,
+        partnerName: true,
+        partnerUeln: true,
+        method: true,
+      },
+      orderBy: { year: 'desc' },
+    });
+
+    // Also check gestations for mares
+    const gestations = await this.prisma.gestation.findMany({
+      where: {
+        horseId,
+        status: 'born',
+      },
+      select: {
+        id: true,
+        actualBirthDate: true,
+        foalName: true,
+        foalGender: true,
+        foalColor: true,
+        stallionName: true,
+        stallionUeln: true,
+      },
+      orderBy: { actualBirthDate: 'desc' },
+    });
+
+    const offspring = [
+      ...breedingRecords.map((r) => ({
+        id: r.id,
+        type: 'breeding_record' as const,
+        name: r.foalName,
+        gender: r.foalGender,
+        year: r.year,
+        otherParent: { name: r.partnerName, ueln: r.partnerUeln },
+        method: r.method,
+      })),
+      ...gestations.map((g) => ({
+        id: g.id,
+        type: 'gestation' as const,
+        name: g.foalName,
+        gender: g.foalGender,
+        year: g.actualBirthDate?.getFullYear(),
+        color: g.foalColor,
+        otherParent: { name: g.stallionName, ueln: g.stallionUeln },
+      })),
+    ];
+
+    return {
+      horse: {
+        id: horse.id,
+        name: horse.name,
+        gender: horse.gender,
+      },
+      offspring,
+      totalOffspring: offspring.length,
+    };
+  }
+
+  // ========== PERFORMANCE TRACKING ==========
+
+  async getPerformances(
+    horseId: string,
+    organizationId: string,
+    params?: {
+      discipline?: string;
+      level?: string;
+      year?: number;
+      page?: number;
+      pageSize?: number;
+    }
+  ) {
+    await this.findById(horseId, organizationId);
+
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 20;
+    const offset = calculateOffset(page, pageSize);
+
+    const where: any = { horseId };
+
+    if (params?.discipline) {
+      where.discipline = params.discipline;
+    }
+    if (params?.level) {
+      where.level = params.level;
+    }
+    if (params?.year) {
+      where.date = {
+        gte: new Date(`${params.year}-01-01`),
+        lt: new Date(`${params.year + 1}-01-01`),
+      };
+    }
+
+    const [items, totalItems] = await Promise.all([
+      this.prisma.horsePerformance.findMany({
+        where,
+        skip: offset,
+        take: pageSize,
+        orderBy: { date: 'desc' },
+      }),
+      this.prisma.horsePerformance.count({ where }),
+    ]);
+
+    return {
+      items,
+      pagination: calculatePagination(totalItems, page, pageSize),
+    };
+  }
+
+  async createPerformance(horseId: string, organizationId: string, data: CreatePerformanceDto) {
+    await this.findById(horseId, organizationId);
+
+    return this.prisma.horsePerformance.create({
+      data: {
+        ...data,
+        horseId,
+      },
+    });
+  }
+
+  async updatePerformance(
+    horseId: string,
+    performanceId: string,
+    organizationId: string,
+    data: UpdatePerformanceDto
+  ) {
+    await this.findById(horseId, organizationId);
+
+    const performance = await this.prisma.horsePerformance.findFirst({
+      where: { id: performanceId, horseId },
+    });
+
+    if (!performance) {
+      throw new NotFoundException('Performance record not found');
+    }
+
+    return this.prisma.horsePerformance.update({
+      where: { id: performanceId },
+      data,
+    });
+  }
+
+  async deletePerformance(horseId: string, performanceId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    const performance = await this.prisma.horsePerformance.findFirst({
+      where: { id: performanceId, horseId },
+    });
+
+    if (!performance) {
+      throw new NotFoundException('Performance record not found');
+    }
+
+    return this.prisma.horsePerformance.delete({
+      where: { id: performanceId },
+    });
+  }
+
+  async getPerformanceStats(horseId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    const performances = await this.prisma.horsePerformance.findMany({
+      where: { horseId },
+      orderBy: { date: 'desc' },
+    });
+
+    if (performances.length === 0) {
+      return {
+        totalPerformances: 0,
+        bestRank: null,
+        averageRank: null,
+        wins: 0,
+        podiums: 0,
+        clearRoundRate: null,
+        averagePenalties: null,
+        bestTime: null,
+        bestPercentage: null,
+        byDiscipline: {},
+        byLevel: {},
+      };
+    }
+
+    const rankedPerformances = performances.filter((p) => p.rank !== null);
+    const wins = rankedPerformances.filter((p) => p.rank === 1).length;
+    const podiums = rankedPerformances.filter((p) => p.rank && p.rank <= 3).length;
+
+    const penaltiesPerformances = performances.filter((p) => p.penaltyPoints !== null);
+    const clearRounds = penaltiesPerformances.filter((p) => p.penaltyPoints === 0).length;
+
+    const timesPerformances = performances.filter((p) => p.timeSeconds !== null);
+    const percentagePerformances = performances.filter((p) => p.percentage !== null);
+
+    // Group by discipline and level
+    const byDiscipline: Record<string, number> = {};
+    const byLevel: Record<string, number> = {};
+
+    for (const p of performances) {
+      byDiscipline[p.discipline] = (byDiscipline[p.discipline] || 0) + 1;
+      if (p.level) {
+        byLevel[p.level] = (byLevel[p.level] || 0) + 1;
+      }
+    }
+
+    return {
+      totalPerformances: performances.length,
+      bestRank: rankedPerformances.length > 0
+        ? Math.min(...rankedPerformances.map((p) => p.rank!))
+        : null,
+      averageRank: rankedPerformances.length > 0
+        ? rankedPerformances.reduce((sum, p) => sum + p.rank!, 0) / rankedPerformances.length
+        : null,
+      wins,
+      podiums,
+      clearRoundRate: penaltiesPerformances.length > 0
+        ? (clearRounds / penaltiesPerformances.length) * 100
+        : null,
+      averagePenalties: penaltiesPerformances.length > 0
+        ? penaltiesPerformances.reduce((sum, p) => sum + p.penaltyPoints!, 0) / penaltiesPerformances.length
+        : null,
+      bestTime: timesPerformances.length > 0
+        ? Math.min(...timesPerformances.map((p) => p.timeSeconds!))
+        : null,
+      bestPercentage: percentagePerformances.length > 0
+        ? Math.max(...percentagePerformances.map((p) => p.percentage!))
+        : null,
+      byDiscipline,
+      byLevel,
+    };
+  }
+
+  // ========== BODY CONDITION SCORE (Database) ==========
+
+  async getBodyConditionScores(horseId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    const scores = await this.prisma.bodyConditionScore.findMany({
+      where: { horseId },
+      orderBy: { date: 'desc' },
+    });
+
+    // Calculate trend and statistics
+    const currentScore = scores.length > 0 ? scores[0].score : null;
+    let trend: string | null = null;
+
+    if (scores.length >= 2) {
+      const recentAvg = scores.slice(0, 3).reduce((sum, s) => sum + s.score, 0) / Math.min(3, scores.length);
+      const olderAvg = scores.slice(3, 6).reduce((sum, s) => sum + s.score, 0) / Math.max(1, scores.slice(3, 6).length);
+
+      if (scores.length >= 4 && recentAvg > olderAvg + 0.3) {
+        trend = 'improving';
+      } else if (scores.length >= 4 && recentAvg < olderAvg - 0.3) {
+        trend = 'declining';
+      } else {
+        trend = 'stable';
+      }
+    }
+
+    // Calculate 6-month average
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const recentScores = scores.filter((s) => s.date >= sixMonthsAgo);
+    const averageScore = recentScores.length > 0
+      ? recentScores.reduce((sum, s) => sum + s.score, 0) / recentScores.length
+      : null;
+
+    return {
+      history: scores.map((s) => ({
+        id: s.id,
+        score: s.score,
+        scaleType: s.scaleType,
+        date: s.date,
+        weightKg: s.weightKg,
+        evaluatedBy: s.evaluatedBy,
+        notes: s.notes,
+      })),
+      currentScore,
+      trend,
+      averageScore,
+      recommendedScore: { min: 4.5, max: 6 }, // Ideal range on Henneke scale
+    };
+  }
+
+  async createBodyConditionScore(horseId: string, organizationId: string, data: CreateBodyConditionDto) {
+    await this.findById(horseId, organizationId);
+
+    // If weight is provided, also update the horse's weight
+    if (data.weightKg) {
+      await this.prisma.horse.update({
+        where: { id: horseId },
+        data: { weightKg: Math.round(data.weightKg) },
+      });
+    }
+
+    return this.prisma.bodyConditionScore.create({
+      data: {
+        ...data,
+        photoUrls: data.photoUrls || [],
+        horseId,
+      },
+    });
+  }
+
+  async updateBodyConditionScore(
+    horseId: string,
+    scoreId: string,
+    organizationId: string,
+    data: UpdateBodyConditionDto
+  ) {
+    await this.findById(horseId, organizationId);
+
+    const score = await this.prisma.bodyConditionScore.findFirst({
+      where: { id: scoreId, horseId },
+    });
+
+    if (!score) {
+      throw new NotFoundException('Body condition score not found');
+    }
+
+    return this.prisma.bodyConditionScore.update({
+      where: { id: scoreId },
+      data,
+    });
+  }
+
+  async deleteBodyConditionScore(horseId: string, scoreId: string, organizationId: string) {
+    await this.findById(horseId, organizationId);
+
+    const score = await this.prisma.bodyConditionScore.findFirst({
+      where: { id: scoreId, horseId },
+    });
+
+    if (!score) {
+      throw new NotFoundException('Body condition score not found');
+    }
+
+    return this.prisma.bodyConditionScore.delete({
+      where: { id: scoreId },
+    });
   }
 }

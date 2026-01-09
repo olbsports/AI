@@ -44,6 +44,8 @@ model Organization {
   socialPosts         SocialPost[]
   notifications       Notification[]
   clubs               ClubMembership[]
+  calendarEvents      CalendarEvent[]
+  healthReminders     HealthReminder[]
 
   @@map("organizations")
 }
@@ -134,6 +136,31 @@ model User {
   // Audit logs
   auditLogs               AuditLog[]            @relation("AuditActor")
 
+  // Push Notifications
+  pushSubscriptions       PushSubscription[]
+  notificationPreferences NotificationPreference?
+
+  // Marketplace alerts
+  listingAlerts           ListingAlert[]
+
+  // Sessions (Device Tracking)
+  sessions                UserSession[]
+
+  // Stories
+  stories                 Story[]               @relation("UserStories")
+  storyViews              StoryView[]           @relation("StoryViews")
+
+  // Calendar & Reminders
+  calendarEvents          CalendarEvent[]
+  eventReminders          EventReminder[]
+
+  // Gamification
+  userChallenges          UserChallenge[]
+  userStreak              UserStreak?
+  referralsMade           Referral[]            @relation("Referrer")
+  referredBy              Referral[]            @relation("Referee")
+  xpTransactions          XpTransaction[]
+
   @@map("users")
 }
 
@@ -165,6 +192,8 @@ model Horse {
   // Grands-parents maternels
   damsSireName   String?  // Grand-père maternel
   damsDamName    String?  // Grand-mère maternelle
+  // Pedigree complet JSON (4 générations)
+  pedigree       Json?    // { sire: {...}, dam: {...}, sireSire: {...}, sireDam: {...}, damSire: {...}, damDam: {...}, ... }
 
   // Owner info
   ownerName      String?
@@ -215,17 +244,22 @@ model Horse {
   updatedAt      DateTime @updatedAt
 
   // Relations
-  analysisSessions   AnalysisSession[]
-  reports            Report[]
-  equiCoteValuations EquiCoteValuation[]
-  equiTraceHistory   EquiTraceEntry[]
-  competitionResults CompetitionResult[]
-  healthRecords      HealthRecord[]
-  gestations         Gestation[]
-  breedingRecords    BreedingRecord[]
+  analysisSessions    AnalysisSession[]
+  reports             Report[]
+  equiCoteValuations  EquiCoteValuation[]
+  equiTraceHistory    EquiTraceEntry[]
+  competitionResults  CompetitionResult[]
+  healthRecords       HealthRecord[]
+  gestations          Gestation[]
+  breedingRecords     BreedingRecord[]
   marketplaceListings MarketplaceListing[]
-  externalDataCache  ExternalDataCache[]
-  socialPosts        SocialPost[]
+  externalDataCache   ExternalDataCache[]
+  socialPosts         SocialPost[]
+  radiologyAnalyses   RadiologyAnalysis[]
+  performances        HorsePerformance[]
+  bodyConditionScores BodyConditionScore[]
+  calendarEvents      CalendarEvent[]
+  healthReminders     HealthReminder[]    @relation("HorseHealthReminders")
 
   @@index([sireId])
   @@index([ueln])
@@ -403,6 +437,9 @@ model HealthRecord {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  // Relations
+  healthReminders HealthReminder[]
 
   @@index([horseId, date])
   @@index([type])
@@ -646,11 +683,65 @@ model MarketplaceListing {
   // Relations
   favorites       Favorite[]
   messages        Message[]
+  promotions      ListingPromotion[]
 
   @@index([status, type])
   @@index([horseId])
   @@index([sellerId])
   @@map("marketplace_listings")
+}
+
+// ==================== LISTING PROMOTIONS ====================
+
+model ListingPromotion {
+  id              String   @id @default(uuid())
+
+  // Listing
+  listingId       String
+  listing         MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  // Promotion type
+  type            String   // featured, boost, refresh
+
+  // Cost
+  tokenCost       Int
+
+  // Timing
+  startedAt       DateTime @default(now())
+  expiresAt       DateTime?
+
+  createdAt       DateTime @default(now())
+
+  @@index([listingId, expiresAt])
+  @@index([type])
+  @@map("listing_promotions")
+}
+
+// ==================== LISTING ALERTS ====================
+
+model ListingAlert {
+  id              String   @id @default(uuid())
+
+  // User
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Alert filters (JSON)
+  filters         Json     // { type, minPrice, maxPrice, breed, location, etc. }
+
+  // Notification preferences
+  notifyEmail     Boolean  @default(true)
+  notifyPush      Boolean  @default(true)
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastTriggeredAt DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, isActive])
+  @@map("listing_alerts")
 }
 
 // ==================== FAVORITES ====================
@@ -748,6 +839,7 @@ model SocialPost {
   likes           Like[]
   savedPosts      SavedPost[]
   reports         UserReport[]
+  hashtags        PostHashtag[]
 
   @@index([authorId, createdAt])
   @@index([visibility])
@@ -891,6 +983,75 @@ model Notification {
   @@map("notifications")
 }
 
+// ==================== PUSH SUBSCRIPTIONS ====================
+
+model PushSubscription {
+  id              String   @id @default(uuid())
+
+  // User
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Device info
+  platform        String   // ios, android, web
+  token           String   // FCM/APNs token
+  deviceId        String
+  deviceName      String?
+  appVersion      String?
+
+  // Status
+  isActive        Boolean  @default(true)
+  lastUsedAt      DateTime @default(now())
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, deviceId])
+  @@index([userId, isActive])
+  @@index([token])
+  @@map("push_subscriptions")
+}
+
+model NotificationPreference {
+  id              String   @id @default(uuid())
+
+  // User
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Global settings
+  pushEnabled     Boolean  @default(true)
+  emailEnabled    Boolean  @default(true)
+  inAppEnabled    Boolean  @default(true)
+
+  // Quiet hours
+  quietHoursEnabled Boolean @default(false)
+  quietHoursStart  String   @default("22:00") // HH:mm format
+  quietHoursEnd    String   @default("07:00")
+  timezone         String   @default("Europe/Paris")
+
+  // Per-category settings (JSON for flexibility)
+  // { analyses: { push: true, email: true }, social: { push: false } }
+  categorySettings Json     @default("{}")
+
+  // Digest settings
+  digestEnabled   Boolean  @default(false)
+  digestFrequency String   @default("daily") // daily, weekly, never
+  digestTime      String   @default("09:00")
+
+  // Social settings
+  likesFromFollowersOnly Boolean @default(false)
+  mentionsFromFollowersOnly Boolean @default(false)
+  messagesFromFollowersOnly Boolean @default(false)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("notification_preferences")
+}
+
 // ==================== ACHIEVEMENTS ====================
 
 model Achievement {
@@ -973,6 +1134,103 @@ model ClubMembership {
 
   @@unique([clubId, userId])
   @@map("club_memberships")
+}
+
+// ==================== RADIOLOGY ANALYSIS ====================
+
+model RadiologyAnalysis {
+  id                String   @id @default(uuid())
+
+  // Subject
+  horseId           String
+  horse             Horse    @relation(fields: [horseId], references: [id], onDelete: Cascade)
+  organizationId    String
+
+  // Exam info
+  examDate          DateTime @default(now())
+  examType          String   @default("standard") // standard, complete, expert
+  indication        String?  // Reason for exam
+  clinicalHistory   String?
+
+  // Status
+  status            String   @default("pending") // pending, uploading, processing, completed, failed, cancelled
+
+  // AI Analysis
+  aiModel           String?
+  aiConfidence      Float?
+  processingTimeMs  Int?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  errorMessage      String?
+
+  // Results
+  globalScore       Float?   // 0-100 overall health score
+  category          String?  // A, A-, B+, B, B-, C, D (purchase exam)
+  findings          Json     @default("[]") // Array of findings
+  recommendations   Json     @default("[]")
+  conclusion        String?
+
+  // Veterinarian validation
+  validatedById     String?
+  validatedAt       DateTime?
+  vetNotes          String?
+  vetSignature      String?
+
+  // Billing
+  tokensConsumed    Int      @default(0)
+  createdById       String
+
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  images            RadioImage[]
+  report            Report?
+
+  @@index([horseId, createdAt])
+  @@index([organizationId, status])
+  @@map("radiology_analyses")
+}
+
+model RadioImage {
+  id                String   @id @default(uuid())
+
+  // Analysis reference
+  analysisId        String
+  analysis          RadiologyAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  // Image info
+  filename          String
+  originalFilename  String
+  mimeType          String   // image/jpeg, image/png, application/dicom
+  fileSize          Int      // bytes
+  url               String
+  thumbnailUrl      String?
+
+  // Anatomical region
+  region            String   // boulet_ad, boulet_ag, jarret, genou, dos, pied, etc.
+  regionLabel       String   // Human readable: "Boulet Antérieur Droit"
+  view              String?  // face, profil, oblique
+
+  // DICOM metadata (if applicable)
+  dicomData         Json?
+
+  // AI Analysis results for this image
+  aiAnalyzed        Boolean  @default(false)
+  aiScore           Float?   // 0-100
+  detections        Json     @default("[]") // Array of RadioDetection
+
+  // Order for display
+  sortOrder         Int      @default(0)
+
+  // Upload status
+  uploadStatus      String   @default("pending") // pending, uploaded, processed, error
+
+  createdAt         DateTime @default(now())
+
+  @@index([analysisId])
+  @@map("radio_images")
 }
 
 // ==================== AI ANALYSIS CACHE ====================
@@ -1271,6 +1529,7 @@ model Rider {
   // Relations
   horses           Horse[]
   analysisSessions AnalysisSession[]
+  calendarEvents   CalendarEvent[]
 
   @@map("riders")
 }
@@ -1435,6 +1694,56 @@ model EmailVerificationToken {
   @@map("email_verification_tokens")
 }
 
+// ==================== USER SESSIONS (Device Tracking) ====================
+
+model UserSession {
+  id            String   @id @default(uuid())
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Device info
+  deviceId      String
+  deviceName    String?
+  platform      String?  // ios, android, web, desktop
+
+  // Request info
+  ipAddress     String?
+  userAgent     String?
+
+  // Session management
+  lastActiveAt  DateTime @default(now())
+  expiresAt     DateTime
+  isRevoked     Boolean  @default(false)
+  revokedAt     DateTime?
+
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, deviceId])
+  @@index([userId, isRevoked])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+// ==================== LOGIN ATTEMPTS (Rate Limiting) ====================
+
+model LoginAttempt {
+  id          String   @id @default(uuid())
+
+  email       String
+  ipAddress   String?
+  userAgent   String?
+
+  successful  Boolean  @default(false)
+  failReason  String?  // invalid_credentials, account_locked, 2fa_failed, etc.
+
+  createdAt   DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+  @@map("login_attempts")
+}
+
 // ==================== TEAM INVITATIONS ====================
 
 model TeamInvitation {
@@ -1489,6 +1798,77 @@ model TokenReservation {
 
   @@index([organizationId, expiresAt])
   @@map("token_reservations")
+}
+
+// ==================== TOKEN PACKS (PURCHASE) ====================
+
+model TokenPack {
+  id              String   @id @default(uuid())
+
+  name            String   // "Starter", "Standard", "Pro", etc.
+  description     String?
+
+  // Tokens
+  baseTokens      Int      // Base tokens in pack
+  bonusPercent    Int      @default(0) // Bonus percentage
+  totalTokens     Int      // Computed: baseTokens * (1 + bonusPercent/100)
+
+  // Pricing
+  price           Int      // Price in cents (e.g., 999 = 9.99€)
+  currency        String   @default("EUR")
+  stripePriceId   String?  // Stripe Price ID for checkout
+
+  // Display
+  isActive        Boolean  @default(true)
+  isPopular       Boolean  @default(false) // "Best Value" badge
+  sortOrder       Int      @default(0)
+
+  // Limits
+  minQuantity     Int      @default(1)
+  maxQuantity     Int      @default(10)
+  limitPerMonth   Int?     // Max purchases per org per month
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  purchases       TokenPurchase[]
+
+  @@map("token_packs")
+}
+
+model TokenPurchase {
+  id                    String   @id @default(uuid())
+
+  // Pack purchased
+  packId                String
+  pack                  TokenPack @relation(fields: [packId], references: [id])
+  quantity              Int      @default(1)
+
+  // Tokens delivered
+  baseTokens            Int
+  bonusTokens           Int
+  totalTokens           Int
+
+  // Payment
+  amount                Int      // Amount paid in cents
+  currency              String   @default("EUR")
+  stripePaymentIntentId String?
+  stripeSessionId       String?
+
+  // Status
+  status                String   @default("pending") // pending, completed, failed, refunded
+
+  // Organization
+  organizationId        String
+  purchasedById         String   // User who made the purchase
+
+  createdAt             DateTime @default(now())
+  completedAt           DateTime?
+
+  @@index([organizationId, createdAt])
+  @@index([status])
+  @@map("token_purchases")
 }
 
 model Invoice {
@@ -1574,6 +1954,90 @@ model ApiKey {
   @@map("api_keys")
 }
 
+
+// ==================== STORIES (24h ephemeral content) ====================
+
+model Story {
+  id          String   @id @default(uuid())
+
+  // Media
+  mediaUrl    String
+  mediaType   String   @default("image") // image, video
+
+  // Content (optional caption)
+  caption     String?
+
+  // Stats
+  viewsCount  Int      @default(0)
+
+  // Expiration (24h from creation)
+  expiresAt   DateTime
+
+  // Author
+  authorId    String
+  author      User     @relation("UserStories", fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  // Relations
+  views       StoryView[]
+
+  @@index([authorId, expiresAt])
+  @@index([expiresAt])
+  @@map("stories")
+}
+
+model StoryView {
+  id        String   @id @default(uuid())
+
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  visitorId String
+  visitor   User     @relation("StoryViews", fields: [visitorId], references: [id], onDelete: Cascade)
+
+  viewedAt  DateTime @default(now())
+
+  @@unique([storyId, visitorId])
+  @@index([storyId])
+  @@map("story_views")
+}
+
+// ==================== HASHTAGS ====================
+
+model Hashtag {
+  id          String   @id @default(uuid())
+
+  name        String   @unique
+  usageCount  Int      @default(0)
+  lastUsedAt  DateTime @default(now())
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  posts       PostHashtag[]
+
+  @@index([usageCount])
+  @@index([lastUsedAt])
+  @@map("hashtags")
+}
+
+model PostHashtag {
+  id        String   @id @default(uuid())
+
+  postId    String
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  hashtagId String
+  hashtag   Hashtag  @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, hashtagId])
+  @@index([hashtagId])
+  @@map("post_hashtags")
+}
 // ==================== USER BLOCKS ====================
 
 model UserBlock {
@@ -1700,6 +2164,145 @@ model SystemSettings {
   @@map("system_settings")
 }
 
+// ==================== GAMIFICATION: CHALLENGES ====================
+
+model Challenge {
+  id              String   @id @default(uuid())
+
+  // Basic info
+  title           String
+  description     String
+
+  // Type and configuration
+  type            String   // daily, weekly, monthly
+  conditionAction String   // login, analyze_horse, publish_post, complete_profile, add_horse, etc.
+  conditionCount  Int      @default(1)
+
+  // Rewards
+  xpReward        Int      @default(0)
+  tokenReward     Int      @default(0)
+
+  // Availability
+  startsAt        DateTime
+  expiresAt       DateTime
+  isActive        Boolean  @default(true)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  userChallenges  UserChallenge[]
+
+  @@index([type, isActive])
+  @@index([startsAt, expiresAt])
+  @@map("challenges")
+}
+
+model UserChallenge {
+  id              String    @id @default(uuid())
+
+  // Progress
+  progress        Int       @default(0)
+  completedAt     DateTime?
+  claimedAt       DateTime?
+
+  // User
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Challenge
+  challengeId     String
+  challenge       Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, challengeId])
+  @@index([userId, completedAt])
+  @@map("user_challenges")
+}
+
+// ==================== GAMIFICATION: STREAKS ====================
+
+model UserStreak {
+  id              String   @id @default(uuid())
+
+  // Streak data
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  lastActivityAt  DateTime?
+
+  // Bonus tracking
+  lastBonusAt     DateTime?
+  totalBonusXp    Int      @default(0)
+
+  // User
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("user_streaks")
+}
+
+// ==================== GAMIFICATION: REFERRALS ====================
+
+model Referral {
+  id              String    @id @default(uuid())
+
+  // Unique referral code (HORSE-XXXXXX)
+  code            String    @unique
+
+  // Status
+  status          String    @default("pending") // pending, completed
+
+  // Rewards
+  xpAwarded       Int       @default(0)
+  tokensAwarded   Int       @default(0)
+
+  // Referrer (who invited)
+  referrerId      String
+  referrer        User      @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  // Referee (who was invited)
+  refereeId       String?
+  referee         User?     @relation("Referee", fields: [refereeId], references: [id], onDelete: SetNull)
+
+  // Invitation email (before signup)
+  invitedEmail    String?
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime?
+
+  @@index([referrerId])
+  @@index([code])
+  @@map("referrals")
+}
+
+// ==================== GAMIFICATION: XP TRANSACTIONS ====================
+
+model XpTransaction {
+  id              String   @id @default(uuid())
+
+  // Transaction details
+  amount          Int
+  source          String   // daily_login, challenge, referral, streak_bonus, achievement, analysis, post, etc.
+  description     String
+
+  // User
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([source])
+  @@map("xp_transactions")
+}
+
 // ==================== SUBSCRIPTIONS ====================
 
 model Subscription {
@@ -1751,4 +2354,221 @@ model SubscriptionPlan {
   updatedAt            DateTime  @updatedAt
 
   @@map("subscription_plans")
+}
+
+// ==================== HORSE PERFORMANCE TRACKING ====================
+
+model HorsePerformance {
+  id              String   @id @default(uuid())
+
+  // Competition info
+  date            DateTime
+  competition     String   // Nom de la competition
+  discipline      String   // CSO, Dressage, CCE, Hunter, Endurance
+  level           String?  // Club4, Club3, Club2, Club1, Amateur, Pro
+
+  // Results
+  rank            Int?     // Classement
+  totalParticipants Int?   // Nombre de participants
+  penaltyPoints   Float?   // Points de penalite (fautes, refus)
+  timeSeconds     Float?   // Temps en secondes
+  score           Float?   // Score (pour dressage par ex.)
+  percentage      Float?   // Pourcentage (dressage)
+
+  // Context
+  riderName       String?
+  location        String?
+  surfaceType     String?  // Sable, herbe, etc.
+  weather         String?
+
+  // Notes
+  notes           String?
+
+  // Horse
+  horseId         String
+  horse           Horse    @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([horseId, date])
+  @@index([discipline])
+  @@map("horse_performances")
+}
+
+// ==================== BODY CONDITION SCORE ====================
+
+model BodyConditionScore {
+  id              String   @id @default(uuid())
+
+  // Score (echelle 1-9 ou 1-5)
+  score           Float    // Score global (1-9 echelle Henneke)
+  scaleType       String   @default("henneke") // henneke (1-9), french (0-5)
+
+  // Date de l'evaluation
+  date            DateTime
+
+  // Details par zone (optionnel)
+  neckScore       Float?   // Encolure
+  withersScore    Float?   // Garrot
+  backScore       Float?   // Dos
+  ribsScore       Float?   // Cotes
+  tailheadScore   Float?   // Base de la queue
+  shoulderScore   Float?   // Epaule
+
+  // Mesures complementaires
+  weightKg        Float?   // Poids estime
+  bellyGirthCm    Float?   // Tour de sangle
+
+  // Evaluateur
+  evaluatedBy     String?  // Nom de l'evaluateur
+  method          String   @default("visual") // visual, palpation, combined
+
+  // Notes et recommandations
+  notes           String?
+  recommendations String?
+
+  // Photos (optionnel)
+  photoUrls       Json     @default("[]")
+
+  // Horse
+  horseId         String
+  horse           Horse    @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([horseId, date])
+  @@map("body_condition_scores")
+}
+
+// ==================== CALENDAR EVENTS ====================
+
+model CalendarEvent {
+  id              String   @id @default(uuid())
+
+  // Basic info
+  title           String
+  description     String?
+  type            String   // training, vet, competition, farrier, dental, vaccination, deworming, other
+
+  // Timing
+  startDate       DateTime
+  endDate         DateTime?
+  allDay          Boolean  @default(false)
+
+  // Location
+  location        String?
+  latitude        Float?
+  longitude       Float?
+
+  // Status
+  status          String   @default("scheduled") // scheduled, confirmed, cancelled, completed
+
+  // Recurrence (iCal RRULE format)
+  recurrenceRule  String?  // RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR
+  recurrenceEndDate DateTime?
+  parentEventId   String?
+  parent          CalendarEvent?  @relation("EventOccurrences", fields: [parentEventId], references: [id], onDelete: Cascade)
+  occurrences     CalendarEvent[] @relation("EventOccurrences")
+
+  // Color/category
+  color           String?
+  priority        String   @default("normal") // low, normal, high, urgent
+
+  // Notes
+  notes           String?
+
+  // Relations
+  horseId         String?
+  horse           Horse?   @relation(fields: [horseId], references: [id], onDelete: SetNull)
+
+  riderId         String?
+  rider           Rider?   @relation(fields: [riderId], references: [id], onDelete: SetNull)
+
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdById     String
+  createdBy       User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  reminders       EventReminder[]
+
+  @@index([organizationId, startDate])
+  @@index([horseId, startDate])
+  @@index([type, startDate])
+  @@index([parentEventId])
+  @@map("calendar_events")
+}
+
+model EventReminder {
+  id              String   @id @default(uuid())
+
+  // Reminder settings
+  reminderType    String   @default("push") // email, push, both
+  reminderTime    Int      // minutes before event
+
+  // Status
+  sent            Boolean  @default(false)
+  sentAt          DateTime?
+  failedAt        DateTime?
+  failureReason   String?
+
+  // Relations
+  eventId         String
+  event           CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@unique([eventId, userId, reminderTime])
+  @@index([sent, eventId])
+  @@map("event_reminders")
+}
+
+// ==================== HEALTH REMINDERS ====================
+
+model HealthReminder {
+  id              String   @id @default(uuid())
+
+  // Reminder type
+  type            String   // vaccination_due, deworming_due, vet_checkup_due, dental_due, farrier_due
+
+  // Timing
+  dueDate         DateTime
+  reminderDate    DateTime // When to send the reminder
+
+  // Status
+  status          String   @default("pending") // pending, sent, dismissed, completed
+  sentAt          DateTime?
+
+  // Related health record (if applicable)
+  healthRecordId  String?
+  healthRecord    HealthRecord? @relation(fields: [healthRecordId], references: [id], onDelete: SetNull)
+
+  // Horse
+  horseId         String
+  horse           Horse    @relation("HorseHealthReminders", fields: [horseId], references: [id], onDelete: Cascade)
+
+  // Organization
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Message
+  title           String
+  message         String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId, status, reminderDate])
+  @@index([horseId, type])
+  @@map("health_reminders")
 }
