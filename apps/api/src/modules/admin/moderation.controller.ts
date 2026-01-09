@@ -10,7 +10,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @ApiTags('moderation')
 @Controller('moderation')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('owner')
+@Roles('admin', 'owner')
 @ApiBearerAuth()
 export class ModerationController {
   constructor(private readonly prisma: PrismaService) {}
