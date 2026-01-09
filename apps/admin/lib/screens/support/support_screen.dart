@@ -135,23 +135,30 @@ class SupportScreen extends ConsumerWidget {
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.support_agent, color: color),
+                child: Icon(Icons.support_agent, color: color, size: 20),
               ),
-              const SizedBox(width: 12),
-              Builder(
-                builder: (ctx) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      value.toString(),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(ctx).textTheme.bodyLarge?.color,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Builder(
+                  builder: (ctx) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        value.toString(),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(ctx).textTheme.bodyLarge?.color,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(label, style: TextStyle(color: Theme.of(ctx).textTheme.bodyMedium?.color, fontSize: 12)),
-                  ],
+                      Text(
+                        label,
+                        style: TextStyle(color: Theme.of(ctx).textTheme.bodyMedium?.color, fontSize: 11),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

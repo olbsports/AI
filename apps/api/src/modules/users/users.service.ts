@@ -9,6 +9,16 @@ interface CreateUserData {
   organizationName: string;
 }
 
+// SECURITY: Fields to exclude from user responses
+const SENSITIVE_FIELDS = ['passwordHash', 'twoFactorSecret'] as const;
+
+// Helper to remove sensitive fields from user object
+function sanitizeUser<T extends Record<string, any>>(user: T | null): Omit<T, typeof SENSITIVE_FIELDS[number]> | null {
+  if (!user) return null;
+  const { passwordHash, twoFactorSecret, ...safeUser } = user;
+  return safeUser as any;
+}
+
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -19,10 +29,19 @@ export class UsersService {
       include: { organization: true },
     });
 
-    return user;
+    return sanitizeUser(user);
+  }
+
+  // Internal method that returns full user (including passwordHash) - for auth only
+  async findByIdInternal(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: { organization: true },
+    });
   }
 
   async findByEmail(email: string) {
+    // This is used for auth, so we need passwordHash
     return this.prisma.user.findUnique({
       where: { email },
       include: { organization: true },
@@ -57,7 +76,7 @@ export class UsersService {
       include: { organization: true },
     });
 
-    return user;
+    return sanitizeUser(user);
   }
 
   async update(id: string, data: Partial<{
@@ -66,17 +85,20 @@ export class UsersService {
     avatarUrl: string;
     preferences: any;
   }>) {
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id },
       data,
       include: { organization: true },
     });
+    return sanitizeUser(user);
   }
 
   async findByOrganization(organizationId: string) {
-    return this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       where: { organizationId },
       orderBy: { createdAt: 'desc' },
     });
+    // SECURITY: Remove sensitive fields from all users
+    return users.map(u => sanitizeUser(u));
   }
 }

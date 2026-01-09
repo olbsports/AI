@@ -73,8 +73,11 @@ export class AuthService {
 
     const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
 
+    // SECURITY: Remove sensitive fields from user object before sending to client
+    const { passwordHash, twoFactorSecret, ...safeUser } = user;
+
     return {
-      user,
+      user: safeUser,
       organization: user.organization,
       accessToken,
       refreshToken,
