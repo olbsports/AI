@@ -82,12 +82,10 @@ export class CreateHorseDto {
   @IsString()
   discipline?: string;
 
-  @ApiProperty({ required: false, description: 'Niveau (0-7)' })
+  @ApiProperty({ required: false, description: 'Niveau: Loisir, Club, Amateur, Pro' })
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(7)
-  level?: number;
+  @IsString()
+  level?: string;
 
   @ApiProperty({ required: false, description: 'Notes' })
   @IsOptional()
