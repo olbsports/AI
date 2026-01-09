@@ -28,6 +28,7 @@ import 'screens/settings/billing_screen.dart';
 import 'screens/settings/organization_screen.dart';
 import 'screens/settings/notifications_screen.dart';
 import 'screens/marketplace/create_listing_screen.dart';
+import 'screens/marketplace/edit_listing_screen.dart';
 import 'screens/leaderboard/leaderboard_screen.dart';
 import 'screens/breeding/breeding_screen.dart';
 import 'screens/social/feed_screen.dart';
@@ -277,6 +278,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'create/stallion',
                 builder: (context, state) => const CreateListingScreen(type: CreateListingType.stallion),
+              ),
+              GoRoute(
+                path: 'edit/:id',
+                builder: (context, state) => EditListingScreen(
+                  listingId: state.pathParameters['id']!,
+                ),
               ),
             ],
           ),
