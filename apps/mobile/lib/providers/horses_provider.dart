@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
-import '../models/health.dart';
 import '../services/api_service.dart';
 
 final horsesProvider = FutureProvider.autoDispose<List<Horse>>((ref) async {
